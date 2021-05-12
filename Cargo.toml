@@ -4,6 +4,12 @@ version = "0.1.0"
 authors = ["rkr35 <rkr35@dragons.drexel.edu>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+panic = "abort"
+lto = "fat"
+codegen-units = 1
 
 [dependencies]
