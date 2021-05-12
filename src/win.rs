@@ -1,3 +1,5 @@
+// https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+
 use std::ffi::c_void;
 use std::ptr;
 
