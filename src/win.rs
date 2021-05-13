@@ -11,6 +11,7 @@ type ThreadProc = unsafe extern "system" fn(parameter: *mut c_void) -> u32;
 
 #[link(name = "Kernel32")]
 extern "system" {
+    pub fn AllocConsole() -> i32;
     fn CreateThread(
         attributes: *mut c_void,
         stack_size: usize,
@@ -20,6 +21,7 @@ extern "system" {
         thread_id: *mut u32,
     ) -> *mut c_void;
     fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
+    pub fn FreeConsole() -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
 }
 

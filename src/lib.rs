@@ -20,7 +20,9 @@ unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void)
 }
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
+    win::AllocConsole();
     win::msg_box("attach");
+    win::FreeConsole();
     win::FreeLibraryAndExitThread(dll, 0);
     1
 }
