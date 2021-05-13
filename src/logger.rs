@@ -16,13 +16,17 @@ impl Log for Logger {
 
         unsafe {
             let stdout = win::GetStdHandle(win::STD_OUTPUT_HANDLE);
-            win::WriteConsoleA(stdout, buffer.as_ptr(), buffer.len() as u32, ptr::null_mut(), ptr::null_mut());
+            win::WriteConsoleA(
+                stdout,
+                buffer.as_ptr(),
+                buffer.len() as u32,
+                ptr::null_mut(),
+                ptr::null_mut(),
+            );
         }
     }
 
-    fn flush(&self) {
-
-    }
+    fn flush(&self) {}
 }
 
 struct Buffer<const N: usize> {

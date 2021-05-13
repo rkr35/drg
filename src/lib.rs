@@ -5,7 +5,7 @@ use core::ffi::c_void;
 
 mod logger;
 
-use log::{info, warn, error};
+use log::{error, info, warn};
 
 mod win;
 
@@ -16,7 +16,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
 // Pick up _DllMainCRTStartup
 #[link(name = "msvcrt")]
-extern {}
+extern "C" {}
 
 #[no_mangle]
 unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -35,7 +35,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
         warn!("warning");
         error!("erroring");
     }
-    
+
     win::msg_box("attach2");
 
     win::FreeConsole();
