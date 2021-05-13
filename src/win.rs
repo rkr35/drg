@@ -6,6 +6,7 @@ use core::ptr;
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
 pub const MB_OK: u32 = 0;
+pub const STD_OUTPUT_HANDLE: u32 = 0xFFFF_FFF5;
 
 type ThreadProc = unsafe extern "system" fn(parameter: *mut c_void) -> u32;
 
@@ -23,6 +24,8 @@ extern "system" {
     fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
     pub fn FreeConsole() -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
+    pub fn GetStdHandle(std_handle: u32) -> *mut c_void;
+    pub fn WriteConsoleA(console: *mut c_void, buffer: *const u8, len: u32, num_written: *mut u32, reserved: *mut c_void) -> i32;
 }
 
 #[link(name = "User32")]
