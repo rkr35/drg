@@ -19,7 +19,7 @@ extern "system" {
         creation_flags: u32,
         thread_id: *mut u32,
     ) -> *mut c_void;
-    pub fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
+    fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
 }
 
