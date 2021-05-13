@@ -2,7 +2,10 @@
 #![warn(clippy::pedantic)]
 
 use core::ffi::c_void;
-use core::ptr;
+
+mod logger;
+
+use log::{info, warn, error};
 
 mod win;
 
@@ -23,11 +26,17 @@ unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void)
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
 
-    let stdout = win::GetStdHandle(win::STD_OUTPUT_HANDLE);
-    let test = b"Hello, world.\n";
-    win::WriteConsoleA(stdout, test.as_ptr(), test.len() as u32, ptr::null_mut(), ptr::null_mut());
+    win::msg_box("attach1");
 
-    win::msg_box("attach");
+    if logger::init().is_err() {
+        win::msg_box("Failed to initialize logger.");
+    } else {
+        info!("testing");
+        warn!("warning");
+        error!("erroring");
+    }
+    
+    win::msg_box("attach2");
 
     win::FreeConsole();
     win::FreeLibraryAndExitThread(dll, 0);
