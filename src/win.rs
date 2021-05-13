@@ -1,7 +1,7 @@
 // https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
 
-use std::ffi::c_void;
-use std::ptr;
+use core::ffi::c_void;
+use core::ptr;
 
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
@@ -28,6 +28,25 @@ extern "system" {
     pub fn MessageBoxA(window: *mut c_void, text: *const u8, caption: *const u8, typ: u32) -> i32;
 }
 
-pub unsafe fn create_thread(on_attach: ThreadProc, parameter: *mut c_void) -> *mut c_void {
-    CreateThread(ptr::null_mut(), 0, on_attach, parameter, 0, ptr::null_mut())
+pub unsafe fn dll_main(dll: *mut c_void, reason: u32, on_attach: ThreadProc, on_detach: unsafe fn()) -> i32 {
+    if reason == DLL_PROCESS_ATTACH {
+        DisableThreadLibraryCalls(dll);
+        CreateThread(ptr::null_mut(), 0, on_attach, dll, 0, ptr::null_mut());
+    } else if reason == DLL_PROCESS_DETACH {
+        on_detach();
+    }
+
+    1
+}
+
+pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
+    let buffer = {
+        let mut b = [0; 256];
+        let text = text.as_ref();
+        let copy_n = text.len().min(b.len() - 1);
+        b[..copy_n].copy_from_slice(&text[..copy_n]);
+        b
+    };
+    
+    MessageBoxA(ptr::null_mut(), buffer.as_ptr(), ptr::null_mut(), MB_OK);
 }

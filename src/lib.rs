@@ -1,25 +1,30 @@
+#![no_std]
 #![warn(clippy::pedantic)]
 
-use std::ffi::c_void;
-use std::ptr;
+use core::ffi::c_void;
 
 mod win;
 
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+// Pick up _DllMainCRTStartup
+#[link(name = "msvcrt")]
+extern {}
+
 #[no_mangle]
 unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-    if reason == win::DLL_PROCESS_ATTACH {
-        win::DisableThreadLibraryCalls(dll);
-        win::create_thread(on_attach, dll);
-    } else if reason == win::DLL_PROCESS_DETACH {
-    }
-
-    1
+    win::dll_main(dll, reason, on_attach, on_detach)
 }
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
-    let text = b"Text\0".as_ptr();
-    let caption = b"Caption\0".as_ptr();
-    win::MessageBoxA(ptr::null_mut(), text, caption, win::MB_OK);
+    win::msg_box("attach");
     win::FreeLibraryAndExitThread(dll, 0);
     1
+}
+
+unsafe fn on_detach() {
+    win::msg_box("detach");
 }
