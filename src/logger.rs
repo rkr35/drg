@@ -16,6 +16,9 @@ impl Log for Logger {
 
         unsafe {
             let stdout = win::GetStdHandle(win::STD_OUTPUT_HANDLE);
+
+            // Buffer size is much smaller than u32::MAX, so we're not truncating the length.
+            #[allow(clippy::cast_possible_truncation)]
             win::WriteConsoleA(
                 stdout,
                 buffer.as_ptr(),
