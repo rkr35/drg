@@ -13,7 +13,7 @@ mod win;
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
     extern "Rust" {
-        #[link_name = "Detected possible panic. Remove all panics."]
+        #[link_name = "\n\nDetected possible panic in your code. Remove all panics.\n"]
         fn f() -> !;
     }
 
