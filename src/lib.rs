@@ -9,9 +9,15 @@ use log::{error, info, warn};
 
 mod win;
 
+
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
+fn panic(_: &core::panic::PanicInfo) -> ! {
+    extern "Rust" {
+        #[link_name = "Detected possible panic. Remove all panics."]
+        fn f() -> !;
+    }
+
+    unsafe { f() }
 }
 
 #[no_mangle]
