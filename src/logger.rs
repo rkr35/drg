@@ -5,12 +5,9 @@ use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
 
 macro_rules! static_assert {
     ($assertion:expr) => {
-        #[allow(dead_code)]
-        {
-            const ASSERT_BOOL: bool = $assertion;
-            const YOUR_STATIC_ASSERT_FAILED: u8 = ASSERT_BOOL as u8;
-            const _: u8 = YOUR_STATIC_ASSERT_FAILED - 1;
-        }
+        const _ASSERT_BOOL: bool = $assertion;
+        const _YOUR_STATIC_ASSERT_FAILED: u8 = _ASSERT_BOOL as u8;
+        const _: u8 = _YOUR_STATIC_ASSERT_FAILED - 1;
     }
 }
 
