@@ -3,24 +3,36 @@ use core::fmt::{self, Write};
 use core::ptr;
 use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
 
+macro_rules! static_assert {
+    ($assertion:expr) => {
+        #[allow(dead_code)]
+        {
+            const ASSERT_BOOL: bool = $assertion;
+            const YOUR_STATIC_ASSERT_FAILED: u8 = ASSERT_BOOL as u8;
+            const _: u8 = YOUR_STATIC_ASSERT_FAILED - 1;
+        }
+    }
+}
+
 pub struct Logger;
 
 impl Log for Logger {
-    fn enabled(&self, _: &Metadata) -> bool {
-        true
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= LevelFilter::Info
     }
 
     fn log(&self, record: &Record) {
-        let mut buffer = Buffer::<1024>::new();
+        const LOG_BUFFER: usize = 128;
+        static_assert!(LOG_BUFFER < u32::MAX as usize);
+        
+        let mut buffer = Buffer::<LOG_BUFFER>::new();
         let _ = writeln!(&mut buffer, "{}", record.args());
 
         unsafe {
-            let stdout = win::GetStdHandle(win::STD_OUTPUT_HANDLE);
-
-            // Buffer size is much smaller than u32::MAX, so we're not truncating the length.
+            // We statically assert that LOG_BUFFER < u32::MAX(), so we don't truncate.
             #[allow(clippy::cast_possible_truncation)]
             win::WriteConsoleA(
-                stdout,
+                win::GetStdHandle(win::STD_OUTPUT_HANDLE),
                 buffer.as_ptr(),
                 buffer.len() as u32,
                 ptr::null_mut(),
