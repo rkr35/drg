@@ -1,5 +1,9 @@
 // https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
 
+// Pick up _DllMainCRTStartup
+#[link(name = "msvcrt")]
+extern "C" {}
+
 use core::ffi::c_void;
 use core::ptr;
 
