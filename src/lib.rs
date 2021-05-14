@@ -3,12 +3,10 @@
 
 use core::ffi::c_void;
 
-mod logger;
-
-use log::{error, info, warn};
-
+mod buffer;
+#[macro_use]
+mod log;
 mod win;
-
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -28,17 +26,13 @@ unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void)
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
 
-    win::msg_box("attach1");
+    win::msg_box("show log messages");
 
-    if logger::init().is_err() {
-        win::msg_box("Failed to initialize logger.");
-    } else {
-        info!("testing");
-        warn!("warning");
-        error!("erroring");
-    }
+    log!("testing");
+    log!("warning");
+    log!("erroring");
 
-    win::msg_box("attach2");
+    win::msg_box("end program");
 
     win::FreeConsole();
     win::FreeLibraryAndExitThread(dll, 0);
@@ -46,5 +40,5 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 }
 
 unsafe fn on_detach() {
-    win::msg_box("detach");
+    win::msg_box("on_detach()");
 }

@@ -16,4 +16,3 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-log = { version = "0.4", features = ["max_level_info", "release_max_level_info"] }
