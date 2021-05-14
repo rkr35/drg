@@ -57,7 +57,7 @@ pub unsafe fn dll_main(
 
 pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
     let buffer = {
-        let mut b = [0; 256];
+        let mut b = [0; 64];
         let text = text.as_ref();
         let copy_n = text.len().min(b.len() - 1);
         b[..copy_n].copy_from_slice(&text[..copy_n]);
