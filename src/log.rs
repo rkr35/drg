@@ -3,7 +3,7 @@ macro_rules! static_assert {
         const _ASSERT_BOOL: bool = $assertion;
         const _YOUR_STATIC_ASSERT_FAILED: u8 = _ASSERT_BOOL as u8;
         const _: u8 = _YOUR_STATIC_ASSERT_FAILED - 1;
-    }}
+    }};
 }
 
 macro_rules! log {

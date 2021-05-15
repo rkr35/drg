@@ -28,7 +28,7 @@ macro_rules! assert {
         if !assertion {
             unreachable();
         }
-    }}
+    }};
 }
 
 fn unreachable() -> ! {
@@ -42,7 +42,10 @@ impl<const N: usize> Write for Buffer<N> {
         let num_bytes_to_write = source.len().min(max_write_bytes);
         let start_write = self.len;
         let end_write = start_write + num_bytes_to_write;
-        let destination_slice = self.data.get_mut(start_write..end_write).unwrap_or_else(|| unreachable());
+        let destination_slice = self
+            .data
+            .get_mut(start_write..end_write)
+            .unwrap_or_else(|| unreachable());
         let source_slice = &source[..num_bytes_to_write];
         assert!(destination_slice.len() == source_slice.len());
         destination_slice.copy_from_slice(source_slice);
