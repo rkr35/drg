@@ -7,6 +7,9 @@ extern "C" {}
 use core::ffi::c_void;
 use core::ptr;
 
+pub mod module;
+pub use module::Module;
+
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
 pub const MB_OK: u32 = 0;
@@ -30,6 +33,7 @@ extern "system" {
     fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
     pub fn FreeConsole() -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
+    pub fn GetModuleHandleA(module_name: *const u8) -> *mut c_void;
     pub fn GetStdHandle(std_handle: u32) -> *mut c_void;
     pub fn ReadConsoleA(
         console_input: *mut c_void,

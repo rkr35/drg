@@ -19,8 +19,9 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
     unsafe { f() }
 }
 
-#[derive(Debug)]
-enum Error {}
+enum Error {
+    Module(win::module::Error),
+}
 
 #[no_mangle]
 unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -31,7 +32,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
 
     if let Err(e) = run() {
-        log!("error: {:?}", e);
+        log!("error");
         win::idle();
     }
 
@@ -45,6 +46,8 @@ unsafe fn on_detach() {
 }
 
 unsafe fn run() -> Result<(), Error> {
+    let module = win::Module::find().map_err(Error::Module)?;
+    log!("module.start = {}, module.size = {}", module.start(), module.size());
     win::idle();
     Ok(())
 }
