@@ -20,9 +20,7 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 }
 
 #[derive(Debug)]
-enum Error {
-
-}
+enum Error {}
 
 #[no_mangle]
 unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {

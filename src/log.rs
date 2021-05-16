@@ -28,8 +28,7 @@ macro_rules! log {
                 Ok(())
             }}
         }
-        
+
         let _ = writeln!(&mut Stdout, $($arg)*);
     }}
 }
-

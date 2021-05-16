@@ -36,7 +36,7 @@ extern "system" {
         buffer: *mut u8,
         len: u32,
         num_read: *mut u32,
-        input_control: *mut c_void
+        input_control: *mut c_void,
     ) -> i32;
     pub fn WriteConsoleA(
         console: *mut c_void,
@@ -60,7 +60,14 @@ pub unsafe fn dll_main(
 ) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         DisableThreadLibraryCalls(dll);
-        CloseHandle(CreateThread(ptr::null_mut(), 0, on_attach, dll, 0, ptr::null_mut()));
+        CloseHandle(CreateThread(
+            ptr::null_mut(),
+            0,
+            on_attach,
+            dll,
+            0,
+            ptr::null_mut(),
+        ));
     } else if reason == DLL_PROCESS_DETACH {
         on_detach();
     }
@@ -93,6 +100,6 @@ pub unsafe fn idle() {
         buffer.as_mut_ptr(),
         1,
         &mut num_read,
-        ptr::null_mut()
+        ptr::null_mut(),
     );
 }
