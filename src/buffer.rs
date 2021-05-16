@@ -1,4 +1,4 @@
-use core::fmt::{self, Write};
+use core::fmt::{self, Debug, Formatter, Write};
 
 pub struct Buffer<const N: usize> {
     data: [u8; N],
@@ -17,8 +17,20 @@ impl<const N: usize> Buffer<N> {
         self.data.as_ptr()
     }
 
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.data.as_mut_ptr()
+    }
+
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    pub const fn capacity(&self) -> usize {
+        N
+    }
+
+    pub fn advance(&mut self, n: usize) {
+        self.len += n;
     }
 }
 
@@ -50,6 +62,12 @@ impl<const N: usize> Write for Buffer<N> {
         assert!(destination_slice.len() == source_slice.len());
         destination_slice.copy_from_slice(source_slice);
         self.len += num_bytes_to_write;
+        Ok(())
+    }
+}
+
+impl<const N: usize> Debug for Buffer<N> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         Ok(())
     }
 }
