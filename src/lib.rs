@@ -3,8 +3,7 @@
 
 use core::ffi::c_void;
 
-mod buffer;
-use buffer::Buffer;
+// mod buffer;
 
 #[macro_use]
 mod log;
@@ -53,20 +52,14 @@ unsafe fn run() -> Result<(), Error> {
 }
 
 unsafe fn idle() {
-    let mut buffer = Buffer::<32>::new();
+    let mut buffer = [0_u8; 1];
     let mut num_read = 0;
 
     win::ReadConsoleA(
         win::GetStdHandle(win::STD_INPUT_HANDLE),
         buffer.as_mut_ptr(),
-        buffer.capacity() as u32,
+        1,
         &mut num_read,
         core::ptr::null_mut()
     );
-
-    buffer.advance(num_read as usize);
-
-    log!("{:?}", buffer);
-
-    win::msg_box("idle()");
 }
