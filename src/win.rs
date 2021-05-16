@@ -51,7 +51,7 @@ pub unsafe fn dll_main(
 ) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         DisableThreadLibraryCalls(dll);
-        CreateThread(ptr::null_mut(), 0, on_attach, dll, 0, ptr::null_mut());
+        CloseHandle(CreateThread(ptr::null_mut(), 0, on_attach, dll, 0, ptr::null_mut()));
     } else if reason == DLL_PROCESS_DETACH {
         on_detach();
     }
