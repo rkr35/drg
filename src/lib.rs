@@ -34,7 +34,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 
     if let Err(e) = run() {
         log!("error: {:?}", e);
-        idle();
+        win::idle();
     }
 
     win::FreeConsole();
@@ -47,19 +47,6 @@ unsafe fn on_detach() {
 }
 
 unsafe fn run() -> Result<(), Error> {
-    idle();
+    win::idle();
     Ok(())
-}
-
-unsafe fn idle() {
-    let mut buffer = [0_u8; 1];
-    let mut num_read = 0;
-
-    win::ReadConsoleA(
-        win::GetStdHandle(win::STD_INPUT_HANDLE),
-        buffer.as_mut_ptr(),
-        1,
-        &mut num_read,
-        core::ptr::null_mut()
-    );
 }

@@ -83,3 +83,16 @@ pub unsafe fn msg_box_n<T: AsRef<[u8]>, const N: usize>(text: T) {
 pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
     msg_box_n::<T, 64>(text)
 }
+
+pub unsafe fn idle() {
+    let mut buffer = [0_u8; 1];
+    let mut num_read = 0;
+
+    ReadConsoleA(
+        GetStdHandle(STD_INPUT_HANDLE),
+        buffer.as_mut_ptr(),
+        1,
+        &mut num_read,
+        ptr::null_mut()
+    );
+}
