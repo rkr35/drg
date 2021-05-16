@@ -1,4 +1,4 @@
-use core::fmt::{self, Debug, Formatter, Write};
+use core::fmt::{self, Write};
 
 pub struct Buffer<const N: usize> {
     data: [u8; N],
@@ -62,12 +62,6 @@ impl<const N: usize> Write for Buffer<N> {
         assert!(destination_slice.len() == source_slice.len());
         destination_slice.copy_from_slice(source_slice);
         self.len += num_bytes_to_write;
-        Ok(())
-    }
-}
-
-impl<const N: usize> Debug for Buffer<N> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         Ok(())
     }
 }
