@@ -68,9 +68,9 @@ pub unsafe fn dll_main(
     1
 }
 
-pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
+pub unsafe fn msg_box_n<T: AsRef<[u8]>, const N: usize>(text: T) {
     let buffer = {
-        let mut b = [0; 64];
+        let mut b = [0; N];
         let text = text.as_ref();
         let copy_n = text.len().min(b.len() - 1);
         b[..copy_n].copy_from_slice(&text[..copy_n]);
@@ -78,4 +78,8 @@ pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
     };
 
     MessageBoxA(ptr::null_mut(), buffer.as_ptr(), ptr::null_mut(), MB_OK);
+}
+
+pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
+    msg_box_n::<T, 64>(text)
 }
