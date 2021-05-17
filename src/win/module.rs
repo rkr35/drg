@@ -51,8 +51,8 @@ struct SectionHeader {
     size_of_raw_data: u32,
     pointer_to_raw_data: u32,
     pointer_to_relocations: u32,
-    pointer_to_linenumbers: u32,
+    pointer_to_line_numbers: u32,
     number_of_relocations: u16,
-    number_of_linenumbers: u16,
+    number_of_line_numbers: u16,
     characteristics: u32,
 }
