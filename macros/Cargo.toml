@@ -1,0 +1,10 @@
+[package]
+name = "macros"
+version = "0.1.0"
+authors = ["rkr35 <rkr35@dragons.drexel.edu>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]

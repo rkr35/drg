@@ -19,8 +19,9 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
     unsafe { f() }
 }
 
+#[derive(macros::NoPanicErrorDebug)]
 enum Error {
-    Module(win::module::Error),
+    Module(#[from] win::module::Error),
 }
 
 #[no_mangle]
@@ -32,7 +33,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
 
     if let Err(e) = run() {
-        log!("error");
+        log!("error: {:?}", e);
         win::idle();
     }
 

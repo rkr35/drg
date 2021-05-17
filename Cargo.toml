@@ -16,3 +16,4 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
+macros = { path = "macros" }

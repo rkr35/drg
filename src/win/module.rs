@@ -1,3 +1,4 @@
+#[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     GetModuleHandle,
     FindTextSection,
