@@ -67,7 +67,7 @@ fn parse_variant(name: Ident, tokens: &mut impl Iterator<Item=TokenTree>) -> Res
 
 fn advance_inner_from_attribute(tokens: &mut impl Iterator<Item=TokenTree>) -> Result<(), Error> {
     fn advance(tokens: &mut impl Iterator<Item=TokenTree>) -> Option<()> {
-        tokens.next().filter(|t| if let TokenTree::Punct(_) = t { true } else { false })?;
+        tokens.next().filter(|t| matches!(t, TokenTree::Punct(_)))?;
 
         if let TokenTree::Group(_) = tokens.next()? {
             Some(())
