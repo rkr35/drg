@@ -1,8 +1,7 @@
 #![allow(non_snake_case, non_upper_case_globals)]
 
 use core::ffi::c_void;
-use core::ptr::{self, addr_of};
-use core::slice;
+use core::ptr;
 use core::str;
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
