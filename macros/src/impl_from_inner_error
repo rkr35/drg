@@ -1,0 +1,5 @@
+impl From<{inner_error}> for {} {{
+    fn from(e: {inner_error}) -> Self {{
+        Self::{}(e)
+    }}
+}}

@@ -1,4 +1,5 @@
 #![warn(clippy::pedantic)]
+#![allow(clippy::missing_panics_doc)]
 
 use proc_macro::{Ident, TokenStream, TokenTree};
 use std::convert::TryFrom;
@@ -13,7 +14,7 @@ enum Error {
 
 struct Variant {
     name: Ident,
-    has_inner_error: bool,
+    inner_error: Option<String>,
 }
 
 struct Enum {
@@ -21,7 +22,7 @@ struct Enum {
     variants: Vec<Variant>,
 }
 
-fn is_enum(tokens: &mut impl Iterator<Item=TokenTree>) -> bool {
+fn is_enum(tokens: &mut impl Iterator<Item = TokenTree>) -> bool {
     tokens.any(|t| {
         if let TokenTree::Ident(ident) = t {
             ident.to_string() == "enum"
@@ -31,7 +32,7 @@ fn is_enum(tokens: &mut impl Iterator<Item=TokenTree>) -> bool {
     })
 }
 
-fn parse_variants(tokens: &mut impl Iterator<Item=TokenTree>) -> Result<Vec<Variant>, Error> {
+fn parse_variants(tokens: &mut impl Iterator<Item = TokenTree>) -> Result<Vec<Variant>, Error> {
     let mut variants = vec![];
 
     while let Some(token) = tokens.next() {
@@ -43,19 +44,24 @@ fn parse_variants(tokens: &mut impl Iterator<Item=TokenTree>) -> Result<Vec<Vari
     Ok(variants)
 }
 
-fn parse_variant(name: Ident, tokens: &mut impl Iterator<Item=TokenTree>) -> Result<Variant, Error> {
+fn parse_variant(
+    name: Ident,
+    tokens: &mut impl Iterator<Item = TokenTree>,
+) -> Result<Variant, Error> {
     match tokens.next() {
-        None | Some(TokenTree::Punct(_)) => {
-            Ok(Variant { name, has_inner_error: false })
-        }
-        
+        None | Some(TokenTree::Punct(_)) => Ok(Variant {
+            name,
+            inner_error: None,
+        }),
+
         Some(TokenTree::Group(inside_variant)) => {
             let mut inside_variant = inside_variant.stream().into_iter();
             advance_inner_from_attribute(&mut inside_variant)?;
+
             // anything else inside this group is the inner error name.
             Ok(Variant {
                 name,
-                has_inner_error: true,
+                inner_error: Some(inside_variant.map(|t| t.to_string()).collect()),
             })
         }
 
@@ -65,8 +71,8 @@ fn parse_variant(name: Ident, tokens: &mut impl Iterator<Item=TokenTree>) -> Res
     }
 }
 
-fn advance_inner_from_attribute(tokens: &mut impl Iterator<Item=TokenTree>) -> Result<(), Error> {
-    fn advance(tokens: &mut impl Iterator<Item=TokenTree>) -> Option<()> {
+fn advance_inner_from_attribute(tokens: &mut impl Iterator<Item = TokenTree>) -> Result<(), Error> {
+    fn advance(tokens: &mut impl Iterator<Item = TokenTree>) -> Option<()> {
         tokens.next().filter(|t| matches!(t, TokenTree::Punct(_)))?;
 
         if let TokenTree::Group(_) = tokens.next()? {
@@ -88,7 +94,7 @@ impl TryFrom<TokenStream> for Enum {
         if !is_enum(&mut stream) {
             return Err(Error::NotEnum);
         }
-        
+
         let name = if let TokenTree::Ident(ident) = stream.next().expect("name after enum") {
             ident
         } else {
@@ -118,28 +124,39 @@ pub fn derive_no_panic_error_debug(input: TokenStream) -> TokenStream {
 
     match Enum::try_from(input) {
         Ok(Enum { name, variants }) => {
-            let variants: String = variants
-                .into_iter()
+            let variant_debugs: String = variants
+                .iter()
                 .map(|v| {
-                    if v.has_inner_error {
-                        format!("Self::{variant}(inner) => write!(f, \"{variant}({{:?}})\", inner)?,\n", variant=v.name)
+                    if v.inner_error.is_some() {
+                        format!(
+                            "Self::{variant}(inner) => write!(f, \"{variant}({{:?}})\", inner)?,\n",
+                            variant = v.name
+                        )
                     } else {
-                        format!("Self::{variant} => f.write_str(\"{variant}\")?,\n", variant=v.name)
+                        format!(
+                            "Self::{variant} => f.write_str(\"{variant}\")?,\n",
+                            variant = v.name
+                        )
                     }
                 })
                 .collect();
 
-            format!("
-            impl core::fmt::Debug for {} {{
-                fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {{
-                    match self {{
-                        {}
-                    }}
-                    Ok(())
-                }}
-            }}
-            ",
-            name, variants).parse().unwrap()
+            let from_impls: String = variants
+                .into_iter()
+                .filter(|v| v.inner_error.is_some())
+                .map(|v| {
+                    format!(
+                        include_str!("impl_from_inner_error"),
+                        name,
+                        v.name,
+                        inner_error = v.inner_error.unwrap()
+                    )
+                })
+                .collect();
+
+            format!(include_str!("impl_debug"), name, variant_debugs, from_impls)
+                .parse()
+                .unwrap()
         }
 
         Err(e) => {
