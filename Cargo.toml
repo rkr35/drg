@@ -1,5 +1,5 @@
 [workspace]
-members = ["drg_sdk_gen", "macros"]
+members = ["sdk_gen", "macros"]
 
 [profile.dev]
 panic = "abort"

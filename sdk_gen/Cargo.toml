@@ -1,5 +1,5 @@
 [package]
-name = "drg_sdk_gen"
+name = "sdk_gen"
 version = "0.1.0"
 authors = ["rkr35 <rkr35@dragons.drexel.edu>"]
 edition = "2018"
