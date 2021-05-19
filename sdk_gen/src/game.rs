@@ -76,7 +76,11 @@ impl FNamePool {
     }
 
     pub unsafe fn iterate(&self, callback: fn(*const FNameEntry)) {
-        unsafe fn iterate_block(mut it: *const u8, block_size: usize, callback: fn(*const FNameEntry)) {
+        unsafe fn iterate_block(
+            mut it: *const u8,
+            block_size: usize,
+            callback: fn(*const FNameEntry),
+        ) {
             let end = it.add(block_size - mem::size_of::<FNameEntryHeader>());
 
             while it < end {
@@ -101,7 +105,11 @@ impl FNamePool {
             iterate_block(self.Blocks[block], BlockSizeBytes, callback);
         }
 
-        iterate_block(self.Blocks[current_block], self.CurrentByteCursor as usize, callback);
+        iterate_block(
+            self.Blocks[current_block],
+            self.CurrentByteCursor as usize,
+            callback,
+        );
     }
 }
 

@@ -70,8 +70,6 @@ unsafe fn init_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    (*game::NamePoolData).iterate(|name| {
-        
-    });
+    (*game::NamePoolData).iterate(|name| {});
     Ok(())
 }
