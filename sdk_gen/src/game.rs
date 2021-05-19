@@ -1,6 +1,7 @@
 #![allow(non_snake_case, non_upper_case_globals)]
 
 use core::ffi::c_void;
+use core::mem;
 use core::ptr;
 use core::str;
 
@@ -12,9 +13,11 @@ pub enum Error {
 }
 
 const FNameMaxBlockBits: u8 = 13;
-// const FNameBlockOffsetBits: u8 = 16;
+const FNameBlockOffsetBits: u8 = 16;
 const FNameMaxBlocks: usize = 1 << FNameMaxBlockBits;
-// const FNameBlockOffsets: usize = 1 << FNameBlockOffsetBits;
+const FNameBlockOffsets: usize = 1 << FNameBlockOffsetBits;
+const Stride: usize = mem::align_of::<FNameEntry>();
+const BlockSizeBytes: usize = Stride * FNameBlockOffsets;
 
 #[repr(C)]
 pub struct FNamePool {
@@ -71,6 +74,35 @@ impl FNamePool {
 
         Ok(())
     }
+
+    pub unsafe fn iterate(&self, callback: fn(*const FNameEntry)) {
+        unsafe fn iterate_block(mut it: *const u8, block_size: usize, callback: fn(*const FNameEntry)) {
+            let end = it.add(block_size - mem::size_of::<FNameEntryHeader>());
+
+            while it < end {
+                let entry: *const FNameEntry = it.cast();
+                let len = (*entry).len();
+
+                if len > 0 {
+                    callback(entry);
+                    it = it.add(FNameEntry::get_size(len));
+                } else {
+                    // Null-terminator entry found
+                    break;
+                }
+            }
+        }
+
+        let current_block = self.CurrentBlock as usize;
+
+        crate::assert!(current_block < self.Blocks.len());
+
+        for block in 0..current_block {
+            iterate_block(self.Blocks[block], BlockSizeBytes, callback);
+        }
+
+        iterate_block(self.Blocks[current_block], self.CurrentByteCursor as usize, callback);
+    }
 }
 
 #[repr(C)]
@@ -108,4 +140,12 @@ impl FNameEntry {
             str::from_utf8_unchecked(&self.AnsiName[..self.len()])
         }
     }
+
+    fn get_size(length: usize) -> usize {
+        align(mem::size_of::<FNameEntryHeader>() + length, Stride)
+    }
+}
+
+fn align(x: usize, alignment: usize) -> usize {
+    (x + alignment - 1) & !(alignment - 1)
 }

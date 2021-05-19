@@ -51,6 +51,7 @@ unsafe fn on_detach() {
 
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;
+    dump_names()?;
     win::idle();
     Ok(())
 }
@@ -65,5 +66,12 @@ unsafe fn init_globals() -> Result<(), Error> {
     game::FNamePool::init(&module)?;
     log!("NamePoolData = {}", game::NamePoolData as usize);
     // log!("CurrentBlock = {}; CurrentByteCursor = {}", (*game::NamePoolData).CurrentBlock, (*game::NamePoolData).CurrentByteCursor);
+    Ok(())
+}
+
+unsafe fn dump_names() -> Result<(), Error> {
+    (*game::NamePoolData).iterate(|name| {
+        
+    });
     Ok(())
 }
