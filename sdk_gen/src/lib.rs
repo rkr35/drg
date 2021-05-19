@@ -8,6 +8,7 @@ use core::ffi::c_void;
 mod game;
 #[macro_use]
 mod log;
+mod util;
 mod win;
 
 #[panic_handler]
