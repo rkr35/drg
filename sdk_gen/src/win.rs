@@ -92,13 +92,16 @@ pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
 }
 
 pub unsafe fn idle() {
-    let mut buffer = [0_u8; 1];
+    let mut buffer = [0_u8; 2];
     let mut num_read = 0;
 
+    // Our buffer is small (2 bytes). We're not truncating going from
+    // usize to u32.
+    #[allow(clippy::cast_possible_truncation)]
     ReadConsoleA(
         GetStdHandle(STD_INPUT_HANDLE),
         buffer.as_mut_ptr(),
-        1,
+        buffer.len() as u32,
         &mut num_read,
         ptr::null_mut(),
     );
