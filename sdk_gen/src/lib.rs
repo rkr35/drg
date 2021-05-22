@@ -65,7 +65,6 @@ unsafe fn init_globals() -> Result<(), Error> {
     );
     game::FNamePool::init(&module)?;
     log!("NamePoolData = {}", game::NamePoolData as usize);
-    // log!("CurrentBlock = {}; CurrentByteCursor = {}", (*game::NamePoolData).CurrentBlock, (*game::NamePoolData).CurrentByteCursor);
     Ok(())
 }
 
