@@ -3,6 +3,9 @@
 use core::ffi::c_void;
 use core::ptr;
 
+pub mod file;
+pub use file::File;
+
 pub mod module;
 pub use module::Module;
 
@@ -17,6 +20,15 @@ type ThreadProc = unsafe extern "system" fn(parameter: *mut c_void) -> u32;
 extern "system" {
     pub fn AllocConsole() -> i32;
     fn CloseHandle(object: *mut c_void) -> i32;
+    fn CreateFileA(
+        file_name: *const u8,
+        desired_access: u32,
+        share_mode: u32,
+        security_attributes: *mut c_void,
+        creation_disposition: u32,
+        flags_and_attributes: u32,
+        template_file: *mut c_void,
+    ) -> *mut c_void;
     fn CreateThread(
         attributes: *mut c_void,
         stack_size: usize,
@@ -44,11 +56,13 @@ extern "system" {
         num_written: *mut u32,
         reserved: *mut c_void,
     ) -> i32;
-}
-
-#[link(name = "User32")]
-extern "system" {
-    pub fn MessageBoxA(window: *mut c_void, text: *const u8, caption: *const u8, typ: u32) -> i32;
+    fn WriteFile(
+        file: *mut c_void,
+        buffer: *const u8,
+        number_of_bytes_to_write: u32,
+        number_of_bytes_written: *mut u32,
+        overlapped: *mut c_void
+    ) -> i32;
 }
 
 pub unsafe fn dll_main(

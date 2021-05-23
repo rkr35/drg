@@ -2,6 +2,7 @@
 #![warn(clippy::pedantic)]
 
 use core::ffi::c_void;
+use core::fmt::Write;
 
 // mod buffer;
 
@@ -25,6 +26,7 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 enum Error {
     Module(#[from] win::module::Error),
     Game(#[from] game::Error),
+    File(#[from] win::file::Error),
 }
 
 #[no_mangle]
@@ -68,6 +70,15 @@ unsafe fn init_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    (*game::NamePoolData).iterate(|name| {});
+    log!("dumping global names");
+
+    let mut file = win::File::new("global_names.txt")?;
+
+    (*game::NamePoolData).iterate(|name| {
+        let text = (*name).text();
+        let _ = writeln!(&mut file, "{}", text);
+    });
+
+    log!("done dumping global names");
     Ok(())
 }

@@ -75,11 +75,11 @@ impl FNamePool {
         Ok(())
     }
 
-    pub unsafe fn iterate(&self, callback: fn(*const FNameEntry)) {
+    pub unsafe fn iterate(&self, mut callback: impl FnMut(*const FNameEntry)) {
         unsafe fn iterate_block(
             mut it: *const u8,
             block_size: usize,
-            callback: fn(*const FNameEntry),
+            callback: &mut impl FnMut(*const FNameEntry),
         ) {
             let end = it.add(block_size - mem::size_of::<FNameEntryHeader>());
 
@@ -102,13 +102,13 @@ impl FNamePool {
         crate::assert!(current_block < self.Blocks.len());
 
         for block in 0..current_block {
-            iterate_block(self.Blocks[block], BlockSizeBytes, callback);
+            iterate_block(self.Blocks[block], BlockSizeBytes, &mut callback);
         }
 
         iterate_block(
             self.Blocks[current_block],
             self.CurrentByteCursor as usize,
-            callback,
+            &mut callback,
         );
     }
 }
