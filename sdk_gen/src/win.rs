@@ -8,7 +8,6 @@ pub use module::Module;
 
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
-pub const MB_OK: u32 = 0;
 pub const STD_OUTPUT_HANDLE: u32 = 0xFFFF_FFF5;
 pub const STD_INPUT_HANDLE: u32 = 0xFFFF_FFF6;
 
@@ -73,22 +72,6 @@ pub unsafe fn dll_main(
     }
 
     1
-}
-
-pub unsafe fn msg_box_n<T: AsRef<[u8]>, const N: usize>(text: T) {
-    let buffer = {
-        let mut b = [0; N];
-        let text = text.as_ref();
-        let copy_n = text.len().min(b.len() - 1);
-        b[..copy_n].copy_from_slice(&text[..copy_n]);
-        b
-    };
-
-    MessageBoxA(ptr::null_mut(), buffer.as_ptr(), ptr::null_mut(), MB_OK);
-}
-
-pub unsafe fn msg_box<T: AsRef<[u8]>>(text: T) {
-    msg_box_n::<T, 64>(text)
 }
 
 pub unsafe fn idle() {

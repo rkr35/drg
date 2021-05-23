@@ -46,7 +46,6 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 }
 
 unsafe fn on_detach() {
-    win::msg_box("on_detach()");
 }
 
 unsafe fn run() -> Result<(), Error> {
