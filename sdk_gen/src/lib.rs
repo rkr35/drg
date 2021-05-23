@@ -47,8 +47,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     0
 }
 
-unsafe fn on_detach() {
-}
+unsafe fn on_detach() {}
 
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;

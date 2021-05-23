@@ -154,8 +154,9 @@ pub fn derive_no_panic_error_debug(input: TokenStream) -> TokenStream {
                 })
                 .collect();
 
-            let implementation = format!(include_str!("impl_debug"), name, variant_debugs, from_impls);
-            
+            let implementation =
+                format!(include_str!("impl_debug"), name, variant_debugs, from_impls);
+
             // println!("{}", implementation);
 
             implementation.parse().unwrap()

@@ -61,7 +61,7 @@ extern "system" {
         buffer: *const u8,
         number_of_bytes_to_write: u32,
         number_of_bytes_written: *mut u32,
-        overlapped: *mut c_void
+        overlapped: *mut c_void,
     ) -> i32;
 }
 

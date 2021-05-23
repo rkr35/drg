@@ -23,16 +23,14 @@ impl File {
             core::ptr::null_mut(),
             CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL,
-            core::ptr::null_mut()
+            core::ptr::null_mut(),
         );
 
         if handle as usize == INVALID_HANDLE_VALUE {
             return Err(Error::CreateFile);
         }
 
-        Ok(Self {
-            handle
-        })
+        Ok(Self { handle })
     }
 }
 
@@ -45,18 +43,20 @@ impl Drop for File {
 }
 
 impl core::fmt::Write for File {
-    fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> { unsafe {
-        let mut num_written = 0;
+    fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> {
+        unsafe {
+            let mut num_written = 0;
 
-        #[allow(clippy::cast_possible_truncation)]
-        super::WriteFile(
-            self.handle,
-            s.as_ptr(),
-            s.len() as u32,
-            &mut num_written,
-            core::ptr::null_mut()
-        );
+            #[allow(clippy::cast_possible_truncation)]
+            super::WriteFile(
+                self.handle,
+                s.as_ptr(),
+                s.len() as u32,
+                &mut num_written,
+                core::ptr::null_mut(),
+            );
 
-        Ok(())
-    }}
+            Ok(())
+        }
+    }
 }
