@@ -89,7 +89,7 @@ impl FNamePool {
 
                 if len > 0 {
                     callback(entry);
-                    it = it.add(FNameEntry::get_size(len));
+                    it = it.add((*entry).get_size());
                 } else {
                     // Null-terminator entry found
                     break;
@@ -149,8 +149,14 @@ impl FNameEntry {
         }
     }
 
-    fn get_size(length: usize) -> usize {
-        align(mem::size_of::<FNameEntryHeader>() + length, Stride)
+    fn get_size(&self) -> usize {
+        let num_text_bytes = if self.Header.is_wide() {
+            2 * self.len()
+        } else {
+            self.len()
+        };
+        let bytes = mem::size_of::<FNameEntryHeader>() + num_text_bytes;
+        align(bytes, Stride)
     }
 }
 
