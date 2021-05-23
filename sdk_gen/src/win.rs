@@ -103,3 +103,7 @@ pub unsafe fn idle() {
         ptr::null_mut(),
     );
 }
+
+macro_rules! z {
+    ($x:literal) => { concat!($x, "\0") };
+}

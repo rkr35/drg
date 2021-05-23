@@ -10,6 +10,7 @@ mod game;
 #[macro_use]
 mod log;
 mod util;
+#[macro_use]
 mod win;
 
 #[panic_handler]
@@ -71,7 +72,7 @@ unsafe fn init_globals() -> Result<(), Error> {
 unsafe fn dump_names() -> Result<(), Error> {
     log!("dumping global names");
 
-    let mut file = win::File::new("global_names.txt")?;
+    let mut file = win::File::new(z!("global_names.txt"))?;
 
     (*game::NamePoolData).iterate(|name| {
         let text = (*name).text();
