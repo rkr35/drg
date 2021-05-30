@@ -22,7 +22,7 @@ struct Enum {
     variants: Vec<Variant>,
 }
 
-fn is_enum(tokens: &mut impl Iterator<Item = TokenTree>) -> bool {
+fn is_enum(mut tokens: impl Iterator<Item = TokenTree>) -> bool {
     tokens.any(|t| {
         if let TokenTree::Ident(ident) = t {
             ident.to_string() == "enum"
@@ -32,12 +32,12 @@ fn is_enum(tokens: &mut impl Iterator<Item = TokenTree>) -> bool {
     })
 }
 
-fn parse_variants(tokens: &mut impl Iterator<Item = TokenTree>) -> Result<Vec<Variant>, Error> {
+fn parse_variants(mut tokens: impl Iterator<Item = TokenTree>) -> Result<Vec<Variant>, Error> {
     let mut variants = vec![];
 
     while let Some(token) = tokens.next() {
         if let TokenTree::Ident(name) = token {
-            variants.push(parse_variant(name, tokens)?);
+            variants.push(parse_variant(name, &mut tokens)?);
         }
     }
 
@@ -46,7 +46,7 @@ fn parse_variants(tokens: &mut impl Iterator<Item = TokenTree>) -> Result<Vec<Va
 
 fn parse_variant(
     name: Ident,
-    tokens: &mut impl Iterator<Item = TokenTree>,
+    mut tokens: impl Iterator<Item = TokenTree>,
 ) -> Result<Variant, Error> {
     match tokens.next() {
         None | Some(TokenTree::Punct(_)) => Ok(Variant {
@@ -71,8 +71,8 @@ fn parse_variant(
     }
 }
 
-fn advance_inner_from_attribute(tokens: &mut impl Iterator<Item = TokenTree>) -> Result<(), Error> {
-    fn advance(tokens: &mut impl Iterator<Item = TokenTree>) -> Option<()> {
+fn advance_inner_from_attribute(tokens: impl Iterator<Item = TokenTree>) -> Result<(), Error> {
+    fn advance(mut tokens: impl Iterator<Item = TokenTree>) -> Option<()> {
         tokens.next().filter(|t| matches!(t, TokenTree::Punct(_)))?;
 
         if let TokenTree::Group(_) = tokens.next()? {

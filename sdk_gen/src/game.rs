@@ -79,7 +79,7 @@ impl FNamePool {
         unsafe fn iterate_block(
             mut it: *const u8,
             block_size: usize,
-            callback: &mut impl FnMut(*const FNameEntry),
+            mut callback: impl FnMut(*const FNameEntry),
         ) {
             let end = it.add(block_size - mem::size_of::<FNameEntryHeader>());
 
