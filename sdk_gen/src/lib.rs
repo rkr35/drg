@@ -40,7 +40,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 
     if let Err(e) = run() {
         log!("error: {:?}", e);
-        win::idle();
+        idle();
     }
 
     win::FreeConsole();
@@ -53,7 +53,7 @@ unsafe fn on_detach() {}
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;
     dump_names()?;
-    win::idle();
+    idle();
     Ok(())
 }
 
@@ -81,4 +81,9 @@ unsafe fn dump_names() -> Result<(), Error> {
 
     log!("done dumping global names");
     Ok(())
+}
+
+unsafe fn idle() {
+    log!("Idling. Press enter to continue.");
+    win::idle();
 }
