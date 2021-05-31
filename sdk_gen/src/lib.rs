@@ -53,6 +53,7 @@ unsafe fn on_detach() {}
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;
     dump_names()?;
+    dump_objects()?;
     idle();
     Ok(())
 }
@@ -80,6 +81,12 @@ unsafe fn dump_names() -> Result<(), Error> {
     });
 
     log!("done dumping global names");
+    Ok(())
+}
+
+unsafe fn dump_objects() -> Result<(), Error> {
+    log!("dumping global objects");
+    log!("done dumping global objects");
     Ok(())
 }
 
