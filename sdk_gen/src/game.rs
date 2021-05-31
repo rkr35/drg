@@ -1,4 +1,4 @@
-#![allow(non_snake_case, non_upper_case_globals)]
+#![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
 use core::ffi::c_void;
 use core::mem;
@@ -6,10 +6,12 @@ use core::ptr;
 use core::str;
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
+pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindNamePoolData,
+    FindGUObjectArray,
 }
 
 const FNameMaxBlockBits: u8 = 13;
@@ -162,4 +164,57 @@ impl FNameEntry {
 
 fn align(x: usize, alignment: usize) -> usize {
     (x + alignment - 1) & !(alignment - 1)
+}
+
+#[repr(C)]
+pub struct FUObjectArray {
+    ObjFirstGCIndex: i32,
+    ObjLastNonGCIndex: i32,
+    MaxObjectsNotConsideredByGC: i32,
+    OpenForDisregardForGC: bool,
+    ObjObjects: TUObjectArray,
+}
+
+#[repr(C)]
+pub struct TUObjectArray {
+    Objects: *const *mut FUObjectItem,
+    PreAllocatedObjects: *mut FUObjectItem,
+    MaxElements: i32,
+    NumElements: i32,
+    MaxChunks: i32,
+    NumChunks: i32,
+}
+
+#[repr(C)]
+pub struct FUObjectItem {
+    Object: *mut UObject,
+    Flags: i32,
+    ClusterRootIndex: i32,
+    SerialNumber: i32,
+}
+
+#[repr(C)]
+pub struct UObject {
+    vtable: usize,
+    ObjectFlags: u32, //EObjectFlags
+    InternalIndex: i32,
+    ClassPrivate: *const UClass,
+    NamePrivate: FName,
+    OuterPrivate: *const UObject,
+}
+
+
+#[repr(C)]
+pub struct UClass {
+}
+
+#[repr(C)]
+pub struct FName {
+    ComparisonIndex: FNameEntryId,
+    Number: u32,
+}
+
+#[repr(C)]
+pub struct FNameEntryId {
+    Value: u32,
 }
