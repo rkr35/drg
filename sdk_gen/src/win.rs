@@ -105,5 +105,7 @@ pub unsafe fn idle() {
 }
 
 macro_rules! z {
-    ($x:literal) => { concat!($x, "\0") };
+    ($x:literal) => {
+        concat!($x, "\0")
+    };
 }

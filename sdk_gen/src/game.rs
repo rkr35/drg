@@ -182,7 +182,22 @@ impl FUObjectArray {
         // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
 
         const GU_OBJECT_ARRAY_PATTERN: [Option<u8>; 16] = [
-            Some(0x44), Some(0x0F), Some(0xB6), Some(0x8C), Some(0x24), Some(0x80), Some(0x00), Some(0x00), Some(0x00), Some(0x48), Some(0x8D), Some(0x0D), None, None, None, None
+            Some(0x44),
+            Some(0x0F),
+            Some(0xB6),
+            Some(0x8C),
+            Some(0x24),
+            Some(0x80),
+            Some(0x00),
+            Some(0x00),
+            Some(0x00),
+            Some(0x48),
+            Some(0x8D),
+            Some(0x0D),
+            None,
+            None,
+            None,
+            None,
         ];
 
         // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
@@ -195,13 +210,15 @@ impl FUObjectArray {
 
         // Silence clippy lint because we do an unaligned read.
         #[allow(clippy::cast_ptr_alignment)]
-        let lea_immediate = instruction_after_movsx.sub(4).cast::<u32>().read_unaligned();
+        let lea_immediate = instruction_after_movsx
+            .sub(4)
+            .cast::<u32>()
+            .read_unaligned();
 
         GUObjectArray = instruction_after_movsx.add(lea_immediate as usize).cast();
 
         Ok(())
     }
-
 }
 
 #[repr(C)]
@@ -232,10 +249,8 @@ pub struct UObject {
     OuterPrivate: *const UObject,
 }
 
-
 #[repr(C)]
-pub struct UClass {
-}
+pub struct UClass {}
 
 #[repr(C)]
 pub struct FName {
