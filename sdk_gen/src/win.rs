@@ -38,6 +38,7 @@ extern "system" {
         thread_id: *mut u32,
     ) -> *mut c_void;
     fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
+    fn FlushFileBuffers(file: *mut c_void) -> i32;
     pub fn FreeConsole() -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
     pub fn GetModuleHandleA(module_name: *const u8) -> *mut c_void;

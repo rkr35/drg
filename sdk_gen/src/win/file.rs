@@ -37,6 +37,7 @@ impl File {
 impl Drop for File {
     fn drop(&mut self) {
         unsafe {
+            super::FlushFileBuffers(self.handle);
             super::CloseHandle(self.handle);
         }
     }
