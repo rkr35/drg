@@ -77,10 +77,10 @@ unsafe fn dump_names() -> Result<(), Error> {
 
     let mut file = win::File::new(z!("global_names.txt"))?;
 
-    (*game::NamePoolData).iterate(|name| {
+    for name in (*game::NamePoolData).iter() {
         let text = (*name).text();
         let _ = writeln!(&mut file, "{}", text);
-    });
+    }
 
     log!("done dumping global names");
     Ok(())

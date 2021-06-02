@@ -77,41 +77,84 @@ impl FNamePool {
         Ok(())
     }
 
-    pub unsafe fn iterate(&self, mut callback: impl FnMut(*const FNameEntry)) {
-        unsafe fn iterate_block(
-            mut it: *const u8,
-            block_size: usize,
-            mut callback: impl FnMut(*const FNameEntry),
-        ) {
-            let end = it.add(block_size - mem::size_of::<FNameEntryHeader>());
+    pub unsafe fn iter(&self) -> NameIterator {
+        let first_block_size = if self.CurrentBlock > 0 {
+            BlockSizeBytes
+        } else {
+            self.CurrentByteCursor as usize
+        };
 
-            while it < end {
-                let entry: *const FNameEntry = it.cast();
-                let len = (*entry).len();
+        NameIterator {
+            pool: self,
+            block: 0,
+            cursor_within_block: self.Blocks[0],
+            block_end_pos: self.Blocks[0]
+                .add(first_block_size - mem::size_of::<FNameEntryHeader>()),
+        }
+    }
+}
 
-                if len > 0 {
-                    callback(entry);
-                    it = it.add((*entry).get_size());
+pub struct NameIterator<'pool> {
+    pool: &'pool FNamePool,
+    block: u32,
+    cursor_within_block: *const u8,
+    block_end_pos: *const u8,
+}
+
+impl Iterator for NameIterator<'_> {
+    type Item = *const FNameEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            // Did we finish iterating this block?
+            if self.cursor_within_block >= self.block_end_pos {
+                // Let's look at the next block.
+                self.block += 1;
+
+                // Get the size of the next block.
+                let block_size = if self.block < self.pool.CurrentBlock {
+                    // This block is filled.
+                    BlockSizeBytes
+                } else if self.block == self.pool.CurrentBlock {
+                    // This block is the last block. It is partially filled.
+                    self.pool.CurrentByteCursor as usize
                 } else {
-                    // Null-terminator entry found
-                    break;
-                }
+                    // There is no next block. We're done iterating all the blocks.
+                    return None;
+                };
+
+                // Elide impossible panic branch.
+                // We trust Unreal Engine will uphold its own invariant that self.CurrentBlock < FNameMaxBlocks.
+                // Since self.block <= self.CurrentBlock, then self.block < FNameMaxBlocks.
+                crate::assert!(self.block < self.pool.Blocks.len() as u32);
+
+                // Get a pointer to the next block.
+                self.cursor_within_block = self.pool.Blocks[self.block as usize];
+
+                // Calculate where this block ends.
+                self.block_end_pos = self
+                    .cursor_within_block
+                    .add(block_size - mem::size_of::<FNameEntryHeader>());
+            }
+
+            let entry: *const FNameEntry = self.cursor_within_block.cast();
+            let len = (*entry).len();
+
+            if len > 0 {
+                // Advance our block cursor past this entry.
+                self.cursor_within_block = self.cursor_within_block.add((*entry).get_size());
+
+                // Yield the entry.
+                Some(entry)
+            } else {
+                // Null-terminator entry found.
+                // We're done iterating this block.
+                self.cursor_within_block = self.block_end_pos;
+
+                // Try to pull an entry from the next block.
+                self.next()
             }
         }
-
-        let current_block = self.CurrentBlock as usize;
-
-        crate::assert!(current_block < self.Blocks.len());
-
-        for block in 0..current_block {
-            iterate_block(self.Blocks[block], BlockSizeBytes, &mut callback);
-        }
-
-        iterate_block(
-            self.Blocks[current_block],
-            self.CurrentByteCursor as usize,
-            &mut callback,
-        );
     }
 }
 
