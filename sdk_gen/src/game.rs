@@ -172,7 +172,36 @@ pub struct FUObjectArray {
     ObjLastNonGCIndex: i32,
     MaxObjectsNotConsideredByGC: i32,
     OpenForDisregardForGC: bool,
-    ObjObjects: TUObjectArray,
+    pub ObjObjects: TUObjectArray,
+}
+
+impl FUObjectArray {
+    pub unsafe fn init(module: &crate::win::Module) -> Result<(), Error> {
+        // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
+        // 00007FF773FACC9F | 48:8D0D 3A7E5503         | lea rcx,qword ptr ds:[7FF777504AE0]                     |
+        // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
+
+        const GU_OBJECT_ARRAY_PATTERN: [Option<u8>; 16] = [
+            Some(0x44), Some(0x0F), Some(0xB6), Some(0x8C), Some(0x24), Some(0x80), Some(0x00), Some(0x00), Some(0x00), Some(0x48), Some(0x8D), Some(0x0D), None, None, None, None
+        ];
+
+        // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
+        let movzx: *const u8 = module
+            .find(&GU_OBJECT_ARRAY_PATTERN)
+            .ok_or(Error::FindGUObjectArray)?;
+
+        // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
+        let instruction_after_movsx = movzx.add(GU_OBJECT_ARRAY_PATTERN.len());
+
+        // Silence clippy lint because we do an unaligned read.
+        #[allow(clippy::cast_ptr_alignment)]
+        let lea_immediate = instruction_after_movsx.sub(4).cast::<u32>().read_unaligned();
+
+        GUObjectArray = instruction_after_movsx.add(lea_immediate as usize).cast();
+
+        Ok(())
+    }
+
 }
 
 #[repr(C)]

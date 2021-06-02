@@ -66,7 +66,9 @@ unsafe fn init_globals() -> Result<(), Error> {
         module.size()
     );
     game::FNamePool::init(&module)?;
+    game::FUObjectArray::init(&module)?;
     log!("NamePoolData = {}", game::NamePoolData as usize);
+    log!("GUObjectArray = {}", game::GUObjectArray as usize);
     Ok(())
 }
 
