@@ -34,15 +34,6 @@ impl<const N: usize> Buffer<N> {
     }
 }
 
-macro_rules! assert {
-    ($assertion:expr) => {{
-        let assertion: bool = $assertion;
-        if !assertion {
-            unreachable();
-        }
-    }};
-}
-
 fn unreachable() -> ! {
     unsafe { core::hint::unreachable_unchecked() }
 }

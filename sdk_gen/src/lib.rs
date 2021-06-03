@@ -4,13 +4,9 @@
 use core::ffi::c_void;
 use core::fmt::Write;
 
-// mod buffer;
-
 mod game;
 #[macro_use]
-mod log;
 mod util;
-#[macro_use]
 mod win;
 
 #[panic_handler]
