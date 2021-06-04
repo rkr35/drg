@@ -71,7 +71,7 @@ unsafe fn init_globals() -> Result<(), Error> {
 unsafe fn dump_names() -> Result<(), Error> {
     log!("dumping global names");
 
-    let mut file = win::File::new(z!("global_names.txt"))?;
+    let mut file = win::File::new(sdk_file!("global_names.txt"))?;
 
     for name in (*game::NamePoolData).iter() {
         let text = (*name).text();

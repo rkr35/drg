@@ -16,12 +16,6 @@ macro_rules! assert {
 //     }};
 // }
 
-macro_rules! z {
-    ($x:literal) => {
-        concat!($x, "\0")
-    };
-}
-
 macro_rules! log {
     ($($arg:tt)*) => {{
         use crate::win;
@@ -47,4 +41,15 @@ macro_rules! log {
 
         let _ = writeln!(&mut Stdout, $($arg)*);
     }}
+}
+
+macro_rules! sdk_file {
+    ($filename:literal) => {{
+        concat!(
+            include_str!(concat!(env!("OUT_DIR"), "/sdk_path")),
+            '\\',
+            $filename,
+            '\0'
+        )
+    }};
 }
