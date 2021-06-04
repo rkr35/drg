@@ -2,7 +2,7 @@
 #![warn(clippy::pedantic)]
 
 use core::ffi::c_void;
-use core::fmt::Write;
+use core::fmt::{self, Write};
 
 mod game;
 #[macro_use]
@@ -24,6 +24,7 @@ enum Error {
     Module(#[from] win::module::Error),
     Game(#[from] game::Error),
     File(#[from] win::file::Error),
+    Fmt(#[from] fmt::Error),
 }
 
 #[no_mangle]
@@ -75,7 +76,7 @@ unsafe fn dump_names() -> Result<(), Error> {
 
     for name in (*game::NamePoolData).iter() {
         let text = (*name).text();
-        let _ = writeln!(&mut file, "{}", text);
+        writeln!(&mut file, "{}", text)?;
     }
 
     log!("done dumping global names");
