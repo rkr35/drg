@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    
+
     // \drg\sdk_gen
     let mut workspace_path = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
 

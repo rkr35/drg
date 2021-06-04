@@ -287,7 +287,7 @@ pub struct ObjectIterator {
     index: usize,
 }
 
-impl Iterator for ObjectIterator {    
+impl Iterator for ObjectIterator {
     type Item = *mut UObject;
 
     fn next(&mut self) -> Option<Self::Item> {
