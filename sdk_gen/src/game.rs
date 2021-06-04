@@ -1,5 +1,6 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
+use core::cmp::Ordering;
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
 use core::mem;
@@ -120,15 +121,15 @@ impl Iterator for NameIterator<'_> {
                 self.block += 1;
 
                 // Get the size of the next block.
-                let block_size = if self.block < self.pool.CurrentBlock {
+                let block_size = match self.block.cmp(&self.pool.CurrentBlock) {
                     // This block is filled.
-                    BlockSizeBytes
-                } else if self.block == self.pool.CurrentBlock {
+                    Ordering::Less => BlockSizeBytes,
+
                     // This block is the last block. It is partially filled.
-                    self.pool.CurrentByteCursor as usize
-                } else {
+                    Ordering::Equal => self.pool.CurrentByteCursor as usize,
+
                     // There is no next block. We're done iterating all the blocks.
-                    return None;
+                    Ordering::Greater => return None,
                 };
 
                 // Elide impossible panic branch.
