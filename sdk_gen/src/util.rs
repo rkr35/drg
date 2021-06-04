@@ -25,7 +25,7 @@ macro_rules! log {
         struct Stdout;
 
         impl Write for Stdout {
-            fn write_str(&mut self, text: &str) -> fmt::Result { unsafe {
+            fn write_str(&mut self, text: &str) -> Result<(), fmt::Error> { unsafe {
                 #[allow(clippy::cast_possible_truncation)]
                 win::WriteConsoleA(
                     win::GetStdHandle(win::STD_OUTPUT_HANDLE),
