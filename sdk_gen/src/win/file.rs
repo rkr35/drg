@@ -1,3 +1,5 @@
+use core::fmt::{self, Write};
+
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     CreateFile,
@@ -43,13 +45,13 @@ impl Drop for File {
     }
 }
 
-impl core::fmt::Write for File {
-    fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> {
+impl Write for File {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         unsafe {
             let mut num_written = 0;
 
             #[allow(clippy::cast_possible_truncation)]
-            super::WriteFile(
+            let result = super::WriteFile(
                 self.handle,
                 s.as_ptr(),
                 s.len() as u32,
@@ -57,7 +59,11 @@ impl core::fmt::Write for File {
                 core::ptr::null_mut(),
             );
 
-            Ok(())
+            if result == 0 {
+                Err(fmt::Error::default())
+            } else {
+                Ok(())
+            }
         }
     }
 }
