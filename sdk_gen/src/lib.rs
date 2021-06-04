@@ -85,6 +85,17 @@ unsafe fn dump_names() -> Result<(), Error> {
 
 unsafe fn dump_objects() -> Result<(), Error> {
     log!("dumping global objects");
+
+    let mut file = win::File::new(sdk_file!("global_objects.txt"))?;
+    
+    for object in (*game::GUObjectArray).iter() {
+        if object.is_null() {
+            writeln!(&mut file, "skipped null object")?;
+        } else {
+            writeln!(&mut file, "[{}] {} {}", (*object).InternalIndex, *object, object as usize)?;
+        }
+    }
+
     log!("done dumping global objects");
     Ok(())
 }

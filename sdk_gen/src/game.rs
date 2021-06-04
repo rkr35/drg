@@ -1,6 +1,7 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
 use core::ffi::c_void;
+use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ptr;
 use core::str;
@@ -20,6 +21,7 @@ const FNameMaxBlocks: usize = 1 << FNameMaxBlockBits;
 const FNameBlockOffsets: usize = 1 << FNameBlockOffsetBits;
 const Stride: usize = mem::align_of::<FNameEntry>();
 const BlockSizeBytes: usize = Stride * FNameBlockOffsets;
+const NumElementsPerChunk: usize = 64 * 1024;
 
 #[repr(C)]
 pub struct FNamePool {
@@ -91,6 +93,12 @@ impl FNamePool {
             block_end_pos: self.Blocks[0]
                 .add(first_block_size - mem::size_of::<FNameEntryHeader>()),
         }
+    }
+
+    unsafe fn get(&self, block: u32, offset: u32) -> *const FNameEntry {
+        let block = block as usize;
+        crate::assert!(block < self.Blocks.len());
+        self.Blocks[block].add(Stride * offset as usize).cast()
     }
 }
 
@@ -262,6 +270,38 @@ impl FUObjectArray {
 
         Ok(())
     }
+
+    pub fn iter(&self) -> ObjectIterator {
+        ObjectIterator {
+            chunks: self.ObjObjects.Objects,
+            num_objects: self.ObjObjects.NumElements as usize,
+            index: 0,
+        }
+    }
+}
+
+pub struct ObjectIterator {
+    chunks: *const *mut FUObjectItem,
+    num_objects: usize,
+    index: usize,
+}
+
+impl Iterator for ObjectIterator {    
+    type Item = *mut UObject;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            if self.index < self.num_objects {
+                self.index += 1;
+                let chunk = *self.chunks.add(self.index / NumElementsPerChunk);
+                let object = chunk.add(self.index % NumElementsPerChunk);
+                let object = (*object).Object;
+                Some(object)
+            } else {
+                None
+            }
+        }
+    }
 }
 
 #[repr(C)]
@@ -286,10 +326,25 @@ pub struct FUObjectItem {
 pub struct UObject {
     vtable: usize,
     ObjectFlags: u32, //EObjectFlags
-    InternalIndex: i32,
+    pub InternalIndex: i32,
     ClassPrivate: *const UClass,
     NamePrivate: FName,
     OuterPrivate: *const UObject,
+}
+
+impl Display for UObject {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        unsafe {
+            let name_entry = self.NamePrivate.entry();
+            f.write_str((*name_entry).text())?;
+        }
+
+        if self.NamePrivate.Number > 0 {
+            write!(f, "_{}", self.NamePrivate.Number)?;
+        }
+
+        Ok(())
+    }
 }
 
 #[repr(C)]
@@ -301,7 +356,27 @@ pub struct FName {
     Number: u32,
 }
 
+impl FName {
+    unsafe fn entry(&self) -> *const FNameEntry {
+        self.ComparisonIndex.entry()
+    }
+}
+
 #[repr(C)]
 pub struct FNameEntryId {
     Value: u32,
+}
+
+impl FNameEntryId {
+    fn block(&self) -> u32 {
+        self.Value >> FNameBlockOffsetBits
+    }
+
+    fn offset(&self) -> u32 {
+        self.Value & (FNameBlockOffsets - 1) as u32
+    }
+
+    unsafe fn entry(&self) -> *const FNameEntry {
+        (*NamePoolData).get(self.block(), self.offset())
+    }
 }
