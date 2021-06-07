@@ -1,6 +1,13 @@
 #![no_std]
 #![warn(clippy::pedantic)]
 
+// // https://docs.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-160
+// #[link(name = "ucrt")]
+// extern {}
+
+// #[link(name = "msvcrt")]
+// extern {}
+
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 
@@ -29,6 +36,7 @@ enum Error {
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
+    // unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
     win::dll_main(dll, reason, on_attach, on_detach)
 }
 
