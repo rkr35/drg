@@ -16,6 +16,7 @@ macro_rules! assert {
 //     }};
 // }
 
+#[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {{
         use crate::win;

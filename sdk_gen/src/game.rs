@@ -95,12 +95,6 @@ impl FNamePool {
                 .add(first_block_size - mem::size_of::<FNameEntryHeader>()),
         }
     }
-
-    unsafe fn get(&self, block: u32, offset: u32) -> *const FNameEntry {
-        let block = block as usize;
-        crate::assert!(block < self.Blocks.len());
-        self.Blocks[block].add(Stride * offset as usize).cast()
-    }
 }
 
 pub struct NameIterator<'pool> {
@@ -211,6 +205,12 @@ impl FNameEntry {
         };
         let bytes = mem::size_of::<FNameEntryHeader>() + num_text_bytes;
         align(bytes, Stride)
+    }
+}
+
+impl Display for FNameEntry {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        unsafe { f.write_str(self.text()) }
     }
 }
 
@@ -336,12 +336,39 @@ pub struct UObject {
 impl Display for UObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
-            let name_entry = self.NamePrivate.entry();
-            f.write_str((*name_entry).text())?;
-        }
+            let class = {
+                let o: *const UObject = self.ClassPrivate.cast();
+                (*o).NamePrivate.text()
+            };
 
-        if self.NamePrivate.Number > 0 {
-            write!(f, "_{}", self.NamePrivate.Number)?;
+            write!(f, "{} ", class)?;
+
+            let mut outers = [""; 32];
+            let mut num_outers = 0;
+
+            let mut outer = self.OuterPrivate;
+
+            while !outer.is_null() {
+                if num_outers >= outers.len() {
+                    crate::log!("warning: reached outers capacity of {} for {}. outer name will be truncated.", outers.len(), self as *const _ as usize);
+                    break;
+                }
+
+                outers[num_outers] = (*outer).NamePrivate.text();
+                num_outers += 1;
+
+                outer = (*outer).OuterPrivate;
+            }
+
+            for outer in outers.iter().take(num_outers).rev() {
+                write!(f, "{}.", outer)?
+            }
+
+            write!(f, "{}", self.NamePrivate.text())?;
+
+            if self.NamePrivate.Number > 0 {
+                write!(f, "_{}", self.NamePrivate.Number)?;
+            }
         }
 
         Ok(())
@@ -349,7 +376,9 @@ impl Display for UObject {
 }
 
 #[repr(C)]
-pub struct UClass {}
+pub struct UClass {
+    base: *const UObject,
+}
 
 #[repr(C)]
 pub struct FName {
@@ -360,6 +389,16 @@ pub struct FName {
 impl FName {
     unsafe fn entry(&self) -> *const FNameEntry {
         self.ComparisonIndex.entry()
+    }
+
+    unsafe fn text(&self) -> &str {
+        (*self.entry()).text()
+    }
+}
+
+impl Display for FName {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        unsafe { (*self.entry()).fmt(f) }
     }
 }
 
@@ -378,6 +417,9 @@ impl FNameEntryId {
     }
 
     unsafe fn entry(&self) -> *const FNameEntry {
-        (*NamePoolData).get(self.block(), self.offset())
+        let block = self.block() as usize;
+        let offset = self.offset() as usize;
+        crate::assert!(block < FNameMaxBlocks);
+        (*NamePoolData).Blocks[block].add(Stride * offset).cast()
     }
 }
