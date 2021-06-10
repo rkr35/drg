@@ -333,6 +333,20 @@ pub struct UObject {
     OuterPrivate: *const UObject,
 }
 
+impl UObject {
+    pub unsafe fn package(&self) -> *const UObject {
+        let mut package = self.OuterPrivate;
+
+        if !package.is_null() {
+            while !(*package).OuterPrivate.is_null() {
+                package = (*package).OuterPrivate;
+            }
+        }
+
+        package
+    }
+}
+
 impl Display for UObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
