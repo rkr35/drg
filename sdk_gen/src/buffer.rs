@@ -1,4 +1,5 @@
 use core::fmt::{self, Write};
+use core::ops::Deref;
 
 pub struct Buffer<const N: usize> {
     data: [u8; N],
@@ -13,46 +14,46 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn as_ptr(&self) -> *const u8 {
-        self.data.as_ptr()
-    }
-
-    pub fn as_mut_ptr(&mut self) -> *mut u8 {
-        self.data.as_mut_ptr()
-    }
-
-    pub fn len(&self) -> usize {
-        self.len
-    }
-
-    pub const fn capacity(&self) -> usize {
-        N
-    }
-
-    pub fn advance(&mut self, n: usize) {
-        self.len += n;
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.data[..self.len]
     }
 }
 
-fn unreachable() -> ! {
-    unsafe { core::hint::unreachable_unchecked() }
+impl<const N: usize> Deref for Buffer<N> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { core::str::from_utf8_unchecked(self.as_bytes()) }
+    }
 }
 
 impl<const N: usize> Write for Buffer<N> {
-    fn write_str(&mut self, source: &str) -> fmt::Result {
-        let source = source.as_bytes();
-        let max_write_bytes = N - self.len;
-        let num_bytes_to_write = source.len().min(max_write_bytes);
-        let start_write = self.len;
-        let end_write = start_write + num_bytes_to_write;
-        let destination_slice = self
-            .data
-            .get_mut(start_write..end_write)
-            .unwrap_or_else(|| unreachable());
-        let source_slice = &source[..num_bytes_to_write];
-        assert!(destination_slice.len() == source_slice.len());
-        destination_slice.copy_from_slice(source_slice);
-        self.len += num_bytes_to_write;
+    fn write_str(&mut self, source: &str) -> Result<(), fmt::Error> {
+        let bytes = source.as_bytes();
+        let num_bytes_to_write = bytes.len();
+        let bytes_left = N - self.len;
+
+        if bytes_left < num_bytes_to_write {
+            // Not great. Wish I had a way to return a custom error.
+            crate::log!("error: bytes_left({}) < num_bytes_to_write({}) when trying to write \"{}\" into a Buffer<{}>.",
+                bytes_left, num_bytes_to_write, source, N);
+            return Err(fmt::Error::default());
+        }
+
+        let start = self.len;
+        let end = start + num_bytes_to_write;
+
+        if let Some(destination) = self.data.get_mut(start..end) {
+            if destination.len() == bytes.len() {
+                destination.copy_from_slice(bytes);
+                self.len += num_bytes_to_write;
+            } else {
+                crate::log!("unexpected: destination.len() ({}) != bytes.len() ({})", destination.len(), bytes.len())
+            }
+        } else {
+            crate::log!("unexpected: out-of-bounds start,end ({}, {}) in Buffer<{}>::write_str.", start, end, N);
+        }
+
         Ok(())
     }
 }
