@@ -1,4 +1,4 @@
-use core::fmt::{self, Write};
+use core::fmt::{self, Display, Formatter, Write};
 use core::ops::Deref;
 
 pub struct Buffer<const N: usize> {
@@ -15,7 +15,12 @@ impl<const N: usize> Buffer<N> {
     }
 
     pub fn as_bytes(&self) -> &[u8] {
-        &self.data[..self.len]
+        if let Some(data) = self.data.get(..self.len) {
+            data
+        } else {
+            crate::log!("unexpected: self.len ({}) is greater than self.data.len() ({})", self.len, self.data.len());
+            &[]
+        }
     }
 }
 
@@ -27,13 +32,19 @@ impl<const N: usize> Deref for Buffer<N> {
     }
 }
 
+impl<const N: usize> Display for Buffer<N> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        f.write_str(self)
+    }
+}
+
 impl<const N: usize> Write for Buffer<N> {
     fn write_str(&mut self, source: &str) -> Result<(), fmt::Error> {
         let bytes = source.as_bytes();
         let num_bytes_to_write = bytes.len();
-        let bytes_left = N - self.len;
+        let bytes_left = self.data.len() - self.len;
 
-        if bytes_left < num_bytes_to_write {
+        if self.len >= self.data.len() || bytes_left < num_bytes_to_write {
             // Not great. Wish I had a way to return a custom error.
             crate::log!("error: bytes_left({}) < num_bytes_to_write({}) when trying to write \"{}\" into a Buffer<{}>.",
                 bytes_left, num_bytes_to_write, source, N);

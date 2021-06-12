@@ -8,10 +8,15 @@
 // #[link(name = "msvcrt")]
 // extern {}
 
+#[link(name = "vcruntime")]
+extern {}
+
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 
 mod game;
+mod buffer;
+mod list;
 #[macro_use]
 mod util;
 mod win;
@@ -36,7 +41,7 @@ enum Error {
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-    // unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
+// unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
     win::dll_main(dll, reason, on_attach, on_detach)
 }
 
@@ -59,6 +64,7 @@ unsafe fn run() -> Result<(), Error> {
     init_globals()?;
     dump_names()?;
     dump_objects()?;
+    generate_sdk()?;
     idle();
     Ok(())
 }
@@ -111,6 +117,13 @@ unsafe fn dump_objects() -> Result<(), Error> {
     }
 
     log!("done dumping global objects");
+    Ok(())
+}
+
+unsafe fn generate_sdk() -> Result<(), Error> {
+    log!("generating sdk");
+    
+    log!("done generating sdk");
     Ok(())
 }
 
