@@ -15,7 +15,7 @@ use core::ffi::c_void;
 use core::fmt::{self, Write};
 
 mod game;
-mod buffer;
+// mod buffer;
 mod list;
 #[macro_use]
 mod util;
@@ -123,6 +123,12 @@ unsafe fn dump_objects() -> Result<(), Error> {
 unsafe fn generate_sdk() -> Result<(), Error> {
     log!("generating sdk");
     
+    match (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum") {
+        Ok(Some(class)) => log!("enum static class: {}", class as usize),
+        Ok(None) => log!("couldn't find enum static class"),
+        Err(e) => log!("error trying to find enum static class: {:?}", e),
+    };
+
     log!("done generating sdk");
     Ok(())
 }

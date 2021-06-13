@@ -1,10 +1,9 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
-use crate::buffer::Buffer;
-use crate::list::{self, List};
 use core::cmp::Ordering;
+use core::convert::TryFrom;
 use core::ffi::c_void;
-use core::fmt::{self, Display, Formatter, Write};
+use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ptr;
 use core::str;
@@ -301,28 +300,7 @@ impl FUObjectArray {
         // This way, we don't have to construct the full name of `self` if we
         // can rule out non-matching classes and outers sooner.
 
-        // The class and outers of the object we're looking for.
-        // ("Class", "Outer3.Outer2.Outer1.Name")
-        let (target_class, target_outers) = name.split_once(' ')?; 
-
-        let (target_name, target_outers) = {
-            let mut list = List::<&str, MAX_OUTERS>::new();
-            
-            // Reverse split because outers are organized inside-out within an
-            // object.
-            let mut target_outers = target_outers.rsplit('.');
-
-            // The first "outer" in the input name is actually the object name.
-            let target_name = target_outers.next()?;
-
-            for target_outer in target_outers {
-                list.add(target_outer)?;
-            }
-
-            (target_name, list)
-        };
-
-        let target = FullName::try_from(name)?;
+        let target = FullName::<MAX_OUTERS>::try_from(name)?;
 
         'outer: for object in self.iter() {
             if object.is_null() {
@@ -330,9 +308,9 @@ impl FUObjectArray {
                 continue;
             }
             
-            let my_name = (*object).NamePrivate.text();
+            let my_name = (*object).NamePrivate.text().as_bytes();
 
-            if my_name != target_name {
+            if my_name != target.name {
                 // Object names don't match.
                 // No need to check the class. Let's bail.
                 continue;
@@ -340,10 +318,10 @@ impl FUObjectArray {
             
             let my_class = {
                 let o: *const UObject = (*object).ClassPrivate.cast();
-                (*o).NamePrivate.text()
+                (*o).NamePrivate.text().as_bytes()
             };
 
-            if my_class != target_class {
+            if my_class != target.class {
                 // Classes don't match.
                 // No need to check the outers. Let's bail.
                 continue;
@@ -351,7 +329,7 @@ impl FUObjectArray {
 
             let mut my_outer = (*object).OuterPrivate;
 
-            for target_outer in target_outers.iter() {
+            for target_outer in target.outers.iter() {
                 if my_outer.is_null() {
                     // We have no more outers left to check for this object, but
                     // we still have target outers. So this object can't be what
@@ -359,7 +337,7 @@ impl FUObjectArray {
                     continue 'outer;
                 }
 
-                let my_outer_name = (*my_outer).NamePrivate.text();
+                let my_outer_name = (*my_outer).NamePrivate.text().as_bytes();
 
                 if my_outer_name != *target_outer {
                     // This outer doesn't match the target outer we're looking for.
@@ -373,11 +351,11 @@ impl FUObjectArray {
 
             // We got here because the name, class, and outers all match the
             // input name. So our search is over.
-            return Some(object);
+            return Ok(Some(object));
         }
 
         // No object matched our search.
-        None
+        Ok(None)
     }
 }
 
