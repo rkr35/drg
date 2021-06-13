@@ -1,11 +1,15 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
 use core::cmp::Ordering;
+use core::convert::TryFrom;
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ptr;
 use core::str;
+
+mod full_name;
+use full_name::FullName;
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
@@ -14,6 +18,7 @@ pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
+    FullName(#[from] full_name::Error),
 }
 
 const FNameMaxBlockBits: u8 = 13;
@@ -23,6 +28,11 @@ const FNameBlockOffsets: usize = 1 << FNameBlockOffsetBits;
 const Stride: usize = mem::align_of::<FNameEntry>();
 const BlockSizeBytes: usize = Stride * FNameBlockOffsets;
 const NumElementsPerChunk: usize = 64 * 1024;
+
+// The maximum number of outers we can store in an array.
+// Set to a large enough number to cover the outers length of all objects.
+// Used when constructing an object's name, as well as for name comparisons.
+const MAX_OUTERS: usize = 32;
 
 #[repr(C)]
 pub struct FNamePool {
@@ -279,7 +289,76 @@ impl FUObjectArray {
             index: 0,
         }
     }
+
+    pub unsafe fn find(&self, name: &str) -> Result<Option<*mut UObject>, Error> {
+        // input name example: "Class Outer3.Outer2.Outer1.Name"
+        // Do a short-circuiting name comparison.
+
+        // Compare the class from `name` against the class in `self`.
+        // Then compare the outers in `name` against the outers in `self`.
+        
+        // This way, we don't have to construct the full name of `self` if we
+        // can rule out non-matching classes and outers sooner.
+
+        let target = FullName::<MAX_OUTERS>::try_from(name)?;
+
+        'outer: for object in self.iter() {
+            if object.is_null() {
+                // We're not looking for a null object.
+                continue;
+            }
+            
+            let my_name = (*object).NamePrivate.text().as_bytes();
+
+            if my_name != target.name {
+                // Object names don't match.
+                // No need to check the class. Let's bail.
+                continue;
+            }
+            
+            let my_class = {
+                let o: *const UObject = (*object).ClassPrivate.cast();
+                (*o).NamePrivate.text().as_bytes()
+            };
+
+            if my_class != target.class {
+                // Classes don't match.
+                // No need to check the outers. Let's bail.
+                continue;
+            }
+
+            let mut my_outer = (*object).OuterPrivate;
+
+            for target_outer in target.outers.iter() {
+                if my_outer.is_null() {
+                    // We have no more outers left to check for this object, but
+                    // we still have target outers. So this object can't be what
+                    // we're looking for. Let's check out the next object.
+                    continue 'outer;
+                }
+
+                let my_outer_name = (*my_outer).NamePrivate.text().as_bytes();
+
+                if my_outer_name != *target_outer {
+                    // This outer doesn't match the target outer we're looking for.
+                    // No need to check the remaining outers. Let's bail.
+                    continue 'outer;
+                }
+
+                // Advance up to the next outer.
+                my_outer = (*my_outer).OuterPrivate;
+            }
+
+            // We got here because the name, class, and outers all match the
+            // input name. So our search is over.
+            return Ok(Some(object));
+        }
+
+        // No object matched our search.
+        Ok(None)
+    }
 }
+
 
 pub struct ObjectIterator {
     chunks: *const *mut FUObjectItem,
@@ -333,6 +412,20 @@ pub struct UObject {
     OuterPrivate: *const UObject,
 }
 
+impl UObject {
+    pub unsafe fn package(&self) -> *const UObject {
+        let mut package = self.OuterPrivate;
+
+        if !package.is_null() {
+            while !(*package).OuterPrivate.is_null() {
+                package = (*package).OuterPrivate;
+            }
+        }
+
+        package
+    }
+}
+
 impl Display for UObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
@@ -343,7 +436,7 @@ impl Display for UObject {
 
             write!(f, "{} ", class)?;
 
-            let mut outers = [""; 32];
+            let mut outers = [""; MAX_OUTERS];
             let mut num_outers = 0;
 
             let mut outer = self.OuterPrivate;
