@@ -372,10 +372,10 @@ impl Iterator for ObjectIterator {
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
             if self.index < self.num_objects {
-                self.index += 1;
                 let chunk = *self.chunks.add(self.index / NumElementsPerChunk);
                 let object = chunk.add(self.index % NumElementsPerChunk);
                 let object = (*object).Object;
+                self.index += 1;
                 Some(object)
             } else {
                 None
