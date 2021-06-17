@@ -1,5 +1,4 @@
 #![no_std]
-#![warn(clippy::pedantic)]
 
 // // https://docs.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-160
 // #[link(name = "ucrt")]
@@ -124,10 +123,10 @@ unsafe fn generate_sdk() -> Result<(), Error> {
     log!("generating sdk");
     
     match (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum") {
-        Ok(Some(class)) => log!("enum static class: {}", class as usize),
-        Ok(None) => log!("couldn't find enum static class"),
-        Err(e) => log!("error trying to find enum static class: {:?}", e),
-    };
+        Ok(Some(class)) => log!("found object at {}", class as usize),
+        Ok(None) => log!("did not find object"),    
+        Err(e) => log!("error finding object: {:?}", e),    
+    }
 
     log!("done generating sdk");
     Ok(())

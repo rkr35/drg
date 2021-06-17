@@ -291,7 +291,6 @@ impl FUObjectArray {
     }
 
     pub unsafe fn find(&self, name: &str) -> Result<Option<*mut UObject>, Error> {
-        // input name example: "Class Outer3.Outer2.Outer1.Name"
         // Do a short-circuiting name comparison.
 
         // Compare the class from `name` against the class in `self`.
