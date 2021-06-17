@@ -8,7 +8,7 @@
 // extern {}
 
 #[link(name = "vcruntime")]
-extern {}
+extern "C" {}
 
 use core::ffi::c_void;
 use core::fmt::{self, Write};
@@ -40,7 +40,7 @@ enum Error {
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-// unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
+    // unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
     win::dll_main(dll, reason, on_attach, on_detach)
 }
 
@@ -121,11 +121,11 @@ unsafe fn dump_objects() -> Result<(), Error> {
 
 unsafe fn generate_sdk() -> Result<(), Error> {
     log!("generating sdk");
-    
+
     match (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum") {
         Ok(Some(class)) => log!("found object at {}", class as usize),
-        Ok(None) => log!("did not find object"),    
-        Err(e) => log!("error finding object: {:?}", e),    
+        Ok(None) => log!("did not find object"),
+        Err(e) => log!("error finding object: {:?}", e),
     }
 
     log!("done generating sdk");

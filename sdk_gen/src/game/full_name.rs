@@ -16,8 +16,11 @@ pub struct FullName<'name, const NUM_OUTERS: usize> {
 
 fn split_class_and_outers(name: &str) -> Result<(&[u8], &[u8]), Error> {
     let name = name.as_bytes();
-    let space = name.iter().position(|c| *c == b' ').ok_or(Error::NoSpaceBetweenClassAndOuters)?;
-    Ok((&name[..space], &name[space+1..]))
+    let space = name
+        .iter()
+        .position(|c| *c == b' ')
+        .ok_or(Error::NoSpaceBetweenClassAndOuters)?;
+    Ok((&name[..space], &name[space + 1..]))
 }
 
 struct OutersIterator<'name> {
@@ -31,14 +34,16 @@ impl<'name> Iterator for OutersIterator<'name> {
         if let Some(split) = self.outers.iter().rposition(|c| *c == b'.') {
             // Elide panic branch. Technically undefined behavior if split == usize::MAX.
             #[allow(clippy::int_plus_one)]
-            unsafe { crate::assert!(split+1 <= self.outers.len()); }
+            unsafe {
+                crate::assert!(split + 1 <= self.outers.len());
+            }
 
             // Return everything after the delimiter.
-            let ret = &self.outers[split+1..];
+            let ret = &self.outers[split + 1..];
 
             // Shrink the input up to and excluding the delimiter.
             self.outers = &self.outers[..split];
-            
+
             Some(ret)
         } else if self.outers.is_empty() {
             // We've exhausted the input, and there's nothing else to return.
@@ -49,7 +54,7 @@ impl<'name> Iterator for OutersIterator<'name> {
 
             // Signal that we exhausted the input.
             self.outers = &[];
-            
+
             Some(ret)
         }
     }
@@ -62,7 +67,7 @@ impl<'name, const NUM_OUTERS: usize> TryFrom<&'name str> for FullName<'name, NUM
         let (class, outers) = split_class_and_outers(name)?;
 
         let mut list = List::<&[u8], NUM_OUTERS>::new();
-        
+
         // Reverse split because outers are organized inside-out within an
         // object.
         let mut outers = OutersIterator { outers };

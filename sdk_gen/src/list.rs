@@ -16,13 +16,13 @@ impl<T, const N: usize> List<T, N> {
     const UNINITIALIZED_VALUE: MaybeUninit<T> = MaybeUninit::uninit();
 
     pub fn new() -> Self {
-        Self { 
+        Self {
             data: [Self::UNINITIALIZED_VALUE; N],
             len: 0,
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=&T> {
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.as_slice().iter()
     }
 
@@ -54,10 +54,9 @@ impl<T, const N: usize> List<T, N> {
 
 impl<T, const NUM_OUTERS: usize> Drop for List<T, NUM_OUTERS> {
     fn drop(&mut self) {
-        // Drop initialized `MaybeUninit<T>`s.
-
         unsafe {
+            // Drop initialized `MaybeUninit<T>`s.
             ptr::drop_in_place(self.as_mut_slice());
-        } 
+        }
     }
 }

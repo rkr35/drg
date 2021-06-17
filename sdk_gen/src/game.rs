@@ -295,7 +295,7 @@ impl FUObjectArray {
 
         // Compare the class from `name` against the class in `self`.
         // Then compare the outers in `name` against the outers in `self`.
-        
+
         // This way, we don't have to construct the full name of `self` if we
         // can rule out non-matching classes and outers sooner.
 
@@ -306,7 +306,7 @@ impl FUObjectArray {
                 // We're not looking for a null object.
                 continue;
             }
-            
+
             let my_name = (*object).NamePrivate.text().as_bytes();
 
             if my_name != target.name {
@@ -314,7 +314,7 @@ impl FUObjectArray {
                 // No need to check the class. Let's bail.
                 continue;
             }
-            
+
             let my_class = {
                 let o: *const UObject = (*object).ClassPrivate.cast();
                 (*o).NamePrivate.text().as_bytes()
@@ -357,7 +357,6 @@ impl FUObjectArray {
         Ok(None)
     }
 }
-
 
 pub struct ObjectIterator {
     chunks: *const *mut FUObjectItem,
