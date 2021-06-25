@@ -74,8 +74,7 @@ fn parse_variant(name: Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Va
         }
 
         Some(TokenTree::Group(group)) => {
-            let fields = parse_variant_fields(&name, group);
-
+            let fields = parse_variant_fields(&name, &group);
             Variant { name, fields }
         }
 
@@ -85,7 +84,7 @@ fn parse_variant(name: Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Va
     }
 }
 
-fn parse_variant_fields(name: &Ident, fields: Group) -> Fields {
+fn parse_variant_fields(name: &Ident, fields: &Group) -> Fields {
     /*
     enum MyEnum {
         UnitVariant,
@@ -135,7 +134,7 @@ fn parse_tuple_variant(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>
     }
 }
 
-fn count_tuple_variant_fields(mut tokens: impl Iterator<Item = TokenTree>) -> usize {
+fn count_tuple_variant_fields(tokens: impl Iterator<Item = TokenTree>) -> usize {
     let mut num_fields = 1;
 
     let mut tokens = tokens.peekable();
