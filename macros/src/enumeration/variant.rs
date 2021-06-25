@@ -156,7 +156,7 @@ impl fmt::Display for Variant {
             Fields::Tuple(size) => {
                 let (mut placeholders, fields): (String, String) =
                     (0..*size)
-                        .map(|i| ("{:?}, ", format!("f{}, ", i)))
+                        .map(|i| ("{}, ", format!("f{}, ", i)))
                         .unzip();
 
                 // Trim final ", ".
@@ -175,7 +175,7 @@ impl fmt::Display for Variant {
             Fields::Struct(fields) => {
                 let (placeholders, fields): (String, String) =
                     fields.iter()
-                        .map(|field| (format!("{}: {{:?}}, ", field), format!("{}, ", field)))
+                        .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
                         .unzip();
 
                 write!(
