@@ -63,10 +63,8 @@ impl<'name> Iterator for OutersIterator<'name> {
 impl<'name, const NUM_OUTERS: usize> TryFrom<&'name str> for FullName<'name, NUM_OUTERS> {
     type Error = Error;
 
-    fn try_from(name: &str) -> Result<FullName<NUM_OUTERS>, Self::Error> {
-        let (class, outers) = split_class_and_outers(name)?;
-
-        let mut list = List::<&[u8], NUM_OUTERS>::new();
+    fn try_from(full_name: &str) -> Result<FullName<NUM_OUTERS>, Self::Error> {
+        let (class, outers) = split_class_and_outers(full_name)?;
 
         // Reverse split because outers are organized inside-out within an
         // object.
@@ -74,6 +72,8 @@ impl<'name, const NUM_OUTERS: usize> TryFrom<&'name str> for FullName<'name, NUM
 
         // The first "outer" in the input name is actually the object name.
         let name = outers.next().ok_or(Error::NoName)?;
+
+        let mut list = List::<&[u8], NUM_OUTERS>::new();
 
         for outer in outers {
             list.push(outer)?;
