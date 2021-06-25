@@ -19,6 +19,7 @@ pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
     FullName(#[from] full_name::Error),
+    UnableToFind(&'static str),
 }
 
 const FNameMaxBlockBits: u8 = 13;
@@ -290,7 +291,7 @@ impl FUObjectArray {
         }
     }
 
-    pub unsafe fn find(&self, name: &str) -> Result<Option<*mut UObject>, Error> {
+    pub unsafe fn find(&self, name: &'static str) -> Result<*mut UObject, Error> {
         // Do a short-circuiting name comparison.
 
         // Compare the class from `name` against the class in `self`.
@@ -350,11 +351,11 @@ impl FUObjectArray {
 
             // We got here because the name, class, and outers all match the
             // input name. So our search is over.
-            return Ok(Some(object));
+            return Ok(object);
         }
 
         // No object matched our search.
-        Ok(None)
+        Err(Error::UnableToFind(name))
     }
 }
 
