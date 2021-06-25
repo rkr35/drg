@@ -1,5 +1,6 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
+use crate::list::List;
 use core::cmp::Ordering;
 use core::convert::TryFrom;
 use core::ffi::c_void;
@@ -435,24 +436,19 @@ impl Display for UObject {
 
             write!(f, "{} ", class)?;
 
-            let mut outers = [""; MAX_OUTERS];
-            let mut num_outers = 0;
-
+            let mut outers = List::<&str, MAX_OUTERS>::new();
             let mut outer = self.OuterPrivate;
 
             while !outer.is_null() {
-                if num_outers >= outers.len() {
-                    crate::log!("warning: reached outers capacity of {} for {}. outer name will be truncated.", outers.len(), self as *const _ as usize);
+                if outers.push((*outer).NamePrivate.text()).is_err() {
+                    crate::log!("warning: reached outers capacity of {} for {}. outer name will be truncated.", outers.capacity(), self as *const _ as usize);
                     break;
                 }
-
-                outers[num_outers] = (*outer).NamePrivate.text();
-                num_outers += 1;
 
                 outer = (*outer).OuterPrivate;
             }
 
-            for outer in outers.iter().take(num_outers).rev() {
+            for outer in outers.iter().rev() {
                 write!(f, "{}.", outer)?
             }
 

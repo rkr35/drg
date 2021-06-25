@@ -1,6 +1,6 @@
 use core::mem::MaybeUninit;
 use core::ptr;
-use core::slice;
+use core::slice::{self, Iter};
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -22,12 +22,16 @@ impl<T, const N: usize> List<T, N> {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub const fn capacity(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn iter(&self) -> Iter<T> {
         self.as_slice().iter()
     }
 
     pub fn push(&mut self, value: T) -> Result<(), Error> {
-        if self.len < self.data.len() {
+        if self.len < self.capacity() {
             // Safe to use direct assignment since dropping a MaybeUninit<T> is a no-op.
             self.data[self.len] = MaybeUninit::new(value);
             self.len += 1;
