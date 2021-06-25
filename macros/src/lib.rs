@@ -42,7 +42,7 @@ impl From<TokenStream> for Enum {
 
         Self {
             name,
-            variants: parse_variants(group.stream().into_iter())
+            variants: parse_variants(group.stream().into_iter()),
         }
     }
 }
@@ -63,10 +63,7 @@ fn parse_variants(mut tokens: impl Iterator<Item = TokenTree>) -> Vec<Variant> {
     variants
 }
 
-fn parse_variant(
-    name: Ident,
-    mut tokens: impl Iterator<Item = TokenTree>,
-) -> Variant {
+fn parse_variant(name: Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Variant {
     match tokens.next() {
         None | Some(TokenTree::Punct(_)) => {
             // Fieldless variant.
@@ -79,10 +76,7 @@ fn parse_variant(
         Some(TokenTree::Group(group)) => {
             let fields = parse_variant_fields(&name, group);
 
-            Variant {
-                name,
-                fields,
-            }
+            Variant { name, fields }
         }
 
         token => {
@@ -113,9 +107,7 @@ fn parse_variant_fields(name: &Ident, fields: Group) -> Fields {
     let field_tokens = fields.stream().into_iter();
 
     match fields.delimiter() {
-        Delimiter::Parenthesis => {
-            parse_tuple_variant(name, field_tokens)
-        }
+        Delimiter::Parenthesis => parse_tuple_variant(name, field_tokens),
 
         Delimiter::Brace => {
             // parse_struct_variant(name, field_tokens)
@@ -123,20 +115,19 @@ fn parse_variant_fields(name: &Ident, fields: Group) -> Fields {
         }
 
         unknown_delimiter => {
-            unreachable!("unexpected field delimiter for variant {}: {:?}", name, unknown_delimiter);
+            unreachable!(
+                "unexpected field delimiter for variant {}: {:?}",
+                name, unknown_delimiter
+            );
         }
     }
 }
 
 fn parse_tuple_variant(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Fields {
     match tokens.next() {
-        Some(TokenTree::Punct(p)) if p.as_char() == '#' => {
-            parse_inner_error(name, tokens)
-        }
+        Some(TokenTree::Punct(p)) if p.as_char() == '#' => parse_inner_error(name, tokens),
 
-        Some(_) => {
-            Fields::Tuple(count_tuple_variant_fields(tokens))
-        }
+        Some(_) => Fields::Tuple(count_tuple_variant_fields(tokens)),
 
         None => {
             panic!("expected fields for {}", name);
@@ -162,7 +153,6 @@ fn count_tuple_variant_fields(mut tokens: impl Iterator<Item = TokenTree>) -> us
     num_fields
 }
 
-
 fn parse_inner_error(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Fields {
     let is_missing_from_attribute = tokens
         .next()
@@ -174,7 +164,7 @@ fn parse_inner_error(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) 
         .filter(|attribute| attribute.delimiter() == Delimiter::Bracket)
         .filter(|attribute| matches!(attribute.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "from"))
         .is_none();
-    
+
     if is_missing_from_attribute {
         panic!("expected #[from] attribute for variant {}", name);
     }
@@ -185,10 +175,12 @@ fn parse_inner_error(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) 
         let inner_error: TokenStream = tokens.collect();
         Fields::InnerError(inner_error.to_string())
     } else {
-        panic!("expected inner error name after #[from] attribute for variant {}", name);
+        panic!(
+            "expected inner error name after #[from] attribute for variant {}",
+            name
+        );
     }
 }
-
 
 #[proc_macro_derive(NoPanicErrorDebug, attributes(from))]
 pub fn derive_no_panic_error_debug(input: TokenStream) -> TokenStream {
