@@ -138,7 +138,7 @@ impl fmt::Display for Variant {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match &self.fields {
             Fields::None => {
-                write!(
+                writeln!(
                     f,
                     "Self::{variant} => f.write_str(\"{variant}\")?,\n",
                     variant = self.name
@@ -146,7 +146,7 @@ impl fmt::Display for Variant {
             }
 
             Fields::InnerError(_) => {
-                write!(
+                writeln!(
                     f,
                     "Self::{variant}(inner) => write!(f, \"{variant}({{:?}})\", inner)?,\n",
                     variant = self.name
@@ -163,7 +163,7 @@ impl fmt::Display for Variant {
                 placeholders.pop();
                 placeholders.pop();
 
-                write!(
+                writeln!(
                     f,
                     "Self::{variant}({fields}) => write!(f, \"{variant}({placeholders})\", {fields})?,\n",
                     variant = self.name,
@@ -178,7 +178,7 @@ impl fmt::Display for Variant {
                         .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
                         .unzip();
 
-                write!(
+                writeln!(
                     f,
                     "Self::{variant} {{ {fields} }} => write!(f, \"{variant} {{ {placeholders} }}\", {fields})?,\n",
                     variant = self.name,

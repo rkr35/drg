@@ -18,7 +18,7 @@ pub fn derive_no_panic_error_debug(input: TokenStream) -> TokenStream {
 
     let variant_debugs: String = variants
         .iter()
-        .map(|v| v.to_string())
+        .map(ToString::to_string)
         .collect();
 
     let from_impls: String = variants
