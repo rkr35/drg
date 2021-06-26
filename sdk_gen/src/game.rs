@@ -412,19 +412,33 @@ pub struct UObject {
     OuterPrivate: *const UObject,
 }
 
-// impl UObject {
-//     pub unsafe fn package(&self) -> *const UObject {
-//         let mut package = self.OuterPrivate;
+impl UObject {
+    // pub unsafe fn package(&self) -> *const UObject {
+    //     let mut package = self.OuterPrivate;
 
-//         if !package.is_null() {
-//             while !(*package).OuterPrivate.is_null() {
-//                 package = (*package).OuterPrivate;
-//             }
-//         }
+    //     if !package.is_null() {
+    //         while !(*package).OuterPrivate.is_null() {
+    //             package = (*package).OuterPrivate;
+    //         }
+    //     }
 
-//         package
-//     }
-// }
+    //     package
+    // }
+
+    pub unsafe fn is(&self, class: *const UClass) -> bool {
+        let mut my_class = self.ClassPrivate;
+
+        while !my_class.is_null() {
+            if my_class == class {
+                return true;
+            }
+
+            my_class = (*my_class).base.SuperStruct.cast();
+        }
+
+        false
+    }
+}
 
 impl Display for UObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
@@ -464,8 +478,23 @@ impl Display for UObject {
 }
 
 #[repr(C)]
+pub struct UField {
+    base: UObject,
+    next: *const UField,
+}
+
+#[repr(C)]
+pub struct UStruct {
+    base: UField,
+    pad1: [u8; 16],
+    SuperStruct: *const UStruct,
+    pad: [u8; 104],
+}
+
+#[repr(C)]
 pub struct UClass {
-    base: *const UObject,
+    base: UStruct,
+    pad: [u8; 384],
 }
 
 #[repr(C)]

@@ -122,7 +122,13 @@ unsafe fn dump_objects() -> Result<(), Error> {
 unsafe fn generate_sdk() -> Result<(), Error> {
     log!("generating sdk");
 
-    let _enum_class = (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?;
+    let enum_class = (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast();
+
+    for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
+        if (*object).is(enum_class) {
+            log!("{} is an enum.", *object);
+        }
+    }
 
     log!("done generating sdk");
     Ok(())
