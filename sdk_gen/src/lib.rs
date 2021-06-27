@@ -16,6 +16,8 @@ use core::fmt::{self, Write};
 mod game;
 // mod buffer;
 mod list;
+mod timer;
+use timer::Timer;
 #[macro_use]
 mod util;
 mod win;
@@ -46,6 +48,8 @@ unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
+    
+    timer::initialize_ticks_per_second();
 
     if let Err(e) = run() {
         log!("error: {:?}", e);
@@ -83,7 +87,7 @@ unsafe fn init_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    log!("dumping global names");
+    let timer = Timer::new("dump global names");
 
     let mut file = win::File::new(sdk_file!("global_names.txt"))?;
 
@@ -92,12 +96,12 @@ unsafe fn dump_names() -> Result<(), Error> {
         writeln!(&mut file, "{}", text)?;
     }
 
-    log!("done dumping global names");
+    timer.stop();
     Ok(())
 }
 
 unsafe fn dump_objects() -> Result<(), Error> {
-    log!("dumping global objects");
+    let timer = Timer::new("dump global objects");
 
     let mut file = win::File::new(sdk_file!("global_objects.txt"))?;
 
@@ -115,13 +119,13 @@ unsafe fn dump_objects() -> Result<(), Error> {
         }
     }
 
-    log!("done dumping global objects");
+    timer.stop();
     Ok(())
 }
 
 unsafe fn generate_sdk() -> Result<(), Error> {
-    log!("generating sdk");
-
+    let timer = Timer::new("generate sdk");
+    
     let enum_class = (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast();
 
     for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
@@ -130,7 +134,7 @@ unsafe fn generate_sdk() -> Result<(), Error> {
         }
     }
 
-    log!("done generating sdk");
+    timer.stop();
     Ok(())
 }
 
