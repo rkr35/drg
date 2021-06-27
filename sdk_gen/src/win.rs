@@ -50,6 +50,8 @@ extern "system" {
         num_read: *mut u32,
         input_control: *mut c_void,
     ) -> i32;
+    pub fn QueryPerformanceCounter(lpPerformanceCount: *mut i64) -> i32;
+    pub fn QueryPerformanceFrequency(lpFrequency: *mut i64) -> i32;
     pub fn WriteConsoleA(
         console: *mut c_void,
         buffer: *const u8,
