@@ -56,7 +56,7 @@ impl<T, const N: usize> List<T, N> {
     }
 }
 
-impl<T, const NUM_OUTERS: usize> Drop for List<T, NUM_OUTERS> {
+impl<T, const N: usize> Drop for List<T, N> {
     fn drop(&mut self) {
         unsafe {
             // Drop initialized `MaybeUninit<T>`s.
