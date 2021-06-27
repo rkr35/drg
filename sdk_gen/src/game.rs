@@ -540,3 +540,28 @@ impl FNameEntryId {
         (*NamePoolData).Blocks[block].add(Stride * offset).cast()
     }
 }
+
+
+#[repr(C)]
+pub struct UEnum {
+    base: UField,
+    CppType: FString,
+    Names: TArray<TPair<FName, i64>>,
+    CppForm: i32,
+    EnumDisplayNameFn: usize,
+}
+
+#[repr(C)]
+pub struct TArray<T> {
+    data: *const T,
+    len: i32,
+    capacity: i32,
+}
+
+pub type FString = TArray<u16>;
+
+#[repr(C)]
+pub struct TPair<K, V> {
+    Key: K,
+    Value: V,
+}
