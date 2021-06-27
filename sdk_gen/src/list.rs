@@ -1,3 +1,4 @@
+use core::fmt::{self, Write};
 use core::mem::MaybeUninit;
 use core::ptr;
 use core::slice::{self, Iter};
@@ -61,6 +62,20 @@ impl<T, const N: usize> Drop for List<T, N> {
         unsafe {
             // Drop initialized `MaybeUninit<T>`s.
             ptr::drop_in_place(self.as_mut_slice());
+        }
+    }
+}
+
+impl<const N: usize> Write for List<u8, N> {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        if let Some(destination) = self.data.get_mut(self.len..self.len + s.len()) {
+            // SAFETY: We already checked that the destination slice is valid for source length bytes.
+            // Nonoverlapping because mutable references can't alias.
+            unsafe { ptr::copy_nonoverlapping(s.as_ptr().cast(), destination.as_mut_ptr(), destination.len()); }
+            self.len += destination.len();
+            Ok(())
+        } else {
+            Err(fmt::Error)
         }
     }
 }
