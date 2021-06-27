@@ -14,14 +14,13 @@ impl File {
         const INVALID_HANDLE_VALUE: usize = usize::MAX;
         const GENERIC_WRITE: u32 = 0x4000_0000;
         const FILE_SHARE_READ: u32 = 1;
-        const FILE_SHARE_WRITE: u32 = 2;
         const CREATE_ALWAYS: u32 = 2;
         const FILE_ATTRIBUTE_NORMAL: u32 = 0x80;
 
         let handle = super::CreateFileA(
             name.as_ptr(),
             GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            FILE_SHARE_READ,
             core::ptr::null_mut(),
             CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL,
