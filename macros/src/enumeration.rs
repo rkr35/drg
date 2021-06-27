@@ -1,8 +1,8 @@
 use proc_macro::{Ident, TokenStream, TokenTree};
 
 mod variant;
-use variant::Variant;
 pub use variant::Fields;
+use variant::Variant;
 
 pub struct Enum {
     pub name: Ident,

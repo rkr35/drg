@@ -71,7 +71,13 @@ impl<const N: usize> Write for List<u8, N> {
         if let Some(destination) = self.data.get_mut(self.len..self.len + s.len()) {
             // SAFETY: We already checked that the destination slice is valid for source length bytes.
             // Nonoverlapping because mutable references can't alias.
-            unsafe { ptr::copy_nonoverlapping(s.as_ptr().cast(), destination.as_mut_ptr(), destination.len()); }
+            unsafe {
+                ptr::copy_nonoverlapping(
+                    s.as_ptr().cast(),
+                    destination.as_mut_ptr(),
+                    destination.len(),
+                );
+            }
             self.len += destination.len();
             Ok(())
         } else {

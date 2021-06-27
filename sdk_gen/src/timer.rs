@@ -10,13 +10,15 @@ pub unsafe fn initialize_ticks_per_second() {
 
 fn get_current_tick() -> i64 {
     let mut tick = 0;
-    unsafe { crate::win::QueryPerformanceCounter(&mut tick); }
+    unsafe {
+        crate::win::QueryPerformanceCounter(&mut tick);
+    }
     tick
 }
 
 pub struct Timer<A: Display> {
     start_tick: i64,
-    action: A
+    action: A,
 }
 
 impl<A: Display> Timer<A> {
@@ -25,14 +27,18 @@ impl<A: Display> Timer<A> {
 
         Self {
             start_tick: get_current_tick(),
-            action
+            action,
         }
     }
 
     pub fn stop(self) {
         let current_tick = get_current_tick();
         let elapsed_ticks = current_tick - self.start_tick;
-        crate::log!("END: {} ({} ticks elapsed)", self.action, FormattedTicks(elapsed_ticks));
+        crate::log!(
+            "END: {} ({} ticks elapsed)",
+            self.action,
+            FormattedTicks(elapsed_ticks)
+        );
     }
 }
 
@@ -53,7 +59,7 @@ impl Display for FormattedTicks {
 
         for (i, digit) in digits.iter().enumerate().rev() {
             f.write_char(char::from(b'0' + digit))?;
-            
+
             let is_final_digit = i == 0;
             let need_comma = !is_final_digit && i % 3 == 0;
 

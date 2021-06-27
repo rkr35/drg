@@ -16,10 +16,7 @@ pub fn derive_no_panic_error_debug(input: TokenStream) -> TokenStream {
 
     let Enum { name, variants } = Enum::from(input);
 
-    let variant_debugs: String = variants
-        .iter()
-        .map(ToString::to_string)
-        .collect();
+    let variant_debugs: String = variants.iter().map(ToString::to_string).collect();
 
     let from_impls: String = variants
         .into_iter()

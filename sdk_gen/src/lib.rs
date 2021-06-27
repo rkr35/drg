@@ -48,7 +48,7 @@ unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
-    
+
     timer::initialize_ticks_per_second();
 
     if let Err(e) = run() {
@@ -125,8 +125,10 @@ unsafe fn dump_objects() -> Result<(), Error> {
 
 unsafe fn generate_sdk() -> Result<(), Error> {
     let timer = Timer::new("generate sdk");
-    
-    let enum_class = (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast();
+
+    let enum_class = (*game::GUObjectArray)
+        .find("Class /Script/CoreUObject.Enum")?
+        .cast();
 
     for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
         if (*object).is(enum_class) {
