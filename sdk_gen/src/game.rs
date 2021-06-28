@@ -438,6 +438,10 @@ impl UObject {
 
         false
     }
+
+    pub unsafe fn name(&self) -> &str {
+        self.NamePrivate.text()
+    }
 }
 
 impl Display for UObject {
