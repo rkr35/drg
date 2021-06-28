@@ -15,7 +15,7 @@ use core::fmt::{self, Write};
 use core::str;
 
 mod game;
-use game::{UEnum, UObject, TPair};
+use game::{TPair, UEnum, UObject};
 mod list;
 use list::List;
 mod timer;
@@ -149,7 +149,12 @@ unsafe fn generate_sdk() -> Result<(), Error> {
 unsafe fn generate_enum(mut out: impl Write, enumeration: *const UEnum) -> Result<(), Error> {
     let object = enumeration.cast::<UObject>();
 
-    writeln!(out, "// {}\n#[repr(u8)]\npub enum {} {{", *object, (*object).name())?;
+    writeln!(
+        out,
+        "// {}\n#[repr(u8)]\npub enum {} {{",
+        *object,
+        (*object).name()
+    )?;
 
     for TPair { Key: name, .. } in (*enumeration).Names.as_slice().iter() {
         let name = name.text();
@@ -159,7 +164,7 @@ unsafe fn generate_enum(mut out: impl Write, enumeration: *const UEnum) -> Resul
             // Per rposition():       0 <= namespace_colon   <  name.len()
             // Slice we're accessing: 1 <= namespace_colon+1 <= name.len()
             // Therefore, the slice is always within bounds and valid UTF8 (we started from an ASCII string).
-            writeln!(out, "    {},", name.get_unchecked(namespace_colon+1..))?;
+            writeln!(out, "    {},", name.get_unchecked(namespace_colon + 1..))?;
         } else {
             writeln!(out, "    {},", name)?;
         }

@@ -546,7 +546,6 @@ impl FNameEntryId {
     }
 }
 
-
 #[repr(C)]
 pub struct UEnum {
     base: UField,
