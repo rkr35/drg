@@ -5,7 +5,7 @@ pub enum Fields {
     None,
     InnerError(String),
     Tuple(usize),
-    Struct(Vec<String>),
+    // Struct(Vec<String>),
 }
 
 pub struct Variant {
@@ -59,10 +59,7 @@ impl Variant {
         match fields.delimiter() {
             Delimiter::Parenthesis => Self::parse_tuple_variant(name, field_tokens),
 
-            Delimiter::Brace => {
-                // Self::parse_struct_variant(name, field_tokens)
-                todo!("parse struct variant")
-            }
+            Delimiter::Brace => Self::parse_struct_variant(name, field_tokens),
 
             unknown_delimiter => {
                 unreachable!(
@@ -85,6 +82,10 @@ impl Variant {
                 panic!("expected fields for {}", name);
             }
         }
+    }
+
+    fn parse_struct_variant(name: &Ident, mut _tokens: impl Iterator<Item = TokenTree>) -> Fields {
+        todo!("parse struct variant {}", name);
     }
 
     fn parse_inner_error(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Fields {
@@ -171,20 +172,20 @@ impl fmt::Display for Variant {
                 )
             }
 
-            Fields::Struct(fields) => {
-                let (placeholders, fields): (String, String) = fields
-                    .iter()
-                    .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
-                    .unzip();
+            // Fields::Struct(fields) => {
+            //     let (placeholders, fields): (String, String) = fields
+            //         .iter()
+            //         .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
+            //         .unzip();
 
-                writeln!(
-                    f,
-                    "Self::{variant} {{ {fields} }} => write!(f, \"{variant} {{ {placeholders} }}\", {fields})?,\n",
-                    variant = self.name,
-                    fields = fields,
-                    placeholders = placeholders,
-                )
-            }
+            //     writeln!(
+            //         f,
+            //         "Self::{variant} {{ {fields} }} => write!(f, \"{variant} {{ {placeholders} }}\", {fields})?,\n",
+            //         variant = self.name,
+            //         fields = fields,
+            //         placeholders = placeholders,
+            //     )
+            // }
         }
     }
 }
