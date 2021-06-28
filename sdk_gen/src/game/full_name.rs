@@ -31,13 +31,7 @@ impl<'name> Iterator for OutersIterator<'name> {
     type Item = &'name [u8];
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(split) = self.outers.iter().rposition(|c| *c == b'.') {
-            // Elide panic branch. Technically undefined behavior if split == usize::MAX.
-            #[allow(clippy::int_plus_one)]
-            unsafe {
-                crate::assert!(split + 1 <= self.outers.len());
-            }
-
+        if let Some(split) = self.outers.iter().rposition(|c| *c == b'.').filter(|i| i + 1 <= self.outers.len()) {
             // Return everything after the delimiter.
             let ret = &self.outers[split + 1..];
 

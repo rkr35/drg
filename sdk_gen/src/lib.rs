@@ -159,12 +159,8 @@ unsafe fn generate_enum(mut out: impl Write, enumeration: *const UEnum) -> Resul
     for TPair { Key: name, .. } in (*enumeration).Names.as_slice().iter() {
         let name = name.text();
 
-        if let Some(namespace_colon) = name.as_bytes().iter().rposition(|&c| c == b':') {
-            // SAFETY:
-            // Per rposition():       0 <= namespace_colon   <  name.len()
-            // Slice we're accessing: 1 <= namespace_colon+1 <= name.len()
-            // Therefore, the slice is always within bounds and valid UTF8 (we started from an ASCII string).
-            writeln!(out, "    {},", name.get_unchecked(namespace_colon + 1..))?;
+        if let Some(name_stripped) = name.bytes().rposition(|c| c == b':').and_then(|i| name.get(i + 1..)) {
+            writeln!(out, "    {},", name_stripped)?;
         } else {
             writeln!(out, "    {},", name)?;
         }
