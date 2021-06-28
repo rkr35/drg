@@ -310,7 +310,7 @@ impl FUObjectArray {
                 continue;
             }
 
-            let my_name = (*object).NamePrivate.text().as_bytes();
+            let my_name = (*object).name().as_bytes();
 
             if my_name != target.name {
                 // Object names don't match.
@@ -320,7 +320,7 @@ impl FUObjectArray {
 
             let my_class = {
                 let o: *const UObject = (*object).ClassPrivate.cast();
-                (*o).NamePrivate.text().as_bytes()
+                (*o).name().as_bytes()
             };
 
             if my_class != target.class {
@@ -339,7 +339,7 @@ impl FUObjectArray {
                     continue 'outer;
                 }
 
-                let my_outer_name = (*my_outer).NamePrivate.text().as_bytes();
+                let my_outer_name = (*my_outer).name().as_bytes();
 
                 if my_outer_name != *target_outer {
                     // This outer doesn't match the target outer we're looking for.
@@ -450,7 +450,7 @@ impl Display for UObject {
         unsafe {
             let class = {
                 let o: *const UObject = self.ClassPrivate.cast();
-                (*o).NamePrivate.text()
+                (*o).name()
             };
 
             write!(f, "{} ", class)?;
@@ -459,7 +459,7 @@ impl Display for UObject {
             let mut outer = self.OuterPrivate;
 
             while !outer.is_null() {
-                if outers.push((*outer).NamePrivate.text()).is_err() {
+                if outers.push((*outer).name()).is_err() {
                     crate::log!("warning: reached outers capacity of {} for {}. outer name will be truncated.", outers.capacity(), self as *const _ as usize);
                     break;
                 }
@@ -471,7 +471,7 @@ impl Display for UObject {
                 write!(f, "{}.", outer)?
             }
 
-            write!(f, "{}", self.NamePrivate.text())?;
+            write!(f, "{}", self.name())?;
 
             if self.NamePrivate.Number > 0 {
                 write!(f, "_{}", self.NamePrivate.Number)?;
