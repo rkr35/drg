@@ -513,7 +513,7 @@ impl FName {
         self.ComparisonIndex.entry()
     }
 
-    unsafe fn text(&self) -> &str {
+    pub unsafe fn text(&self) -> &str {
         (*self.entry()).text()
     }
 }
@@ -551,7 +551,7 @@ impl FNameEntryId {
 pub struct UEnum {
     base: UField,
     CppType: FString,
-    Names: TArray<TPair<FName, i64>>,
+    pub Names: TArray<TPair<FName, i64>>,
     CppForm: i32,
     EnumDisplayNameFn: usize,
 }
@@ -579,6 +579,6 @@ pub type FString = TArray<u16>;
 
 #[repr(C)]
 pub struct TPair<K, V> {
-    Key: K,
+    pub Key: K,
     Value: V,
 }

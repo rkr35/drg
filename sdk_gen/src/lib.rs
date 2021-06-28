@@ -12,10 +12,12 @@ extern "C" {}
 
 use core::ffi::c_void;
 use core::fmt::{self, Write};
+use core::str;
 
 mod game;
-// mod buffer;
+use game::{UEnum, UObject, TPair};
 mod list;
+use list::List;
 mod timer;
 use timer::Timer;
 #[macro_use]
@@ -66,7 +68,7 @@ unsafe fn on_detach() {}
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;
     dump_names()?;
-    dump_objects()?;
+    // dump_objects()?;
     generate_sdk()?;
     idle();
     Ok(())
@@ -132,11 +134,39 @@ unsafe fn generate_sdk() -> Result<(), Error> {
 
     for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
         if (*object).is(enum_class) {
-            log!("{} is an enum.", *object);
+            let mut out = List::<u8, 2048>::new();
+            generate_enum(&mut out, object.cast())?;
+            if let Ok(s) = out.as_str() {
+                log!("{}", s);
+            }
         }
     }
 
     timer.stop();
+    Ok(())
+}
+
+unsafe fn generate_enum(mut out: impl Write, enumeration: *const UEnum) -> Result<(), Error> {
+    let object = enumeration.cast::<UObject>();
+
+    writeln!(out, "// {}\n#[repr(u8)]\npub enum {} {{", *object, (*object).name())?;
+
+    for TPair { Key: name, .. } in (*enumeration).Names.as_slice().iter() {
+        let name = name.text();
+
+        if let Some(namespace_colon) = name.as_bytes().iter().rposition(|&c| c == b':') {
+            // SAFETY:
+            // Per rposition():       0 <= namespace_colon   <  name.len()
+            // Slice we're accessing: 1 <= namespace_colon+1 <= name.len()
+            // Therefore, the slice is always within bounds and valid UTF8 (we started from an ASCII string).
+            writeln!(out, "    {},", name.get_unchecked(namespace_colon+1..))?;
+        } else {
+            writeln!(out, "    {},", name)?;
+        }
+    }
+
+    writeln!(out, "}}")?;
+
     Ok(())
 }
 
