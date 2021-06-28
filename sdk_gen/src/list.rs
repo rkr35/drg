@@ -2,6 +2,7 @@ use core::fmt::{self, Write};
 use core::mem::MaybeUninit;
 use core::ptr;
 use core::slice::{self, Iter};
+use core::str;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -83,5 +84,11 @@ impl<const N: usize> Write for List<u8, N> {
         } else {
             Err(fmt::Error)
         }
+    }
+}
+
+impl<const N: usize> List<u8, N> {
+    pub fn as_str(&self) -> Result<&str, str::Utf8Error> {
+        str::from_utf8(self.as_slice())
     }
 }
