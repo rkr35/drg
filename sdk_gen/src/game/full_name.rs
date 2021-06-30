@@ -31,6 +31,7 @@ impl<'name> Iterator for OutersIterator<'name> {
     type Item = &'name [u8];
 
     fn next(&mut self) -> Option<Self::Item> {
+        #[allow(clippy::int_plus_one)] // Applying this lint yields `i < self.outers.len()`, which doesn't elide the panic branch.
         if let Some(split) = self.outers.iter().rposition(|c| *c == b'.').filter(|i| i + 1 <= self.outers.len()) {
             // Return everything after the delimiter.
             let ret = &self.outers[split + 1..];
