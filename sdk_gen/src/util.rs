@@ -1,22 +1,4 @@
 #[macro_export]
-macro_rules! assert {
-    ($assertion:expr) => {{
-        let assertion: bool = $assertion;
-        if !assertion {
-            core::hint::unreachable_unchecked();
-        }
-    }};
-}
-
-// macro_rules! static_assert {
-//     ($assertion:expr) => {{
-//         const _ASSERT_BOOL: bool = $assertion;
-//         const _YOUR_STATIC_ASSERT_FAILED: u8 = _ASSERT_BOOL as u8;
-//         const _: u8 = _YOUR_STATIC_ASSERT_FAILED - 1;
-//     }};
-// }
-
-#[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {{
         use crate::win;

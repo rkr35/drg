@@ -139,13 +139,11 @@ impl Iterator for NameIterator<'_> {
                     Ordering::Greater => return None,
                 };
 
-                // Elide impossible panic branch.
-                // We trust Unreal Engine will uphold its own invariant that self.CurrentBlock < FNameMaxBlocks.
-                // Since self.block <= self.CurrentBlock, then self.block < FNameMaxBlocks.
-                crate::assert!(self.block < self.pool.Blocks.len() as u32);
-
                 // Get a pointer to the next block.
-                self.cursor_within_block = self.pool.Blocks[self.block as usize];
+                // Use .get_unchecked() to elide impossible panic branch. We trust Unreal Engine will uphold its own
+                // invariant that self.CurrentBlock < FNameMaxBlocks. Since self.block <= self.CurrentBlock, then
+                // self.block < FNameMaxBlocks.
+                self.cursor_within_block = *self.pool.Blocks.get_unchecked(self.block as usize);
 
                 // Calculate where this block ends.
                 self.block_end_pos = self
@@ -541,8 +539,7 @@ impl FNameEntryId {
     unsafe fn entry(&self) -> *const FNameEntry {
         let block = self.block() as usize;
         let offset = self.offset() as usize;
-        crate::assert!(block < FNameMaxBlocks);
-        (*NamePoolData).Blocks[block].add(Stride * offset).cast()
+        (*NamePoolData).Blocks.get_unchecked(block).add(Stride * offset).cast()
     }
 }
 
