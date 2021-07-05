@@ -4,8 +4,8 @@
 // #[link(name = "ucrt")]
 // extern {}
 
-// #[link(name = "msvcrt")]
-// extern {}
+#[link(name = "msvcrt")]
+extern {}
 
 #[link(name = "vcruntime")]
 extern "C" {}
@@ -132,14 +132,66 @@ unsafe fn generate_sdk() -> Result<(), Error> {
         .find("Class /Script/CoreUObject.Enum")?
         .cast();
 
-    for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-        if (*object).is(enum_class) {
-            let mut out = List::<u8, 2048>::new();
-            generate_enum(&mut out, object.cast())?;
-            if let Ok(s) = out.as_str() {
-                log!("{}", s);
+    let struct_class = (*game::GUObjectArray)
+        .find("Class /Script/CoreUObject.Struct")?
+        .cast();
+
+    let class_class = (*game::GUObjectArray)
+        .find("Class /Script/CoreUObject.Class")?
+        .cast();
+
+    struct Package {
+        ptr: *mut game::UPackage,
+        count: u32,
+    }
+
+    impl Drop for Package {
+        fn drop(&mut self) {
+            unsafe {
+                (*self.ptr).PIEInstanceID = -1;
             }
         }
+    }
+
+    let mut packages = List::<Package, 1700>::new();
+        
+    let mut f = |object: *mut UObject| {
+        let package = (*object).package();
+        let is_unseen_package = (*package).PIEInstanceID == -1;
+
+        if is_unseen_package {
+            // Register this package's index in an otherwise unused field.
+            (*package).PIEInstanceID = packages.len() as i32;
+            
+            let p = Package {
+                ptr: package,
+                count: 0,
+            };
+
+            // Save this package for us to reference later.
+            if packages.push(p).is_err() {
+                return;
+            }
+        }
+
+        // Increment the number of times we've seen this package.
+        let package = (*package).PIEInstanceID as usize;
+        let package = packages.get_unchecked_mut(package);
+        package.count += 1;
+    };
+
+    for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
+        if (*object).is(enum_class) {
+            f(object);
+        } else if (*object).is(struct_class) {
+            f(object);
+        } else if (*object).is(class_class) {
+            f(object);
+        }
+    }
+
+    for p in packages.iter() {
+        log!("{} has {} items.", *p.ptr.cast::<UObject>(), p.count);
     }
 
     timer.stop();

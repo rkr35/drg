@@ -408,21 +408,19 @@ pub struct UObject {
     pub InternalIndex: i32,
     ClassPrivate: *const UClass,
     NamePrivate: FName,
-    OuterPrivate: *const UObject,
+    OuterPrivate: *mut UObject,
 }
 
 impl UObject {
-    // pub unsafe fn package(&self) -> *const UObject {
-    //     let mut package = self.OuterPrivate;
+    pub unsafe fn package(&mut self) -> *mut UPackage {
+        let mut top = self as *mut UObject;
 
-    //     if !package.is_null() {
-    //         while !(*package).OuterPrivate.is_null() {
-    //             package = (*package).OuterPrivate;
-    //         }
-    //     }
+        while !(*top).OuterPrivate.is_null() {
+            top = (*top).OuterPrivate;
+        }
 
-    //     package
-    // }
+        top.cast()
+    }
 
     pub unsafe fn is(&self, class: *const UClass) -> bool {
         let mut my_class = self.ClassPrivate;
@@ -577,4 +575,12 @@ pub type FString = TArray<u16>;
 pub struct TPair<K, V> {
     pub Key: K,
     Value: V,
+}
+
+#[repr(C)]
+pub struct UPackage {
+    base: UObject,
+    unneeded_0: [u8; 56],
+    pub PIEInstanceID: i32,
+    unneeded_1: [u8; 60],
 }

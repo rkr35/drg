@@ -24,6 +24,10 @@ impl<T, const N: usize> List<T, N> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
     pub const fn capacity(&self) -> usize {
         self.data.len()
     }
@@ -41,6 +45,10 @@ impl<T, const N: usize> List<T, N> {
         } else {
             Err(Error::CapacityReached)
         }
+    }
+
+    pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
+        &mut *self.data.get_unchecked_mut(index).as_mut_ptr()
     }
 
     fn as_slice(&self) -> &[T] {
