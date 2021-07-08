@@ -1,6 +1,8 @@
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
 
 use crate::list::List;
+use crate::split::ReverseSplitIterator;
+
 use core::cmp::Ordering;
 use core::convert::TryFrom;
 use core::ffi::c_void;
@@ -512,6 +514,10 @@ impl FName {
     pub unsafe fn text(&self) -> &str {
         (*self.entry()).text()
     }
+
+    pub fn number(&self) -> u32 {
+        self.Number
+    }
 }
 
 impl Display for FName {
@@ -574,7 +580,7 @@ pub type FString = TArray<u16>;
 #[repr(C)]
 pub struct TPair<K, V> {
     pub Key: K,
-    Value: V,
+    pub Value: V,
 }
 
 #[repr(C)]
@@ -583,4 +589,21 @@ pub struct UPackage {
     unneeded_0: [u8; 56],
     pub PIEInstanceID: i32,
     unneeded_1: [u8; 60],
+}
+
+impl UPackage {
+    pub fn short_name(&self) -> &str {
+        let name = unsafe { self.base.name() }.as_bytes();
+        let name = ReverseSplitIterator::new(name, b'/')
+            .next()
+            .unwrap_or(b"UPackage::short_name(): empty object name");
+        
+        // SAFETY: We started with an ASCII string (`self.base.name()`) and
+        // split on an ASCII delimiter (`/`). Therefore, we still have a valid
+        // ASCII string after the split. Since ASCII is a subset of UTF-8, the
+        // bytes in `name` are valid UTF-8.
+        unsafe {
+            core::str::from_utf8_unchecked(name)
+        }
+    }
 }

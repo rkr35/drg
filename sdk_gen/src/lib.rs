@@ -15,9 +15,10 @@ use core::fmt::{self, Write};
 use core::str;
 
 mod game;
-use game::{TPair, UEnum, UObject};
+use game::{TPair, UClass, UEnum, UObject, UPackage};
 mod list;
 use list::List;
+mod split;
 mod timer;
 use timer::Timer;
 #[macro_use]
@@ -40,6 +41,7 @@ enum Error {
     Game(#[from] game::Error),
     File(#[from] win::file::Error),
     Fmt(#[from] fmt::Error),
+    List(#[from] list::Error),
 }
 
 #[no_mangle]
@@ -125,101 +127,148 @@ unsafe fn dump_objects() -> Result<(), Error> {
     Ok(())
 }
 
-unsafe fn generate_sdk() -> Result<(), Error> {
-    let timer = Timer::new("generate sdk");
+struct StaticClasses {
+    enumeration: *const UClass,
+    // structure: *const UClass,
+    // class: *const UClass,
+}
 
-    let enum_class = (*game::GUObjectArray)
-        .find("Class /Script/CoreUObject.Enum")?
-        .cast();
-
-    let struct_class = (*game::GUObjectArray)
-        .find("Class /Script/CoreUObject.Struct")?
-        .cast();
-
-    let class_class = (*game::GUObjectArray)
-        .find("Class /Script/CoreUObject.Class")?
-        .cast();
-
-    struct Package {
-        ptr: *mut game::UPackage,
-        count: u32,
+impl StaticClasses {
+    pub unsafe fn new() -> Result<StaticClasses, Error> {
+        Ok(StaticClasses {
+            enumeration: (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast(),
+            // structure: (*game::GUObjectArray).find("Class /Script/CoreUObject.Struct")?.cast(),
+            // class: (*game::GUObjectArray).find("Class /Script/CoreUObject.Class")?.cast(),
+        })
     }
+}
 
-    impl Drop for Package {
-        fn drop(&mut self) {
-            unsafe {
-                (*self.ptr).PIEInstanceID = -1;
-            }
+struct Package {
+    ptr: *mut game::UPackage,
+    file: win::File,
+}
+
+impl Drop for Package {
+    fn drop(&mut self) {
+        unsafe {
+            (*self.ptr).PIEInstanceID = -1;
         }
     }
+}
 
-    let mut packages = List::<Package, 1700>::new();
-        
-    let mut f = |object: *mut UObject| {
+struct Generator {
+    classes: StaticClasses,
+    lib_rs: win::File,
+    packages: List<Package, 1660>,
+}
+
+impl Generator {
+    pub unsafe fn new() -> Result<Generator, Error> {
+        let mut lib_rs = win::File::new(sdk_file!("src/lib.rs"))?;
+        lib_rs.write_str("#![allow(non_snake_case)]\n")?;
+        lib_rs.write_str("#![allow(non_camel_case_types)]\n")?;
+
+        Ok(Generator {
+            classes: StaticClasses::new()?,
+            lib_rs,
+            packages: List::<Package, 1660>::new(),
+        })
+    }
+
+    pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
+        for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
+            if (*object).is(self.classes.enumeration) {
+                self.generate_enum(object.cast())?;
+            }
+        }
+        Ok(())
+    }
+
+    unsafe fn get_package(&mut self, object: *mut UObject) -> Result<&mut Package, Error> {
         let package = (*object).package();
         let is_unseen_package = (*package).PIEInstanceID == -1;
 
-        if is_unseen_package {
-            // Register this package's index in an otherwise unused field.
-            (*package).PIEInstanceID = packages.len() as i32;
-            
-            let p = Package {
-                ptr: package,
-                count: 0,
-            };
+        if is_unseen_package {          
+            self.register_package(package)?;  
+        }
 
-            // Save this package for us to reference later.
-            if packages.push(p).is_err() {
-                return;
+        let package = (*package).PIEInstanceID as usize;
+        Ok(self.packages.get_unchecked_mut(package))
+    }
+
+    unsafe fn register_package(&mut self, package: *mut UPackage) -> Result<(), Error> {
+        let package_name = (*package).short_name();
+            
+        // Create a Rust module file for this package.
+        let file = {
+            let mut path = List::<u8, 260>::new();
+            write!(&mut path, concat!(sdk_path!(), "/src/{}.rs\0"), package_name)?;
+            win::File::new(path)?
+        };
+
+        // Declare the module in the SDK lib.rs.
+        writeln!(&mut self.lib_rs, "pub mod {};", package_name)?;
+
+        // Register this package's index in our package cache.
+        (*package).PIEInstanceID = self.packages.len() as i32;
+
+        let p = Package {
+            ptr: package,
+            file,
+        };
+
+        // Save the package to our cache.
+        self.packages.push(p)?;
+
+        Ok(())
+    }
+
+    unsafe fn generate_enum(&mut self, enumeration: *mut UEnum) -> Result<(), Error> {
+        let variants = (*enumeration).Names.as_slice();
+
+        if variants.is_empty() {
+            return Ok(());
+        }
+
+        let object = enumeration.cast::<UObject>();
+        let package = self.get_package(object)?;
+
+        writeln!(
+            &mut package.file,
+            "// {}\n#[repr(u8)]\npub enum {} {{",
+            *object,
+            (*object).name()
+        )?;
+    
+        for TPair { Key: name, Value: value } in variants.iter() {
+            let mut text = name.text();
+
+            if let Some(text_stripped) = text.bytes().rposition(|c| c == b':').and_then(|i| text.get(i + 1..)) {
+                text = text_stripped;
+            }
+
+            if text == "Self" {
+                // `Self` is a Rust keyword.
+                text = "SelfVariant";
+            }
+
+            if name.number() > 0 {
+                writeln!(&mut package.file, "    {}_{} = {},", text, name.number() - 1, value)?;
+            } else {
+                writeln!(&mut package.file, "    {} = {},", text, value)?;
             }
         }
-
-        // Increment the number of times we've seen this package.
-        let package = (*package).PIEInstanceID as usize;
-        let package = packages.get_unchecked_mut(package);
-        package.count += 1;
-    };
-
-    for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-        if (*object).is(enum_class) {
-            f(object);
-        } else if (*object).is(struct_class) {
-            f(object);
-        } else if (*object).is(class_class) {
-            f(object);
-        }
+    
+        writeln!(&mut package.file, "}}\n")?;
+    
+        Ok(())
     }
-
-    for p in packages.iter() {
-        log!("{} has {} items.", *p.ptr.cast::<UObject>(), p.count);
-    }
-
-    timer.stop();
-    Ok(())
 }
 
-unsafe fn generate_enum(mut out: impl Write, enumeration: *const UEnum) -> Result<(), Error> {
-    let object = enumeration.cast::<UObject>();
-
-    writeln!(
-        out,
-        "// {}\n#[repr(u8)]\npub enum {} {{",
-        *object,
-        (*object).name()
-    )?;
-
-    for TPair { Key: name, .. } in (*enumeration).Names.as_slice().iter() {
-        let name = name.text();
-
-        if let Some(name_stripped) = name.bytes().rposition(|c| c == b':').and_then(|i| name.get(i + 1..)) {
-            writeln!(out, "    {},", name_stripped)?;
-        } else {
-            writeln!(out, "    {},", name)?;
-        }
-    }
-
-    writeln!(out, "}}")?;
-
+unsafe fn generate_sdk() -> Result<(), Error> {
+    let timer = Timer::new("generate sdk");
+    Generator::new()?.generate_sdk()?;
+    timer.stop();
     Ok(())
 }
 

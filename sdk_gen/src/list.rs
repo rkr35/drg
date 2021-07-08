@@ -95,8 +95,14 @@ impl<const N: usize> Write for List<u8, N> {
     }
 }
 
-impl<const N: usize> List<u8, N> {
-    pub fn as_str(&self) -> Result<&str, str::Utf8Error> {
-        str::from_utf8(self.as_slice())
+// impl<const N: usize> List<u8, N> {
+//     pub fn as_str(&self) -> Result<&str, str::Utf8Error> {
+//         str::from_utf8(self.as_slice())
+//     }
+// }
+
+impl<const N: usize> AsRef<[u8]> for List<u8, N> {
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
     }
 }

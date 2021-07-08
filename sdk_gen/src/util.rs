@@ -29,10 +29,16 @@ macro_rules! log {
 macro_rules! sdk_file {
     ($filename:literal) => {{
         concat!(
-            include_str!(concat!(env!("OUT_DIR"), "/sdk_path")),
+            sdk_path!(),
             '\\',
             $filename,
             '\0'
         )
     }};
+}
+
+macro_rules! sdk_path {
+    () => {
+        include_str!(concat!(env!("OUT_DIR"), "/sdk_path"))       
+    }
 }
