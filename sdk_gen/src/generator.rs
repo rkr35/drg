@@ -117,31 +117,10 @@ impl Generator {
         Ok(())
     }
 
-    unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> Option<&'static str> {
-        let max_discriminant_value = variants
-            .iter()
-            .filter(|v|
-                // Unreal Engine has a bug where u8 enum classes can have an auto-generated "_MAX" field with value
-                // 256. We need to copy this bug so we don't accidentally represent these bugged enums as u16.
-                v.Value != 256 || !v.Key.text().ends_with("_MAX"))
-            .map(|v| v.Value)
-            .max()?;
-
-        Some(if max_discriminant_value <= u8::MAX.into() {
-            "u8"
-        } else if max_discriminant_value <= u16::MAX.into() {
-            "u16"
-        } else if max_discriminant_value <= u32::MAX.into() {
-            "u32"
-        } else {
-            "u64"
-        })
-    }
-
     unsafe fn generate_enum(&mut self, enumeration: *mut UEnum) -> Result<(), Error> {
         let variants = (*enumeration).Names.as_slice();
 
-        let representation = if let Some(r) = Self::get_enum_representation(variants) {
+        let representation = if let Some(r) = get_enum_representation(variants) {
             r
         } else {
             // Don't generate empty enum.
@@ -162,44 +141,7 @@ impl Generator {
 
         for variant in variants.iter()
         {
-            let mut text = variant.Key.text();
-
-            if text.ends_with("_MAX") {
-                // Skip auto-generated _MAX field.
-                continue;
-            }
-
-            if let Some(text_stripped) = text
-                .bytes()
-                .rposition(|c| c == b':')
-                .and_then(|i| text.get(i + 1..))
-            {
-                text = text_stripped;
-            }
-
-            if text == "Self" {
-                // `Self` is a Rust keyword.
-                text = "SelfVariant";
-            }
-
-            if variant.Key.number() > 0 {
-                writeln!(
-                    file,
-                    "    pub const {}_{}: {enum_name} = {enum_name}({});",
-                    text,
-                    variant.Key.number() - 1,
-                    variant.Value,
-                    enum_name = enum_name
-                )?;
-            } else {
-                writeln!(
-                    file,
-                    "    pub const {}: {enum_name} = {enum_name}({});",
-                    text,
-                    variant.Value,
-                    enum_name = enum_name
-                )?;
-            }
+            write_enum_variant(file, enum_name, variant)?;
         }
 
         writeln!(file, "}}\n")?;
@@ -210,4 +152,68 @@ impl Generator {
     unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
         Ok(())
     }
+}
+
+unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> Option<&'static str> {
+    let max_discriminant_value = variants
+        .iter()
+        .filter(|v|
+            // Unreal Engine has a bug where u8 enum classes can have an auto-generated "_MAX" field with value
+            // 256. We need to copy this bug so we don't accidentally represent these bugged enums as u16.
+            v.Value != 256 || !v.Key.text().ends_with("_MAX"))
+        .map(|v| v.Value)
+        .max()?;
+
+    Some(if max_discriminant_value <= u8::MAX.into() {
+        "u8"
+    } else if max_discriminant_value <= u16::MAX.into() {
+        "u16"
+    } else if max_discriminant_value <= u32::MAX.into() {
+        "u32"
+    } else {
+        "u64"
+    })
+}
+
+unsafe fn write_enum_variant(file: &mut File, enum_name: &str, variant: &TPair<FName, i64>) -> Result<(), Error> {
+    let mut text = variant.Key.text();
+
+    if text.ends_with("_MAX") {
+        // Skip auto-generated _MAX field.
+        return Ok(());
+    }
+
+    if let Some(text_stripped) = text
+        .bytes()
+        .rposition(|c| c == b':')
+        .and_then(|i| text.get(i + 1..))
+    {
+        text = text_stripped;
+    }
+
+    if text == "Self" {
+        // `Self` is a Rust keyword.
+        text = "SelfVariant";
+    }
+
+    if variant.Key.number() > 0 {
+        writeln!(
+            file,
+            "    pub const {}_{}: {enum_name} = {enum_name}({});",
+            text,
+            variant.Key.number() - 1,
+            variant.Value,
+            enum_name = enum_name
+        )?;
+    } else {
+        writeln!(
+            file,
+            "    pub const {}: {enum_name} = {enum_name}({});",
+            text,
+            variant.Value,
+            enum_name = enum_name
+        )?;
+    }
+
+    Ok(())
 }
