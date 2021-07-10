@@ -5,7 +5,7 @@
 // extern {}
 
 #[link(name = "msvcrt")]
-extern {}
+extern "C" {}
 
 #[link(name = "vcruntime")]
 extern "C" {}
@@ -136,8 +136,12 @@ struct StaticClasses {
 impl StaticClasses {
     pub unsafe fn new() -> Result<StaticClasses, Error> {
         Ok(StaticClasses {
-            enumeration: (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast(),
-            structure: (*game::GUObjectArray).find("Class /Script/CoreUObject.Struct")?.cast(),
+            enumeration: (*game::GUObjectArray)
+                .find("Class /Script/CoreUObject.Enum")?
+                .cast(),
+            structure: (*game::GUObjectArray)
+                .find("Class /Script/CoreUObject.Struct")?
+                .cast(),
             // class: (*game::GUObjectArray).find("Class /Script/CoreUObject.Class")?.cast(),
         })
     }
@@ -191,8 +195,8 @@ impl Generator {
         let package = (*object).package();
         let is_unseen_package = (*package).PIEInstanceID == -1;
 
-        if is_unseen_package {          
-            self.register_package(package)?;  
+        if is_unseen_package {
+            self.register_package(package)?;
         }
 
         let package = (*package).PIEInstanceID as usize;
@@ -201,11 +205,15 @@ impl Generator {
 
     unsafe fn register_package(&mut self, package: *mut UPackage) -> Result<(), Error> {
         let package_name = (*package).short_name();
-            
+
         // Create a Rust module file for this package.
         let file = {
             let mut path = List::<u8, 260>::new();
-            write!(&mut path, concat!(sdk_path!(), "/src/{}.rs\0"), package_name)?;
+            write!(
+                &mut path,
+                concat!(sdk_path!(), "/src/{}.rs\0"),
+                package_name
+            )?;
             win::File::new(path)?
         };
 
@@ -215,10 +223,7 @@ impl Generator {
         // Register this package's index in our package cache.
         (*package).PIEInstanceID = self.packages.len() as i32;
 
-        let p = Package {
-            ptr: package,
-            file,
-        };
+        let p = Package { ptr: package, file };
 
         // Save the package to our cache.
         self.packages.push(p)?;
@@ -232,8 +237,7 @@ impl Generator {
             .filter(|v|
                 // Unreal Engine has a bug where u8 enum classes can have an auto-generated "_MAX" field with value
                 // 256. We need to copy this bug so we don't accidentally represent these bugged enums as u16.
-                v.Value != 256 || !v.Key.text().ends_with("_MAX")
-            )
+                v.Value != 256 || !v.Key.text().ends_with("_MAX"))
             .map(|v| v.Value)
             .max()?;
 
@@ -270,7 +274,11 @@ impl Generator {
             name = enum_name,
         )?;
 
-        for TPair { Key: name, Value: value } in variants.iter() {
+        for TPair {
+            Key: name,
+            Value: value,
+        } in variants.iter()
+        {
             let mut text = name.text();
 
             if text.ends_with("_MAX") {
@@ -278,7 +286,11 @@ impl Generator {
                 continue;
             }
 
-            if let Some(text_stripped) = text.bytes().rposition(|c| c == b':').and_then(|i| text.get(i + 1..)) {
+            if let Some(text_stripped) = text
+                .bytes()
+                .rposition(|c| c == b':')
+                .and_then(|i| text.get(i + 1..))
+            {
                 text = text_stripped;
             }
 
@@ -288,14 +300,27 @@ impl Generator {
             }
 
             if name.number() > 0 {
-                writeln!(file, "    pub const {}_{}: {enum_name} = {enum_name}({});", text, name.number() - 1, value, enum_name = enum_name)?;
+                writeln!(
+                    file,
+                    "    pub const {}_{}: {enum_name} = {enum_name}({});",
+                    text,
+                    name.number() - 1,
+                    value,
+                    enum_name = enum_name
+                )?;
             } else {
-                writeln!(file, "    pub const {}: {enum_name} = {enum_name}({});", text, value, enum_name = enum_name)?;
+                writeln!(
+                    file,
+                    "    pub const {}: {enum_name} = {enum_name}({});",
+                    text,
+                    value,
+                    enum_name = enum_name
+                )?;
             }
         }
-    
+
         writeln!(file, "}}\n")?;
-    
+
         Ok(())
     }
 

@@ -5,10 +5,7 @@ pub struct ReverseSplitIterator<'a> {
 
 impl<'a> ReverseSplitIterator<'a> {
     pub fn new(source: &[u8], delimiter: u8) -> ReverseSplitIterator {
-        ReverseSplitIterator {
-            source,
-            delimiter,
-        }
+        ReverseSplitIterator { source, delimiter }
     }
 }
 
@@ -16,8 +13,14 @@ impl<'a> Iterator for ReverseSplitIterator<'a> {
     type Item = &'a [u8];
 
     fn next(&mut self) -> Option<Self::Item> {
-        #[allow(clippy::int_plus_one)] // Applying this lint yields `i < self.source.len()`, which doesn't elide the panic branch.
-        if let Some(split) = self.source.iter().rposition(|c| *c == self.delimiter).filter(|i| i + 1 <= self.source.len()) {
+        #[allow(clippy::int_plus_one)]
+        // Applying this lint yields `i < self.source.len()`, which doesn't elide the panic branch.
+        if let Some(split) = self
+            .source
+            .iter()
+            .rposition(|c| *c == self.delimiter)
+            .filter(|i| i + 1 <= self.source.len())
+        {
             // Return everything after the delimiter.
             let ret = &self.source[split + 1..];
 
@@ -39,4 +42,3 @@ impl<'a> Iterator for ReverseSplitIterator<'a> {
         }
     }
 }
-

@@ -170,22 +170,20 @@ impl fmt::Display for Variant {
                     fields = fields,
                     placeholders = placeholders,
                 )
-            }
+            } // Fields::Struct(fields) => {
+              //     let (placeholders, fields): (String, String) = fields
+              //         .iter()
+              //         .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
+              //         .unzip();
 
-            // Fields::Struct(fields) => {
-            //     let (placeholders, fields): (String, String) = fields
-            //         .iter()
-            //         .map(|field| (format!("{}: {{}}, ", field), format!("{}, ", field)))
-            //         .unzip();
-
-            //     writeln!(
-            //         f,
-            //         "Self::{variant} {{ {fields} }} => write!(f, \"{variant} {{ {placeholders} }}\", {fields})?,\n",
-            //         variant = self.name,
-            //         fields = fields,
-            //         placeholders = placeholders,
-            //     )
-            // }
+              //     writeln!(
+              //         f,
+              //         "Self::{variant} {{ {fields} }} => write!(f, \"{variant} {{ {placeholders} }}\", {fields})?,\n",
+              //         variant = self.name,
+              //         fields = fields,
+              //         placeholders = placeholders,
+              //     )
+              // }
         }
     }
 }

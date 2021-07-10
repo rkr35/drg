@@ -543,7 +543,11 @@ impl FNameEntryId {
     unsafe fn entry(&self) -> *const FNameEntry {
         let block = self.block() as usize;
         let offset = self.offset() as usize;
-        (*NamePoolData).Blocks.get_unchecked(block).add(Stride * offset).cast()
+        (*NamePoolData)
+            .Blocks
+            .get_unchecked(block)
+            .add(Stride * offset)
+            .cast()
     }
 }
 
@@ -597,13 +601,11 @@ impl UPackage {
         let name = ReverseSplitIterator::new(name, b'/')
             .next()
             .unwrap_or(b"UPackage::short_name(): empty object name");
-        
+
         // SAFETY: We started with an ASCII string (`self.base.name()`) and
         // split on an ASCII delimiter (`/`). Therefore, we still have a valid
         // ASCII string after the split. Since ASCII is a subset of UTF-8, the
         // bytes in `name` are valid UTF-8.
-        unsafe {
-            core::str::from_utf8_unchecked(name)
-        }
+        unsafe { core::str::from_utf8_unchecked(name) }
     }
 }
