@@ -472,7 +472,7 @@ impl Display for UObject {
             write!(f, "{}", self.name())?;
 
             if self.NamePrivate.Number > 0 {
-                write!(f, "_{}", self.NamePrivate.Number)?;
+                write!(f, "_{}", self.NamePrivate.Number - 1)?;
             }
         }
 
