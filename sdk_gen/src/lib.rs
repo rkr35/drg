@@ -15,7 +15,7 @@ use core::fmt::{self, Write};
 use core::str;
 
 mod game;
-use game::{FName, TPair, UClass, UEnum, UObject, UPackage};
+use game::{FName, TPair, UClass, UEnum, UObject, UPackage, UStruct};
 mod list;
 use list::List;
 mod split;
@@ -129,7 +129,7 @@ unsafe fn dump_objects() -> Result<(), Error> {
 
 struct StaticClasses {
     enumeration: *const UClass,
-    // structure: *const UClass,
+    structure: *const UClass,
     // class: *const UClass,
 }
 
@@ -137,7 +137,7 @@ impl StaticClasses {
     pub unsafe fn new() -> Result<StaticClasses, Error> {
         Ok(StaticClasses {
             enumeration: (*game::GUObjectArray).find("Class /Script/CoreUObject.Enum")?.cast(),
-            // structure: (*game::GUObjectArray).find("Class /Script/CoreUObject.Struct")?.cast(),
+            structure: (*game::GUObjectArray).find("Class /Script/CoreUObject.Struct")?.cast(),
             // class: (*game::GUObjectArray).find("Class /Script/CoreUObject.Class")?.cast(),
         })
     }
@@ -180,6 +180,8 @@ impl Generator {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
             if (*object).is(self.classes.enumeration) {
                 self.generate_enum(object.cast())?;
+            } else if (*object).is(self.classes.structure) {
+                self.generate_structure(object.cast())?;
             }
         }
         Ok(())
@@ -294,6 +296,10 @@ impl Generator {
     
         writeln!(file, "}}\n")?;
     
+        Ok(())
+    }
+
+    unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
         Ok(())
     }
 }
