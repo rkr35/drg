@@ -15,7 +15,7 @@ use core::fmt::{self, Write};
 use core::str;
 
 mod game;
-use game::{TPair, UClass, UEnum, UObject, UPackage};
+use game::{FName, TPair, UClass, UEnum, UObject, UPackage};
 mod list;
 use list::List;
 mod split;
@@ -165,8 +165,9 @@ struct Generator {
 impl Generator {
     pub unsafe fn new() -> Result<Generator, Error> {
         let mut lib_rs = win::File::new(sdk_file!("src/lib.rs"))?;
-        lib_rs.write_str("#![allow(non_snake_case)]\n")?;
         lib_rs.write_str("#![allow(non_camel_case_types)]\n")?;
+        lib_rs.write_str("#![allow(non_snake_case)]\n")?;
+        lib_rs.write_str("#![allow(non_upper_case_globals)]\n")?;
 
         Ok(Generator {
             classes: StaticClasses::new()?,
@@ -223,25 +224,57 @@ impl Generator {
         Ok(())
     }
 
+    unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> Option<&'static str> {
+        let max_discriminant_value = variants
+            .iter()
+            .filter(|v|
+                // Unreal Engine has a bug where u8 enum classes can have an auto-generated "_MAX" field with value
+                // 256. We need to copy this bug so we don't accidentally represent these bugged enums as u16.
+                v.Value != 256 || !v.Key.text().ends_with("_MAX")
+            )
+            .map(|v| v.Value)
+            .max()?;
+
+        Some(if max_discriminant_value <= u8::MAX.into() {
+            "u8"
+        } else if max_discriminant_value <= u16::MAX.into() {
+            "u16"
+        } else if max_discriminant_value <= u32::MAX.into() {
+            "u32"
+        } else {
+            "u64"
+        })
+    }
+
     unsafe fn generate_enum(&mut self, enumeration: *mut UEnum) -> Result<(), Error> {
         let variants = (*enumeration).Names.as_slice();
 
-        if variants.is_empty() {
+        let representation = if let Some(r) = Self::get_enum_representation(variants) {
+            r
+        } else {
+            // Don't generate empty enum.
             return Ok(());
-        }
+        };
 
         let object = enumeration.cast::<UObject>();
-        let package = self.get_package(object)?;
+        let file = &mut self.get_package(object)?.file;
+        let enum_name = (*object).name();
 
         writeln!(
-            &mut package.file,
-            "// {}\n#[repr(u8)]\npub enum {} {{",
+            file,
+            "// {}\n#[repr(transparent)]\npub struct {name}({});\n\nimpl {name} {{",
             *object,
-            (*object).name()
+            representation,
+            name = enum_name,
         )?;
-    
+
         for TPair { Key: name, Value: value } in variants.iter() {
             let mut text = name.text();
+
+            if text.ends_with("_MAX") {
+                // Skip auto-generated _MAX field.
+                continue;
+            }
 
             if let Some(text_stripped) = text.bytes().rposition(|c| c == b':').and_then(|i| text.get(i + 1..)) {
                 text = text_stripped;
@@ -253,13 +286,13 @@ impl Generator {
             }
 
             if name.number() > 0 {
-                writeln!(&mut package.file, "    {}_{} = {},", text, name.number() - 1, value)?;
+                writeln!(file, "    pub const {}_{}: {enum_name} = {enum_name}({});", text, name.number() - 1, value, enum_name = enum_name)?;
             } else {
-                writeln!(&mut package.file, "    {} = {},", text, value)?;
+                writeln!(file, "    pub const {}: {enum_name} = {enum_name}({});", text, value, enum_name = enum_name)?;
             }
         }
     
-        writeln!(&mut package.file, "}}\n")?;
+        writeln!(file, "}}\n")?;
     
         Ok(())
     }
