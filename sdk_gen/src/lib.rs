@@ -274,12 +274,9 @@ impl Generator {
             name = enum_name,
         )?;
 
-        for TPair {
-            Key: name,
-            Value: value,
-        } in variants.iter()
+        for variant in variants.iter()
         {
-            let mut text = name.text();
+            let mut text = variant.Key.text();
 
             if text.ends_with("_MAX") {
                 // Skip auto-generated _MAX field.
@@ -299,13 +296,13 @@ impl Generator {
                 text = "SelfVariant";
             }
 
-            if name.number() > 0 {
+            if variant.Key.number() > 0 {
                 writeln!(
                     file,
                     "    pub const {}_{}: {enum_name} = {enum_name}({});",
                     text,
-                    name.number() - 1,
-                    value,
+                    variant.Key.number() - 1,
+                    variant.Value,
                     enum_name = enum_name
                 )?;
             } else {
@@ -313,7 +310,7 @@ impl Generator {
                     file,
                     "    pub const {}: {enum_name} = {enum_name}({});",
                     text,
-                    value,
+                    variant.Value,
                     enum_name = enum_name
                 )?;
             }
