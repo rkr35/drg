@@ -466,7 +466,7 @@ impl Display for UObject {
             }
 
             for outer in outers.iter().rev() {
-                write!(f, "{}.", outer)?
+                write!(f, "{}.", outer)?;
             }
 
             write!(f, "{}", self.name())?;
