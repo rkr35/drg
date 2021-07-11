@@ -139,9 +139,13 @@ impl Generator {
             name = enum_name,
         )?;
 
-        for variant in variants.iter()
-        {
-            write_enum_variant(file, enum_name, variant)?;
+        if let Some((last, rest)) = variants.split_last() {
+            for variant in rest.iter()
+            {
+                write_enum_variant(file, enum_name, variant, false)?;
+            }
+
+            write_enum_variant(file, enum_name, last, true)?;
         }
 
         writeln!(file, "}}\n")?;
@@ -175,10 +179,10 @@ unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> Option<&'st
     })
 }
 
-unsafe fn write_enum_variant(file: &mut File, enum_name: &str, variant: &TPair<FName, i64>) -> Result<(), Error> {
+unsafe fn write_enum_variant(file: &mut File, enum_name: &str, variant: &TPair<FName, i64>, is_last_variant: bool) -> Result<(), Error> {
     let mut text = variant.Key.text();
 
-    if text.ends_with("_MAX") {
+    if is_last_variant && text.ends_with("_MAX") {
         // Skip auto-generated _MAX field.
         return Ok(());
     }
