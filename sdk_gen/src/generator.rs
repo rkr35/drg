@@ -182,7 +182,7 @@ unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> Option<&'st
 unsafe fn write_enum_variant(file: &mut File, enum_name: &str, variant: &TPair<FName, i64>, is_last_variant: bool) -> Result<(), Error> {
     let mut text = variant.Key.text();
 
-    if is_last_variant && text.ends_with("_MAX") {
+    if is_last_variant && (text.ends_with("_MAX") || text.ends_with("_Max")) {
         // Skip auto-generated _MAX field.
         return Ok(());
     }
