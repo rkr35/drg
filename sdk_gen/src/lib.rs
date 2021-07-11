@@ -69,8 +69,7 @@ unsafe fn on_detach() {}
 
 unsafe fn run() -> Result<(), Error> {
     init_globals()?;
-    dump_names()?;
-    // dump_objects()?;
+    dump_globals()?;
     generate_sdk()?;
     idle();
     Ok(())
@@ -87,6 +86,14 @@ unsafe fn init_globals() -> Result<(), Error> {
     game::FUObjectArray::init(&module)?;
     log!("NamePoolData = {}", game::NamePoolData as usize);
     log!("GUObjectArray = {}", game::GUObjectArray as usize);
+    Ok(())
+}
+
+unsafe fn dump_globals() -> Result<(), Error> {
+    let timer = Timer::new("dump global names and objects");
+    dump_names()?;
+    dump_objects()?;
+    timer.stop();
     Ok(())
 }
 
