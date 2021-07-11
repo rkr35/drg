@@ -76,14 +76,17 @@ unsafe fn run() -> Result<(), Error> {
 }
 
 unsafe fn init_globals() -> Result<(), Error> {
+    let timer = Timer::new("init globals");
     let module = win::Module::current()?;
+    game::FNamePool::init(&module)?;
+    game::FUObjectArray::init(&module)?;
+    timer.stop();
+
     log!(
         "module.start = {}, module.size = {}",
         module.start(),
         module.size()
     );
-    game::FNamePool::init(&module)?;
-    game::FUObjectArray::init(&module)?;
     log!("NamePoolData = {}", game::NamePoolData as usize);
     log!("GUObjectArray = {}", game::GUObjectArray as usize);
     Ok(())
