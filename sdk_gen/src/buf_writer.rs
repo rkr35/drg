@@ -24,9 +24,7 @@ impl<W: Write> BufWriter<W> {
 
     fn flush(&mut self) -> Result<(), fmt::Error> {
         if let Some(writer) = &mut self.writer {
-            let s = unsafe {
-                str::from_utf8_unchecked(self.buffer.as_slice())
-            };
+            let s = unsafe { str::from_utf8_unchecked(self.buffer.as_slice()) };
             writer.write_str(s)?;
         }
         self.buffer.clear();
@@ -38,7 +36,7 @@ impl<W: Write> Write for BufWriter<W> {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         let s = s.as_bytes();
         let mut cursor = 0;
-        
+
         while cursor < s.len() {
             let mut space_left_in_buffer = self.buffer.capacity() - self.buffer.len();
 

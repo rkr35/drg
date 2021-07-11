@@ -49,7 +49,6 @@ enum Error {
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-    // unsafe extern "system" fn DllMain(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
     win::dll_main(dll, reason, on_attach, on_detach)
 }
 

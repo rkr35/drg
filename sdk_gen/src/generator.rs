@@ -1,7 +1,7 @@
-use crate::{sdk_file, sdk_path};
 use crate::game::{self, FName, TPair, UClass, UEnum, UObject, UPackage, UStruct};
 use crate::list::{self, List};
 use crate::win::file::{self, File};
+use crate::{sdk_file, sdk_path};
 
 use core::fmt::{self, Write};
 
@@ -169,11 +169,7 @@ impl Generator {
 }
 
 unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static str {
-    let max_discriminant_value = variants
-        .iter()
-        .map(|v| v.Value)
-        .max()
-        .unwrap_or(0);
+    let max_discriminant_value = variants.iter().map(|v| v.Value).max().unwrap_or(0);
 
     if max_discriminant_value <= u8::MAX.into() {
         "u8"
@@ -186,7 +182,11 @@ unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static st
     }
 }
 
-unsafe fn write_enum_variant(file: &mut File, enum_name: &str, variant: &TPair<FName, i64>) -> Result<(), Error> {
+unsafe fn write_enum_variant(
+    file: &mut File,
+    enum_name: &str,
+    variant: &TPair<FName, i64>,
+) -> Result<(), Error> {
     let mut text = variant.Key.text();
 
     if let Some(text_stripped) = text
