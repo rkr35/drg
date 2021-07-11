@@ -14,6 +14,8 @@ use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;
 
+mod buf_writer;
+use buf_writer::BufWriter;
 mod game;
 mod generator;
 use generator::Generator;
@@ -23,6 +25,7 @@ mod timer;
 use timer::Timer;
 mod util;
 mod win;
+use win::File;
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -101,23 +104,18 @@ unsafe fn dump_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    let timer = Timer::new("dump global names");
-
-    let mut file = win::File::new(sdk_file!("global_names.txt"))?;
+    let mut file = BufWriter::with_writer(File::new(sdk_file!("global_names.txt"))?);
 
     for name in (*game::NamePoolData).iter() {
         let text = (*name).text();
         writeln!(&mut file, "{}", text)?;
     }
 
-    timer.stop();
     Ok(())
 }
 
 unsafe fn dump_objects() -> Result<(), Error> {
-    let timer = Timer::new("dump global objects");
-
-    let mut file = win::File::new(sdk_file!("global_objects.txt"))?;
+    let mut file = BufWriter::with_writer(File::new(sdk_file!("global_objects.txt"))?);
 
     for object in (*game::GUObjectArray).iter() {
         if object.is_null() {
@@ -133,7 +131,6 @@ unsafe fn dump_objects() -> Result<(), Error> {
         }
     }
 
-    timer.stop();
     Ok(())
 }
 

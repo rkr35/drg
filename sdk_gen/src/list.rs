@@ -32,6 +32,14 @@ impl<T, const N: usize> List<T, N> {
         self.data.len()
     }
 
+    pub fn clear(&mut self) {
+        unsafe {
+            let slice = ptr::slice_from_raw_parts_mut(self.data.as_mut_ptr() as *mut T, self.len);
+            self.len = 0;
+            ptr::drop_in_place(slice);
+        }
+    }
+
     pub fn iter(&self) -> Iter<T> {
         self.as_slice().iter()
     }
@@ -51,7 +59,7 @@ impl<T, const N: usize> List<T, N> {
         &mut *self.data.get_unchecked_mut(index).as_mut_ptr()
     }
 
-    fn as_slice(&self) -> &[T] {
+    pub fn as_slice(&self) -> &[T] {
         unsafe {
             // SAFETY: We ensure that &self.data[..self.len] contains initialized values.
             slice::from_raw_parts(self.data.as_ptr() as *const T, self.len)
@@ -77,12 +85,18 @@ impl<T, const N: usize> Drop for List<T, N> {
 
 impl<const N: usize> Write for List<u8, N> {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        if let Some(destination) = self.data.get_mut(self.len..self.len + s.len()) {
+        self.write_bytes(s.as_bytes()).map_err(|_| fmt::Error)
+    }
+}
+
+impl<const N: usize> List<u8, N> {
+    pub fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        if let Some(destination) = self.data.get_mut(self.len..self.len + bytes.len()) {
             // SAFETY: We already checked that the destination slice is valid for source length bytes.
             // Nonoverlapping because mutable references can't alias.
             unsafe {
                 ptr::copy_nonoverlapping(
-                    s.as_ptr().cast(),
+                    bytes.as_ptr().cast(),
                     destination.as_mut_ptr(),
                     destination.len(),
                 );
@@ -90,16 +104,10 @@ impl<const N: usize> Write for List<u8, N> {
             self.len += destination.len();
             Ok(())
         } else {
-            Err(fmt::Error)
+            Err(Error::CapacityReached)
         }
     }
 }
-
-// impl<const N: usize> List<u8, N> {
-//     pub fn as_str(&self) -> Result<&str, str::Utf8Error> {
-//         str::from_utf8(self.as_slice())
-//     }
-// }
 
 impl<const N: usize> AsRef<[u8]> for List<u8, N> {
     fn as_ref(&self) -> &[u8] {

@@ -3,6 +3,7 @@ use core::fmt::{self, Write};
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     CreateFile,
+    WriteFile,
 }
 
 pub struct File {
@@ -33,6 +34,27 @@ impl File {
 
         Ok(Self { handle })
     }
+
+    pub fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        unsafe {
+            let mut num_written = 0;
+
+            #[allow(clippy::cast_possible_truncation)]
+            let result = super::WriteFile(
+                self.handle,
+                bytes.as_ptr(),
+                bytes.len() as u32,
+                &mut num_written,
+                core::ptr::null_mut(),
+            );
+
+            if result == 0 {
+                Err(Error::WriteFile)
+            } else {
+                Ok(())
+            }
+        }
+    }
 }
 
 impl Drop for File {
@@ -46,23 +68,6 @@ impl Drop for File {
 
 impl Write for File {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        unsafe {
-            let mut num_written = 0;
-
-            #[allow(clippy::cast_possible_truncation)]
-            let result = super::WriteFile(
-                self.handle,
-                s.as_ptr(),
-                s.len() as u32,
-                &mut num_written,
-                core::ptr::null_mut(),
-            );
-
-            if result == 0 {
-                Err(fmt::Error::default())
-            } else {
-                Ok(())
-            }
-        }
+        self.write_bytes(s.as_bytes()).map_err(|_| fmt::Error)
     }
 }
