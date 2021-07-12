@@ -3,30 +3,21 @@ use core::fmt::{self, Write};
 use core::str;
 
 pub struct BufWriter<W: Write> {
-    writer: Option<W>,
+    writer: W,
     buffer: List<u8, 8192>,
 }
 
 impl<W: Write> BufWriter<W> {
-    pub fn new() -> BufWriter<W> {
-        BufWriter {
-            writer: None,
-            buffer: List::new(),
-        }
-    }
-
     pub fn with_writer(writer: W) -> BufWriter<W> {
         BufWriter {
-            writer: Some(writer),
+            writer,
             buffer: List::new(),
         }
     }
 
     fn flush(&mut self) -> Result<(), fmt::Error> {
-        if let Some(writer) = &mut self.writer {
-            let s = unsafe { str::from_utf8_unchecked(self.buffer.as_slice()) };
-            writer.write_str(s)?;
-        }
+        let s = unsafe { str::from_utf8_unchecked(self.buffer.as_slice()) };
+        self.writer.write_str(s)?;
         self.buffer.clear();
         Ok(())
     }
