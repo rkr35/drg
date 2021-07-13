@@ -58,7 +58,9 @@ pub struct Generator {
 impl Generator {
     pub unsafe fn new() -> Result<Generator, Error> {
         let mut lib_rs = File::new(sdk_file!("src/lib.rs"))?;
-        lib_rs.write_str("#![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n")?;
+        lib_rs.write_str(
+            "#![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n",
+        )?;
 
         Ok(Generator {
             classes: StaticClasses::new()?,
@@ -90,7 +92,10 @@ impl Generator {
         Ok(self.packages.get_unchecked_mut(package))
     }
 
-    unsafe fn get_package_file(&mut self, object: *mut UObject) -> Result<BufWriter<&mut File>, Error> {
+    unsafe fn get_package_file(
+        &mut self,
+        object: *mut UObject,
+    ) -> Result<BufWriter<&mut File>, Error> {
         Ok(BufWriter::new(&mut self.get_package(object)?.file))
     }
 
@@ -185,19 +190,37 @@ impl Generator {
         let base = (*structure).SuperStruct;
 
         if base.is_null() {
-            writeln!(file, "// {} is {} bytes\n#[repr(C)]\npub struct {} {{", *object, size, struct_name)?;
+            writeln!(
+                file,
+                "// {} is {} bytes\n#[repr(C)]\npub struct {} {{",
+                *object, size, struct_name
+            )?;
         } else {
             offset = (*base).PropertiesSize;
-            writeln!(file, "// {} is {} bytes ({} inherited)\n#[repr(C)]\npub struct {} {{", *object, size, offset, struct_name)?;
+            writeln!(
+                file,
+                "// {} is {} bytes ({} inherited)\n#[repr(C)]\npub struct {} {{",
+                *object, size, offset, struct_name
+            )?;
 
             let base_object = base.cast::<UObject>();
             let base_name = (*base_object).name();
             let base_package = (*base_object).package();
 
             if base_package == package.ptr {
-                writeln!(file, "    // offset: 0, size: {}\n    base: {},\n", offset, base_name)?;
+                writeln!(
+                    file,
+                    "    // offset: 0, size: {}\n    base: {},\n",
+                    offset, base_name
+                )?;
             } else {
-                writeln!(file, "    // offset: 0, size: {}\n    base: crate::{}::{},\n", offset, (*base_package).short_name(), base_name)?;
+                writeln!(
+                    file,
+                    "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
+                    offset,
+                    (*base_package).short_name(),
+                    base_name
+                )?;
             }
         }
 
