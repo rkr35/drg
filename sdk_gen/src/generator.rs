@@ -56,7 +56,7 @@ pub struct Generator {
 impl Generator {
     pub unsafe fn new() -> Result<Generator, Error> {
         let mut lib_rs = File::new(sdk_file!("src/lib.rs"))?;
-        lib_rs.write_str("#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]\n")?;
+        lib_rs.write_str("#![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n")?;
 
         Ok(Generator {
             classes: StaticClasses::new()?,
