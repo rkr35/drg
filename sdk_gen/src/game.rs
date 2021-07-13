@@ -105,8 +105,9 @@ impl FNamePool {
         NameIterator {
             pool: self,
             block: 0,
+            block_start: self.Blocks[0],
             cursor_within_block: self.Blocks[0],
-            block_end_pos: self.Blocks[0]
+            block_end: self.Blocks[0]
                 .add(first_block_size - mem::size_of::<FNameEntryHeader>()),
         }
     }
@@ -115,17 +116,18 @@ impl FNamePool {
 pub struct NameIterator<'pool> {
     pool: &'pool FNamePool,
     block: u32,
+    block_start: *const u8,
     cursor_within_block: *const u8,
-    block_end_pos: *const u8,
+    block_end: *const u8,
 }
 
 impl Iterator for NameIterator<'_> {
-    type Item = *const FNameEntry;
+    type Item = (FNameEntryId, *const FNameEntry);
 
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
             // Did we finish iterating this block?
-            if self.cursor_within_block >= self.block_end_pos {
+            if self.cursor_within_block >= self.block_end {
                 // Let's look at the next block.
                 self.block += 1;
 
@@ -145,11 +147,12 @@ impl Iterator for NameIterator<'_> {
                 // Use .get_unchecked() to elide impossible panic branch. We trust Unreal Engine will uphold its own
                 // invariant that self.CurrentBlock < FNameMaxBlocks. Since self.block <= self.CurrentBlock, then
                 // self.block < FNameMaxBlocks.
-                self.cursor_within_block = *self.pool.Blocks.get_unchecked(self.block as usize);
+                self.block_start = *self.pool.Blocks.get_unchecked(self.block as usize);
+                self.cursor_within_block = self.block_start;
 
                 // Calculate where this block ends.
-                self.block_end_pos = self
-                    .cursor_within_block
+                self.block_end = self
+                    .block_start
                     .add(block_size - mem::size_of::<FNameEntryHeader>());
             }
 
@@ -157,15 +160,17 @@ impl Iterator for NameIterator<'_> {
             let len = (*entry).len();
 
             if len > 0 {
+                let offset = (self.cursor_within_block as usize - self.block_start as usize) / Stride;
+
                 // Advance our block cursor past this entry.
                 self.cursor_within_block = self.cursor_within_block.add((*entry).get_size());
 
                 // Yield the entry.
-                Some(entry)
+                Some((FNameEntryId::from(self.block, offset as u32), entry))
             } else {
                 // Null-terminator entry found.
                 // We're done iterating this block.
-                self.cursor_within_block = self.block_end_pos;
+                self.cursor_within_block = self.block_end;
 
                 // Try to pull an entry from the next block.
                 self.next()
@@ -549,12 +554,22 @@ pub struct FNameEntryId {
 }
 
 impl FNameEntryId {
+    fn from(block: u32, offset: u32) -> Self {
+        Self {
+            Value: (block << FNameBlockOffsetBits) | offset,
+        }
+    }
+
     fn block(&self) -> u32 {
         self.Value >> FNameBlockOffsetBits
     }
 
     fn offset(&self) -> u32 {
         self.Value & (FNameBlockOffsets - 1) as u32
+    }
+
+    pub fn value(&self) -> u32 {
+        self.Value
     }
 
     unsafe fn entry(&self) -> *const FNameEntry {

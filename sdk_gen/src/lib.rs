@@ -105,9 +105,9 @@ unsafe fn dump_globals() -> Result<(), Error> {
 unsafe fn dump_names() -> Result<(), Error> {
     let mut file = BufWriter::new(File::new(sdk_file!("global_names.txt"))?);
 
-    for name in (*game::NamePoolData).iter() {
+    for (index, name) in (*game::NamePoolData).iter() {
         let text = (*name).text();
-        writeln!(&mut file, "{}", text)?;
+        writeln!(&mut file, "[{}] {}", index.value(), text)?;
     }
 
     Ok(())
