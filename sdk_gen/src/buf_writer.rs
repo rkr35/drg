@@ -8,7 +8,7 @@ pub struct BufWriter<W: Write> {
 }
 
 impl<W: Write> BufWriter<W> {
-    pub fn with_writer(writer: W) -> BufWriter<W> {
+    pub fn new(writer: W) -> BufWriter<W> {
         BufWriter {
             writer,
             buffer: List::new(),

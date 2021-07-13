@@ -103,7 +103,7 @@ unsafe fn dump_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    let mut file = BufWriter::with_writer(File::new(sdk_file!("global_names.txt"))?);
+    let mut file = BufWriter::new(File::new(sdk_file!("global_names.txt"))?);
 
     for name in (*game::NamePoolData).iter() {
         let text = (*name).text();
@@ -114,7 +114,7 @@ unsafe fn dump_names() -> Result<(), Error> {
 }
 
 unsafe fn dump_objects() -> Result<(), Error> {
-    let mut file = BufWriter::with_writer(File::new(sdk_file!("global_objects.txt"))?);
+    let mut file = BufWriter::new(File::new(sdk_file!("global_objects.txt"))?);
 
     for object in (*game::GUObjectArray).iter() {
         if object.is_null() {

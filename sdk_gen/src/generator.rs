@@ -89,7 +89,7 @@ impl Generator {
     }
 
     unsafe fn get_package_file(&mut self, object: *mut UObject) -> Result<BufWriter<&mut File>, Error> {
-        Ok(BufWriter::with_writer(&mut self.get_package(object)?.file))
+        Ok(BufWriter::new(&mut self.get_package(object)?.file))
     }
 
     unsafe fn register_package(&mut self, package: *mut UPackage) -> Result<(), Error> {
