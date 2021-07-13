@@ -427,7 +427,9 @@ impl UObject {
     pub unsafe fn is(&self, class: *const UClass) -> bool {
         let my_class = self.ClassPrivate.cast::<UStruct>();
         let class = class.cast::<UStruct>();
-        (*my_class).struct_base_chain.is(&(*class).struct_base_chain)
+        (*my_class)
+            .struct_base_chain
+            .is(&(*class).struct_base_chain)
     }
 
     pub unsafe fn name(&self) -> &str {
