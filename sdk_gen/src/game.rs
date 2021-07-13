@@ -425,17 +425,9 @@ impl UObject {
     }
 
     pub unsafe fn is(&self, class: *const UClass) -> bool {
-        let mut my_class = self.ClassPrivate;
-
-        while !my_class.is_null() {
-            if my_class == class {
-                return true;
-            }
-
-            my_class = (*my_class).base.SuperStruct.cast();
-        }
-
-        false
+        let my_class = self.ClassPrivate.cast::<UStruct>();
+        let class = class.cast::<UStruct>();
+        (*my_class).struct_base_chain.is(&(*class).struct_base_chain)
     }
 
     pub unsafe fn name(&self) -> &str {
@@ -493,9 +485,23 @@ pub struct UField {
 }
 
 #[repr(C)]
+pub struct FStructBaseChain {
+    StructBaseChainArray: *const *const FStructBaseChain,
+    NumStructBasesInChainMinusOne: i32,
+}
+
+impl FStructBaseChain {
+    unsafe fn is(&self, other: &Self) -> bool {
+        let other_index = other.NumStructBasesInChainMinusOne;
+        let our_index = self.NumStructBasesInChainMinusOne;
+        other_index <= our_index && *self.StructBaseChainArray.add(other_index as usize) == other
+    }
+}
+
+#[repr(C)]
 pub struct UStruct {
     base: UField,
-    pad0: [u8; 16],
+    struct_base_chain: FStructBaseChain,
     pub SuperStruct: *mut UStruct,
     pub Children: *const UField,
     pub ChildProperties: *const FField,
