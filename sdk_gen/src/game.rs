@@ -481,6 +481,12 @@ impl Display for UObject {
 }
 
 #[repr(C)]
+pub struct FField {
+    vtable: usize,
+    pad: [u8; 48],
+}
+
+#[repr(C)]
 pub struct UField {
     base: UObject,
     next: *const UField,
@@ -489,9 +495,12 @@ pub struct UField {
 #[repr(C)]
 pub struct UStruct {
     base: UField,
-    pad1: [u8; 16],
-    SuperStruct: *const UStruct,
-    pad: [u8; 104],
+    pad0: [u8; 16],
+    pub SuperStruct: *mut UStruct,
+    pub Children: *const UField,
+    pub ChildProperties: *const FField,
+    pub PropertiesSize: i32,
+    pad1: [u8; 84],
 }
 
 #[repr(C)]

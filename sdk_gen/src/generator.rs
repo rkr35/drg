@@ -17,7 +17,7 @@ pub enum Error {
 struct StaticClasses {
     enumeration: *const UClass,
     structure: *const UClass,
-    // class: *const UClass,
+    class: *const UClass,
 }
 
 impl StaticClasses {
@@ -27,9 +27,11 @@ impl StaticClasses {
                 .find("Class /Script/CoreUObject.Enum")?
                 .cast(),
             structure: (*game::GUObjectArray)
-                .find("Class /Script/CoreUObject.Struct")?
+                .find("Class /Script/CoreUObject.ScriptStruct")?
                 .cast(),
-            // class: (*game::GUObjectArray).find("Class /Script/CoreUObject.Class")?.cast(),
+            class: (*game::GUObjectArray)
+                .find("Class /Script/CoreUObject.Class")?
+                .cast(),
         })
     }
 }
@@ -67,11 +69,11 @@ impl Generator {
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-            if (*object).is(self.classes.enumeration) {
+            if (*object).is(self.classes.class) || (*object).is(self.classes.structure) {
+                self.generate_structure(object.cast())?;
+            } else if (*object).is(self.classes.enumeration) {
                 self.generate_enum(object.cast())?;
-            }/* else if (*object).is(self.classes.structure) {
-                self.generate_structure(&mut buffer, object.cast())?;
-            }*/
+            }
         }
         Ok(())
     }
@@ -166,9 +168,45 @@ impl Generator {
         Ok(())
     }
 
-    // unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
-    //     Ok(())
-    // }
+    unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
+        let size = (*structure).PropertiesSize;
+
+        if size == 0 {
+            return Ok(());
+        }
+
+        let object = structure.cast::<UObject>();
+        let package = self.get_package(object)?;
+        let mut file = BufWriter::new(&mut package.file);
+
+        let mut offset = 0;
+
+        let struct_name = (*object).name();
+        let base = (*structure).SuperStruct;
+
+        if base.is_null() {
+            writeln!(file, "// {} is {} bytes\n#[repr(C)]\npub struct {} {{", *object, size, struct_name)?;
+        } else {
+            offset = (*base).PropertiesSize;
+            writeln!(file, "// {} is {} bytes ({} inherited)\n#[repr(C)]\npub struct {} {{", *object, size, offset, struct_name)?;
+
+            let base_object = base.cast::<UObject>();
+            let base_name = (*base_object).name();
+            let base_package = (*base_object).package();
+
+            if base_package == package.ptr {
+                writeln!(file, "    // offset: 0, size: {}\n    base: {},\n", offset, base_name)?;
+            } else {
+                writeln!(file, "    // offset: 0, size: {}\n    base: crate::{}::{},\n", offset, (*base_package).short_name(), base_name)?;
+            }
+        }
+
+        // todo: add struct fields.
+
+        writeln!(file, "}}\n")?;
+
+        Ok(())
+    }
 }
 
 unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static str {
