@@ -495,12 +495,6 @@ impl Display for UObject {
 }
 
 #[repr(C)]
-pub struct FField {
-    vtable: usize,
-    pad: [u8; 48],
-}
-
-#[repr(C)]
 pub struct UField {
     base: UObject,
     Next: *const UField,
@@ -534,6 +528,16 @@ pub struct UStruct {
 }
 
 impl_deref! { UStruct as UField }
+
+#[repr(C)]
+pub struct FField {
+    vtable: usize,
+    pub Class: *const c_void,
+    pad0: [u8; 16],
+    pub Next: *const FField,
+    pub Name: FName,
+    pub Flags: u32,
+}
 
 #[repr(C)]
 pub struct UClass {
