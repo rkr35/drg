@@ -503,7 +503,7 @@ pub struct FField {
 #[repr(C)]
 pub struct UField {
     base: UObject,
-    next: *const UField,
+    Next: *const UField,
 }
 
 impl_deref! { UField as UObject }
