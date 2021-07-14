@@ -540,6 +540,17 @@ pub struct FField {
 }
 
 #[repr(C)]
+pub struct FProperty {
+    pub base: FField,
+    pub ArrayDim: i32,
+    pub ElementSize: i32,
+    pub PropertyFlags: u64,
+    pad0: [u8; 4],
+    pub Offset: i32,
+    pad1: [u8; 40],
+}
+
+#[repr(C)]
 pub struct UClass {
     base: UStruct,
     pad: [u8; 384],
