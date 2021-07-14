@@ -323,10 +323,7 @@ impl FUObjectArray {
                 continue;
             }
 
-            let my_class = {
-                let o: *const UObject = (*object).ClassPrivate.cast();
-                (*o).name().as_bytes()
-            };
+            let my_class = (*(*object).ClassPrivate).name().as_bytes();
 
             if my_class != target.class {
                 // Classes don't match.
@@ -408,6 +405,31 @@ pub struct FUObjectItem {
     SerialNumber: i32,
 }
 
+macro_rules! impl_deref {
+    ($Derived:ty as $Base:ty) => {
+        impl core::ops::Deref for $Derived {
+            type Target = $Base;
+
+            fn deref(&self) -> &Self::Target {
+                &self.base
+            }
+        }
+
+        impl core::ops::DerefMut for $Derived {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.base
+            }
+        }
+
+        impl core::fmt::Display for $Derived {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
+                let object: &UObject = self;
+                object.fmt(f)
+            }
+        }
+    }
+}
+
 #[repr(C)]
 pub struct UObject {
     vtable: usize,
@@ -430,9 +452,7 @@ impl UObject {
     }
 
     pub unsafe fn is(&self, class: *const UClass) -> bool {
-        let my_class = self.ClassPrivate.cast::<UStruct>();
-        let class = class.cast::<UStruct>();
-        (*my_class)
+        (*self.ClassPrivate)
             .struct_base_chain
             .is(&(*class).struct_base_chain)
     }
@@ -445,12 +465,7 @@ impl UObject {
 impl Display for UObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
-            let class = {
-                let o: *const UObject = self.ClassPrivate.cast();
-                (*o).name()
-            };
-
-            write!(f, "{} ", class)?;
+            write!(f, "{} ", (*self.ClassPrivate).name())?;
 
             let mut outers = List::<&str, MAX_OUTERS>::new();
             let mut outer = self.OuterPrivate;
@@ -491,6 +506,8 @@ pub struct UField {
     next: *const UField,
 }
 
+impl_deref! { UField as UObject }
+
 #[repr(C)]
 pub struct FStructBaseChain {
     StructBaseChainArray: *const *const FStructBaseChain,
@@ -516,11 +533,15 @@ pub struct UStruct {
     pad1: [u8; 84],
 }
 
+impl_deref! { UStruct as UField }
+
 #[repr(C)]
 pub struct UClass {
     base: UStruct,
     pad: [u8; 384],
 }
+
+impl_deref! { UClass as UStruct }
 
 #[repr(C)]
 pub struct FName {
@@ -591,6 +612,8 @@ pub struct UEnum {
     CppForm: i32,
     EnumDisplayNameFn: usize,
 }
+
+impl_deref! { UEnum as UField }
 
 #[repr(C)]
 pub struct TArray<T> {

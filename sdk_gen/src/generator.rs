@@ -148,14 +148,13 @@ impl Generator {
             get_enum_representation(variants)
         };
 
-        let object = enumeration.cast::<UObject>();
-        let mut file = self.get_package_file(object)?;
-        let enum_name = (*object).name();
+        let mut file = self.get_package_file(enumeration.cast())?;
+        let enum_name = (*enumeration).name();
 
         writeln!(
             file,
             "// {}\n#[repr(transparent)]\npub struct {name}({});\n\nimpl {name} {{",
-            *object,
+            *enumeration,
             representation,
             name = enum_name,
         )?;
@@ -180,32 +179,30 @@ impl Generator {
             return Ok(());
         }
 
-        let object = structure.cast::<UObject>();
-        let package = self.get_package(object)?;
+        let package = self.get_package(structure.cast())?;
         let mut file = BufWriter::new(&mut package.file);
 
         let mut offset = 0;
 
-        let struct_name = (*object).name();
+        let struct_name = (*structure).name();
         let base = (*structure).SuperStruct;
 
         if base.is_null() {
             writeln!(
                 file,
                 "// {} is {} bytes\n#[repr(C)]\npub struct {} {{",
-                *object, size, struct_name
+                *structure, size, struct_name
             )?;
         } else {
             offset = (*base).PropertiesSize;
             writeln!(
                 file,
                 "// {} is {} bytes ({} inherited)\n#[repr(C)]\npub struct {} {{",
-                *object, size, offset, struct_name
+                *structure, size, offset, struct_name
             )?;
 
-            let base_object = base.cast::<UObject>();
-            let base_name = (*base_object).name();
-            let base_package = (*base_object).package();
+            let base_name = (*base).name();
+            let base_package = (*base).package();
 
             if base_package == package.ptr {
                 writeln!(
