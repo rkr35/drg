@@ -470,7 +470,7 @@ pub struct FProperty {
     pad1: [u8; 40],
 }
 
-#[repr(C)]
+#[repr(transparent)]
 pub struct EClassCastFlags(u64);
 
 impl EClassCastFlags {
