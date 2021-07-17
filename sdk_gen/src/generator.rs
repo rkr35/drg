@@ -1,5 +1,5 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, FName, TPair, UClass, UEnum, UObject, UPackage, UStruct};
+use crate::game::{self, FName, FProperty, TPair, UClass, UEnum, UObject, UPackage, UStruct};
 use crate::list::{self, List};
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
@@ -12,6 +12,9 @@ pub enum Error {
     File(#[from] file::Error),
     Fmt(#[from] fmt::Error),
     List(#[from] list::Error),
+
+    BadOffset,
+    ZeroSizedField,
 }
 
 struct StaticClasses {
@@ -173,58 +176,9 @@ impl Generator {
     }
 
     unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
-        let size = (*structure).PropertiesSize;
-
-        if size == 0 {
-            return Ok(());
-        }
-
         let package = self.get_package(structure.cast())?;
-        let mut file = BufWriter::new(&mut package.file);
-
-        let mut offset = 0;
-
-        let struct_name = (*structure).name();
-        let base = (*structure).SuperStruct;
-
-        if base.is_null() {
-            writeln!(
-                file,
-                "// {} is {} bytes\n#[repr(C)]\npub struct {} {{",
-                *structure, size, struct_name
-            )?;
-        } else {
-            offset = (*base).PropertiesSize;
-            writeln!(
-                file,
-                "// {} is {} bytes ({} inherited)\n#[repr(C)]\npub struct {} {{",
-                *structure, size, offset, struct_name
-            )?;
-
-            let base_name = (*base).name();
-            let base_package = (*base).package();
-
-            if base_package == package.ptr {
-                writeln!(
-                    file,
-                    "    // offset: 0, size: {}\n    base: {},\n",
-                    offset, base_name
-                )?;
-            } else {
-                writeln!(
-                    file,
-                    "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
-                    offset,
-                    (*base_package).short_name(),
-                    base_name
-                )?;
-            }
-        }
-
-        // todo: add struct fields.
-
-        writeln!(file, "}}\n")?;
-
+        let file = BufWriter::new(&mut package.file);
+        StructGenerator::new(structure, package.ptr, file).generate()?;
         Ok(())
     }
 }
@@ -283,4 +237,151 @@ unsafe fn write_enum_variant(
     }
 
     Ok(())
+}
+
+struct StructGenerator<'a> {
+    structure: *mut UStruct,
+    package: *mut UPackage,
+    file: BufWriter<&'a mut File>,
+    offset: i32,
+}
+
+impl<'a> StructGenerator<'a> {
+    pub fn new(structure: *mut UStruct, package: *mut UPackage, file: BufWriter<&mut File>) -> StructGenerator {
+        StructGenerator {
+            structure,
+            package,
+            file,
+            offset: 0,
+        }
+    }
+
+    pub unsafe fn generate(&mut self) -> Result<(), Error> {
+        if (*self.structure).PropertiesSize == 0 {
+            return Ok(());
+        }
+
+        self.write_header()?;
+        self.add_fields_and_functions()?;
+
+        writeln!(self.file, "}}\n")?;
+
+        Ok(())
+    }
+
+    unsafe fn write_header(&mut self) -> Result<(), Error> {
+        let base = (*self.structure).SuperStruct;
+
+        if base.is_null() {
+            writeln!(
+                self.file,
+                "// {} is {} bytes.\n#[repr(C)]\npub struct {} {{",
+                *self.structure, (*self.structure).PropertiesSize, (*self.structure).name()
+            )?;
+        } else {
+            self.write_header_inherited(base)?;
+        }
+
+        Ok(())
+    }
+
+    unsafe fn write_header_inherited(&mut self, base: *mut UStruct) -> Result<(), Error> {
+        self.offset = (*base).PropertiesSize;
+
+        writeln!(
+            self.file,
+            "// {} is {} bytes ({} inherited).\n#[repr(C)]\npub struct {} {{",
+            *self.structure, (*self.structure).PropertiesSize, self.offset, (*self.structure).name()
+        )?;
+
+        let base_name = (*base).name();
+        let base_package = (*base).package();
+
+        if base_package == self.package {
+            writeln!(
+                self.file,
+                "    // offset: 0, size: {}\n    base: {},\n",
+                self.offset,
+                base_name
+            )?;
+        } else {
+            writeln!(
+                self.file,
+                "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
+                self.offset,
+                (*base_package).short_name(),
+                base_name
+            )?;
+        }
+
+        Ok(())
+    }
+
+    unsafe fn add_fields_and_functions(&mut self) -> Result<(), Error> {
+        let mut property = (*self.structure).ChildProperties.cast::<FProperty>();
+
+        while !property.is_null() {
+            self.process_property(property)?;
+            property = (*property).base.Next.cast();
+        }
+
+        self.add_end_of_struct_padding_if_needed()?;
+
+        Ok(())
+    }
+
+    unsafe fn process_property(&mut self, property: *const FProperty) -> Result<(), Error> {
+        let size = (*property).ElementSize * (*property).ArrayDim;
+
+        if size == 0 {
+            return Err(Error::ZeroSizedField);
+        }
+
+        let offset = (*property).Offset;
+
+        if offset > self.offset {
+            self.add_pad_field(self.offset, offset)?;
+        } else if offset < self.offset {
+            crate::log!("offset ({}) < self.offset ({}) for {}", offset, self.offset, *self.structure);
+            return Err(Error::BadOffset);
+        }
+
+        writeln!(
+            self.file,
+            "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
+            offset = self.offset,
+            size = size,
+            name = (*property).base.Name.text(),
+        )?;
+
+        self.offset += size;
+
+        Ok(())
+    }
+
+    unsafe fn add_pad_field(&mut self, from_offset: i32, to_offset: i32) -> Result<(), Error> {
+        writeln!(
+            self.file,
+            "    // offset: {offset}, size: {size}\n    pad_at_{offset}: [u8; {size}],\n",
+            offset = from_offset,
+            size = to_offset - from_offset,
+        )?;
+
+        self.offset = to_offset;
+
+        Ok(())
+    }
+
+    unsafe fn add_end_of_struct_padding_if_needed(&mut self) -> Result<(), Error> {
+        let struct_size = (*self.structure).PropertiesSize;
+        
+        if self.offset < struct_size {
+            self.add_pad_field(self.offset, struct_size)?;
+        } else if self.offset > struct_size {
+            crate::log!("struct size ({}) < self.offset ({}) for {}", struct_size, self.offset, *self.structure);
+            return Err(Error::BadOffset);
+        }
+
+        Ok(())
+    }
 }
