@@ -247,7 +247,11 @@ struct StructGenerator<'a> {
 }
 
 impl<'a> StructGenerator<'a> {
-    pub fn new(structure: *mut UStruct, package: *mut UPackage, file: BufWriter<&mut File>) -> StructGenerator {
+    pub fn new(
+        structure: *mut UStruct,
+        package: *mut UPackage,
+        file: BufWriter<&mut File>,
+    ) -> StructGenerator {
         StructGenerator {
             structure,
             package,
@@ -276,7 +280,9 @@ impl<'a> StructGenerator<'a> {
             writeln!(
                 self.file,
                 "// {} is {} bytes.\n#[repr(C)]\npub struct {} {{",
-                *self.structure, (*self.structure).PropertiesSize, (*self.structure).name()
+                *self.structure,
+                (*self.structure).PropertiesSize,
+                (*self.structure).name()
             )?;
         } else {
             self.write_header_inherited(base)?;
@@ -291,7 +297,10 @@ impl<'a> StructGenerator<'a> {
         writeln!(
             self.file,
             "// {} is {} bytes ({} inherited).\n#[repr(C)]\npub struct {} {{",
-            *self.structure, (*self.structure).PropertiesSize, self.offset, (*self.structure).name()
+            *self.structure,
+            (*self.structure).PropertiesSize,
+            self.offset,
+            (*self.structure).name()
         )?;
 
         let base_name = (*base).name();
@@ -301,8 +310,7 @@ impl<'a> StructGenerator<'a> {
             writeln!(
                 self.file,
                 "    // offset: 0, size: {}\n    base: {},\n",
-                self.offset,
-                base_name
+                self.offset, base_name
             )?;
         } else {
             writeln!(
@@ -342,7 +350,12 @@ impl<'a> StructGenerator<'a> {
         if offset > self.offset {
             self.add_pad_field(self.offset, offset)?;
         } else if offset < self.offset {
-            crate::log!("offset ({}) < self.offset ({}) for {}", offset, self.offset, *self.structure);
+            crate::log!(
+                "offset ({}) < self.offset ({}) for {}",
+                offset,
+                self.offset,
+                *self.structure
+            );
             return Err(Error::BadOffset);
         }
 
@@ -374,11 +387,16 @@ impl<'a> StructGenerator<'a> {
 
     unsafe fn add_end_of_struct_padding_if_needed(&mut self) -> Result<(), Error> {
         let struct_size = (*self.structure).PropertiesSize;
-        
+
         if self.offset < struct_size {
             self.add_pad_field(self.offset, struct_size)?;
         } else if self.offset > struct_size {
-            crate::log!("struct size ({}) < self.offset ({}) for {}", struct_size, self.offset, *self.structure);
+            crate::log!(
+                "struct size ({}) < self.offset ({}) for {}",
+                struct_size,
+                self.offset,
+                *self.structure
+            );
             return Err(Error::BadOffset);
         }
 

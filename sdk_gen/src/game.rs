@@ -107,8 +107,7 @@ impl FNamePool {
             block: 0,
             block_start: self.Blocks[0],
             cursor_within_block: self.Blocks[0],
-            block_end: self.Blocks[0]
-                .add(first_block_size - mem::size_of::<FNameEntryHeader>()),
+            block_end: self.Blocks[0].add(first_block_size - mem::size_of::<FNameEntryHeader>()),
         }
     }
 }
@@ -160,7 +159,8 @@ impl Iterator for NameIterator<'_> {
             let len = (*entry).len();
 
             if len > 0 {
-                let offset = (self.cursor_within_block as usize - self.block_start as usize) / Stride;
+                let offset =
+                    (self.cursor_within_block as usize - self.block_start as usize) / Stride;
 
                 // Advance our block cursor past this entry.
                 self.cursor_within_block = self.cursor_within_block.add((*entry).get_size());
@@ -427,7 +427,7 @@ macro_rules! impl_deref {
                 object.fmt(f)
             }
         }
-    }
+    };
 }
 
 #[repr(C)]
