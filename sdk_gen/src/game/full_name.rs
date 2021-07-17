@@ -37,7 +37,7 @@ impl<'name, const NUM_OUTERS: usize> TryFrom<&'name str> for FullName<'name, NUM
         // The first "outer" in the input name is actually the object name.
         let name = outers.next().ok_or(Error::NoName)?;
 
-        let mut list = List::<&[u8], NUM_OUTERS>::new();
+        let mut list = List::new();
 
         for outer in outers {
             list.push(outer)?;

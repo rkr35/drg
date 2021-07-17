@@ -68,7 +68,7 @@ impl Generator {
         Ok(Generator {
             classes: StaticClasses::new()?,
             lib_rs,
-            packages: List::<Package, 1660>::new(),
+            packages: List::new(),
         })
     }
 
