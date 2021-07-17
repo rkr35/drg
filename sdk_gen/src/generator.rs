@@ -351,10 +351,11 @@ impl<'a> StructGenerator<'a> {
             self.add_pad_field(self.offset, offset)?;
         } else if offset < self.offset {
             crate::log!(
-                "offset ({}) < self.offset ({}) for {}",
+                "offset ({}) < self.offset ({}) for {} {}",
                 offset,
                 self.offset,
-                *self.structure
+                *self.structure,
+                self.structure as usize,
             );
             return Err(Error::BadOffset);
         }
