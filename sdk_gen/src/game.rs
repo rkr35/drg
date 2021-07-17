@@ -4,16 +4,12 @@ use crate::list::List;
 use crate::split::ReverseSplitIterator;
 
 use core::cmp::Ordering;
-use core::convert::TryFrom;
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ptr;
 use core::slice;
 use core::str;
-
-mod full_name;
-use full_name::FullName;
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
@@ -22,8 +18,6 @@ pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
-    FullName(#[from] full_name::Error),
-    UnableToFind(&'static str),
 }
 
 const FNameMaxBlockBits: u8 = 13;
@@ -297,70 +291,6 @@ impl FUObjectArray {
             index: 0,
         }
     }
-
-    pub unsafe fn find(&self, name: &'static str) -> Result<*mut UObject, Error> {
-        // Do a short-circuiting name comparison.
-
-        // Compare the class from `name` against the class in `self`.
-        // Then compare the outers in `name` against the outers in `self`.
-
-        // This way, we don't have to construct the full name of `self` if we
-        // can rule out non-matching classes and outers sooner.
-
-        let target = FullName::<MAX_OUTERS>::try_from(name)?;
-
-        'outer: for object in self.iter() {
-            if object.is_null() {
-                // We're not looking for a null object.
-                continue;
-            }
-
-            let my_name = (*object).name().as_bytes();
-
-            if my_name != target.name {
-                // Object names don't match.
-                // No need to check the class. Let's bail.
-                continue;
-            }
-
-            let my_class = (*(*object).ClassPrivate).name().as_bytes();
-
-            if my_class != target.class {
-                // Classes don't match.
-                // No need to check the outers. Let's bail.
-                continue;
-            }
-
-            let mut my_outer = (*object).OuterPrivate;
-
-            for target_outer in target.outers.iter() {
-                if my_outer.is_null() {
-                    // We have no more outers left to check for this object, but
-                    // we still have target outers. So this object can't be what
-                    // we're looking for. Let's check out the next object.
-                    continue 'outer;
-                }
-
-                let my_outer_name = (*my_outer).name().as_bytes();
-
-                if my_outer_name != *target_outer {
-                    // This outer doesn't match the target outer we're looking for.
-                    // No need to check the remaining outers. Let's bail.
-                    continue 'outer;
-                }
-
-                // Advance up to the next outer.
-                my_outer = (*my_outer).OuterPrivate;
-            }
-
-            // We got here because the name, class, and outers all match the
-            // input name. So our search is over.
-            return Ok(object);
-        }
-
-        // No object matched our search.
-        Err(Error::UnableToFind(name))
-    }
 }
 
 pub struct ObjectIterator {
@@ -451,10 +381,8 @@ impl UObject {
         top.cast()
     }
 
-    pub unsafe fn is(&self, class: *const UClass) -> bool {
-        (*self.ClassPrivate)
-            .struct_base_chain
-            .is(&(*class).struct_base_chain)
+    pub unsafe fn fast_is(&self, class: EClassCastFlags) -> bool {
+        (*self.ClassPrivate).ClassCastFlags.is(class)
     }
 
     pub unsafe fn name(&self) -> &str {
@@ -508,14 +436,6 @@ pub struct FStructBaseChain {
     NumStructBasesInChainMinusOne: i32,
 }
 
-impl FStructBaseChain {
-    unsafe fn is(&self, other: &Self) -> bool {
-        let other_index = other.NumStructBasesInChainMinusOne;
-        let our_index = self.NumStructBasesInChainMinusOne;
-        other_index <= our_index && *self.StructBaseChainArray.add(other_index as usize) == other
-    }
-}
-
 #[repr(C)]
 pub struct UStruct {
     base: UField,
@@ -551,9 +471,24 @@ pub struct FProperty {
 }
 
 #[repr(C)]
+pub struct EClassCastFlags(u64);
+
+impl EClassCastFlags {
+    pub const CASTCLASS_UEnum: EClassCastFlags = EClassCastFlags(0x4);
+    pub const CASTCLASS_UScriptStruct: EClassCastFlags = EClassCastFlags(0x10);
+    pub const CASTCLASS_UClass: EClassCastFlags = EClassCastFlags(0x20);
+
+    pub fn is(&self, Self(class): Self) -> bool {
+        self.0 & class == class
+    }
+}
+
+#[repr(C)]
 pub struct UClass {
     base: UStruct,
-    pad: [u8; 384],
+    pad0: [u8; 32],
+    pub ClassCastFlags: EClassCastFlags,
+    pad1: [u8; 344],
 }
 
 impl_deref! { UClass as UStruct }

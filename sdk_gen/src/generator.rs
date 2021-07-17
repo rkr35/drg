@@ -1,5 +1,5 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, FName, FProperty, TPair, UClass, UEnum, UObject, UPackage, UStruct};
+use crate::game::{self, EClassCastFlags, FName, FProperty, TPair, UEnum, UObject, UPackage, UStruct};
 use crate::list::{self, List};
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
@@ -17,28 +17,6 @@ pub enum Error {
     ZeroSizedField,
 }
 
-struct StaticClasses {
-    enumeration: *const UClass,
-    structure: *const UClass,
-    class: *const UClass,
-}
-
-impl StaticClasses {
-    pub unsafe fn new() -> Result<StaticClasses, Error> {
-        Ok(StaticClasses {
-            enumeration: (*game::GUObjectArray)
-                .find("Class /Script/CoreUObject.Enum")?
-                .cast(),
-            structure: (*game::GUObjectArray)
-                .find("Class /Script/CoreUObject.ScriptStruct")?
-                .cast(),
-            class: (*game::GUObjectArray)
-                .find("Class /Script/CoreUObject.Class")?
-                .cast(),
-        })
-    }
-}
-
 struct Package {
     ptr: *mut game::UPackage,
     file: File,
@@ -53,7 +31,6 @@ impl Drop for Package {
 }
 
 pub struct Generator {
-    classes: StaticClasses,
     lib_rs: File,
     packages: List<Package, 1660>,
 }
@@ -66,7 +43,6 @@ impl Generator {
         )?;
 
         Ok(Generator {
-            classes: StaticClasses::new()?,
             lib_rs,
             packages: List::new(),
         })
@@ -74,9 +50,9 @@ impl Generator {
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-            if (*object).is(self.classes.class) || (*object).is(self.classes.structure) {
+            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass) || (*object).fast_is(EClassCastFlags::CASTCLASS_UScriptStruct) {
                 self.generate_structure(object.cast())?;
-            } else if (*object).is(self.classes.enumeration) {
+            } else if (*object).fast_is(EClassCastFlags::CASTCLASS_UEnum) {
                 self.generate_enum(object.cast())?;
             }
         }
