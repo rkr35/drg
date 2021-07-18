@@ -153,7 +153,11 @@ impl Generator {
 
     unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
         let package = self.get_package(structure.cast())?;
+
+        // TODO(perf): Don't need to create a new `BufWriter` if the previous object is from the same package.
+        // Reuse previous buffer to reduce total `WriteFile` calls.
         let file = BufWriter::new(&mut package.file);
+
         StructGenerator::new(structure, package.ptr, file).generate()?;
         Ok(())
     }
