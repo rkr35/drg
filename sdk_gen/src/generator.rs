@@ -1,5 +1,5 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, EClassCastFlags, FName, FProperty, TPair, UEnum, UObject, UPackage, UStruct};
+use crate::game::{self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UEnum, UObject, UPackage, UStruct};
 use crate::list::{self, List};
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
@@ -15,6 +15,8 @@ pub enum Error {
 
     BadOffset,
     ZeroSizedField,
+    BadBitfieldSize(i32),
+    LastBitfield,
 }
 
 struct Package {
@@ -224,6 +226,8 @@ struct StructGenerator<'a> {
     package: *mut UPackage,
     file: BufWriter<&'a mut File>,
     offset: i32,
+    bitfields: List<List<*const FBoolProperty, 64>, 8>,
+    last_bitfield_offset: Option<i32>,
 }
 
 impl<'a> StructGenerator<'a> {
@@ -237,6 +241,8 @@ impl<'a> StructGenerator<'a> {
             package,
             file,
             offset: 0,
+            bitfields: List::new(),
+            last_bitfield_offset: None,
         }
     }
 
@@ -324,7 +330,62 @@ impl<'a> StructGenerator<'a> {
         if size == 0 {
             return Err(Error::ZeroSizedField);
         }
+        
+        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
+            let property = property.cast::<FBoolProperty>();
 
+            if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
+                self.bitfields.last_mut().ok_or(Error::LastBitfield)?.push(property)?;
+
+                // We already emitted the bitfield member variable on the first bit.
+                return Ok(());
+            } else {
+                let representation = if size == 1 {
+                    "u8"
+                } else if size == 2 {
+                    "u16"
+                } else if size == 4 {
+                    "u32"
+                } else if size == 8 {
+                    "u64"
+                } else {
+                    return Err(Error::BadBitfieldSize(size));
+                };
+
+                self.add_padding_if_needed(property.cast())?;
+
+                writeln!(
+                    self.file,
+                    "    // offset: {offset} (actual: {actual_offset}), size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
+                    offset = self.offset,
+                    actual_offset = (*property).base.Offset,
+                    size = size,
+                    representation = representation,
+                )?;
+                
+                self.last_bitfield_offset = Some(self.offset);
+                self.bitfields.push({ let mut b = List::new(); b.push(property)?; b })?;
+                self.offset += size;
+            }
+        } else {
+            self.add_padding_if_needed(property)?;
+
+            writeln!(
+                self.file,
+                "    // offset: {offset} (actual: {actual_offset}), size: {size}\n    pub {name}: [u8; {size}],\n",
+                offset = self.offset,
+                actual_offset = (*property).Offset,
+                size = size,
+                name = (*property).base.Name.text(),
+            )?;
+
+            self.offset += size;
+        }
+
+        Ok(())
+    }
+
+    unsafe fn add_padding_if_needed(&mut self, property: *const FProperty) -> Result<(), Error> {
         let offset = (*property).Offset;
 
         if offset > self.offset {
@@ -339,16 +400,6 @@ impl<'a> StructGenerator<'a> {
             );
             return Err(Error::BadOffset);
         }
-
-        writeln!(
-            self.file,
-            "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
-            offset = self.offset,
-            size = size,
-            name = (*property).base.Name.text(),
-        )?;
-
-        self.offset += size;
 
         Ok(())
     }

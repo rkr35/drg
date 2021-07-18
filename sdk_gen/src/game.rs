@@ -450,9 +450,16 @@ pub struct UStruct {
 impl_deref! { UStruct as UField }
 
 #[repr(C)]
+pub struct FFieldClass {
+    pad0: [u8; 16],
+    CastFlags: EClassCastFlags,
+    pad1: [u8; 40],
+}
+
+#[repr(C)]
 pub struct FField {
     vtable: usize,
-    pub Class: *const c_void,
+    pub ClassPrivate: *const FFieldClass,
     pad0: [u8; 16],
     pub Next: *const FField,
     pub Name: FName,
@@ -470,6 +477,22 @@ pub struct FProperty {
     pad1: [u8; 40],
 }
 
+impl FProperty {
+    pub unsafe fn is(&self, property: EClassCastFlags) -> bool {
+        (*self.base.ClassPrivate).CastFlags.is(property)
+    }
+}
+
+#[repr(C)]
+pub struct FBoolProperty {
+    pub base: FProperty,
+    FieldSize: u8,
+    ByteOffset: u8,
+    ByteMask: u8,
+    FieldMask: u8,
+    pad: [u8; 4],
+}
+
 #[repr(transparent)]
 pub struct EClassCastFlags(u64);
 
@@ -477,6 +500,7 @@ impl EClassCastFlags {
     pub const CASTCLASS_UEnum: EClassCastFlags = EClassCastFlags(0x4);
     pub const CASTCLASS_UScriptStruct: EClassCastFlags = EClassCastFlags(0x10);
     pub const CASTCLASS_UClass: EClassCastFlags = EClassCastFlags(0x20);
+    pub const CASTCLASS_FBoolProperty: EClassCastFlags = EClassCastFlags(0x20000);
 
     pub fn is(&self, Self(class): Self) -> bool {
         self.0 & class == class

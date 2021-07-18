@@ -72,6 +72,14 @@ impl<T, const N: usize> List<T, N> {
             slice::from_raw_parts_mut(self.data.as_mut_ptr() as *mut T, self.len)
         }
     }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        if self.len > 0 {
+            Some(unsafe { self.get_unchecked_mut(self.len - 1) })
+        } else {
+            None
+        }
+    }
 }
 
 impl<T, const N: usize> Drop for List<T, N> {
