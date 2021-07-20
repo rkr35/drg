@@ -1,6 +1,6 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UEnum, UObject, UPackage, UStruct};
-use crate::list::{self, List};
+use crate::list::List;
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
 
@@ -11,12 +11,13 @@ pub enum Error {
     Game(#[from] game::Error),
     File(#[from] file::Error),
     Fmt(#[from] fmt::Error),
-    List(#[from] list::Error),
 
-    BadOffset,
     ZeroSizedField,
     BadBitfieldSize(i32),
     LastBitfield,
+    MaxPackages,
+    MaxBitfields,
+    BitfieldFull,
 }
 
 struct Package {
@@ -103,7 +104,7 @@ impl Generator {
         let p = Package { ptr: package, file };
 
         // Save the package to our cache.
-        self.packages.push(p)?;
+        self.packages.push(p).map_err(|_| Error::MaxPackages)?;
 
         Ok(())
     }
@@ -335,7 +336,7 @@ impl<'a> StructGenerator<'a> {
             let property = property.cast::<FBoolProperty>();
 
             if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
-                self.bitfields.last_mut().ok_or(Error::LastBitfield)?.push(property)?;
+                self.bitfields.last_mut().ok_or(Error::LastBitfield)?.push(property).map_err(|_| Error::BitfieldFull)?;
 
                 // We already emitted the bitfield member variable on the first bit.
                 return Ok(());
@@ -364,7 +365,7 @@ impl<'a> StructGenerator<'a> {
                 )?;
                 
                 self.last_bitfield_offset = Some(self.offset);
-                self.bitfields.push({ let mut b = List::new(); b.push(property)?; b })?;
+                self.bitfields.push({ let mut b = List::new(); b.push(property).map_err(|_| Error::BitfieldFull)?; b }).map_err(|_| Error::MaxBitfields)?;
                 self.offset += size;
             }
         } else {
