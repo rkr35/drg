@@ -338,10 +338,7 @@ impl<'a> StructGenerator<'a> {
         if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
             let property = property.cast::<FBoolProperty>();
 
-            if self
-                .last_bitfield_offset
-                .map_or(false, |o| (*property).base.Offset == o)
-            {
+            if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
                 self.bitfields
                     .last_mut()
                     .ok_or(Error::LastBitfield)?
@@ -351,6 +348,8 @@ impl<'a> StructGenerator<'a> {
                 // We already emitted the bitfield member variable on the first bit.
                 return Ok(());
             } else {
+                self.add_padding_if_needed(property.cast())?;
+
                 let representation = if size == 1 {
                     "u8"
                 } else if size == 2 {
@@ -363,18 +362,16 @@ impl<'a> StructGenerator<'a> {
                     return Err(Error::BadBitfieldSize(size));
                 };
 
-                self.add_padding_if_needed(property.cast())?;
-
                 writeln!(
                     self.file,
-                    "    // offset: {offset} (actual: {actual_offset}), size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
+                    "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
                     offset = self.offset,
-                    actual_offset = (*property).base.Offset,
                     size = size,
                     representation = representation,
                 )?;
 
                 self.last_bitfield_offset = Some(self.offset);
+
                 self.bitfields
                     .push({
                         let mut b = List::new();
@@ -382,6 +379,7 @@ impl<'a> StructGenerator<'a> {
                         b
                     })
                     .map_err(|_| Error::MaxBitfields)?;
+                
                 self.offset += size;
             }
         } else {
@@ -389,24 +387,13 @@ impl<'a> StructGenerator<'a> {
 
             writeln!(
                 self.file,
-                "    // offset: {offset} (actual: {actual_offset}), size: {size}\n    pub {name}: [u8; {size}],\n",
+                "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
                 offset = self.offset,
-                actual_offset = (*property).Offset,
                 size = size,
                 name = (*property).base.Name.text(),
             )?;
 
             self.offset += size;
-        }
-
-        Ok(())
-    }
-
-    unsafe fn add_padding_if_needed(&mut self, property: *const FProperty) -> Result<(), Error> {
-        let offset = (*property).Offset;
-
-        if offset > self.offset {
-            self.add_pad_field(self.offset, offset)?;
         }
 
         Ok(())
@@ -421,6 +408,16 @@ impl<'a> StructGenerator<'a> {
         )?;
 
         self.offset = to_offset;
+
+        Ok(())
+    }
+
+    unsafe fn add_padding_if_needed(&mut self, property: *const FProperty) -> Result<(), Error> {
+        let offset = (*property).Offset;
+
+        if offset > self.offset {
+            self.add_pad_field(self.offset, offset)?;
+        }
 
         Ok(())
     }
