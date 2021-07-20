@@ -7,6 +7,7 @@ use core::cmp::Ordering;
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
 use core::mem;
+use core::ops::BitOr;
 use core::ptr;
 use core::slice;
 use core::str;
@@ -503,7 +504,15 @@ impl EClassCastFlags {
     pub const CASTCLASS_FBoolProperty: EClassCastFlags = EClassCastFlags(0x20000);
 
     pub fn is(&self, Self(class): Self) -> bool {
-        self.0 & class == class
+        self.0 & class != 0
+    }
+}
+
+impl BitOr for EClassCastFlags {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
     }
 }
 

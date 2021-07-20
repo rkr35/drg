@@ -56,9 +56,7 @@ impl Generator {
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass)
-                || (*object).fast_is(EClassCastFlags::CASTCLASS_UScriptStruct)
-            {
+            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass | EClassCastFlags::CASTCLASS_UScriptStruct) {
                 self.generate_structure(object.cast())?;
             } else if (*object).fast_is(EClassCastFlags::CASTCLASS_UEnum) {
                 self.generate_enum(object.cast())?;
