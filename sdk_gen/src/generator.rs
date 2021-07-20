@@ -390,7 +390,7 @@ impl<'a> StructGenerator<'a> {
                 "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
                 offset = self.offset,
                 size = size,
-                name = (*property).base.Name.text(),
+                name = (*property).base.Name,
             )?;
 
             self.offset += size;

@@ -548,7 +548,13 @@ impl FName {
 
 impl Display for FName {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        unsafe { (*self.entry()).fmt(f) }
+        unsafe {
+            if self.number() == 0 {
+                self.text().fmt(f)
+            } else {
+                write!(f, "{}_{}", self.text(), self.number() - 1)
+            }
+        }
     }
 }
 
