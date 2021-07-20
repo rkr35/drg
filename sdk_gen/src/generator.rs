@@ -390,15 +390,6 @@ impl<'a> StructGenerator<'a> {
 
         if offset > self.offset {
             self.add_pad_field(self.offset, offset)?;
-        } else if offset < self.offset {
-            crate::log!(
-                "offset ({}) < self.offset ({}) for {} {}",
-                offset,
-                self.offset,
-                *self.structure,
-                self.structure as usize,
-            );
-            return Err(Error::BadOffset);
         }
 
         Ok(())
@@ -422,14 +413,6 @@ impl<'a> StructGenerator<'a> {
 
         if self.offset < struct_size {
             self.add_pad_field(self.offset, struct_size)?;
-        } else if self.offset > struct_size {
-            crate::log!(
-                "struct size ({}) < self.offset ({}) for {}",
-                struct_size,
-                self.offset,
-                *self.structure
-            );
-            return Err(Error::BadOffset);
         }
 
         Ok(())
