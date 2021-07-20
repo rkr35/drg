@@ -34,7 +34,7 @@ impl Drop for Package {
 
 pub struct Generator {
     lib_rs: File,
-    packages: List<Package, 1660>,
+    packages: List<Package, 1700>,
 }
 
 impl Generator {
