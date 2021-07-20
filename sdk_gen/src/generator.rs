@@ -226,7 +226,7 @@ struct StructGenerator<'a> {
     package: *mut UPackage,
     file: BufWriter<&'a mut File>,
     offset: i32,
-    bitfields: List<List<*const FBoolProperty, 64>, 8>,
+    bitfields: List<List<*const FBoolProperty, 64>, 64>,
     last_bitfield_offset: Option<i32>,
 }
 
