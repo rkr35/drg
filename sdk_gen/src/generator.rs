@@ -1,5 +1,8 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UEnum, UObject, UPackage, UStruct};
+use crate::game::{
+    self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UEnum, UObject, UPackage,
+    UStruct,
+};
 use crate::list::List;
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
@@ -53,7 +56,9 @@ impl Generator {
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass) || (*object).fast_is(EClassCastFlags::CASTCLASS_UScriptStruct) {
+            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass)
+                || (*object).fast_is(EClassCastFlags::CASTCLASS_UScriptStruct)
+            {
                 self.generate_structure(object.cast())?;
             } else if (*object).fast_is(EClassCastFlags::CASTCLASS_UEnum) {
                 self.generate_enum(object.cast())?;
@@ -331,12 +336,19 @@ impl<'a> StructGenerator<'a> {
         if size == 0 {
             return Err(Error::ZeroSizedField);
         }
-        
+
         if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
             let property = property.cast::<FBoolProperty>();
 
-            if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
-                self.bitfields.last_mut().ok_or(Error::LastBitfield)?.push(property).map_err(|_| Error::BitfieldFull)?;
+            if self
+                .last_bitfield_offset
+                .map_or(false, |o| (*property).base.Offset == o)
+            {
+                self.bitfields
+                    .last_mut()
+                    .ok_or(Error::LastBitfield)?
+                    .push(property)
+                    .map_err(|_| Error::BitfieldFull)?;
 
                 // We already emitted the bitfield member variable on the first bit.
                 return Ok(());
@@ -363,9 +375,15 @@ impl<'a> StructGenerator<'a> {
                     size = size,
                     representation = representation,
                 )?;
-                
+
                 self.last_bitfield_offset = Some(self.offset);
-                self.bitfields.push({ let mut b = List::new(); b.push(property).map_err(|_| Error::BitfieldFull)?; b }).map_err(|_| Error::MaxBitfields)?;
+                self.bitfields
+                    .push({
+                        let mut b = List::new();
+                        b.push(property).map_err(|_| Error::BitfieldFull)?;
+                        b
+                    })
+                    .map_err(|_| Error::MaxBitfields)?;
                 self.offset += size;
             }
         } else {
