@@ -7,6 +7,7 @@ use crate::list::List;
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
 
+use core::cmp::Ordering;
 use core::fmt::{self, Write};
 
 #[derive(macros::NoPanicErrorDebug)]
@@ -415,8 +416,28 @@ impl<'a> StructGenerator<'a> {
     unsafe fn add_padding_if_needed(&mut self, property: *const FProperty) -> Result<(), Error> {
         let offset = (*property).Offset;
 
-        if offset > self.offset {
-            self.add_pad_field(self.offset, offset)?;
+        match self.offset.cmp(&offset) {
+            Ordering::Less => {
+                // We believe the structure is currently at `self.offset`. This
+                // property is some bytes ahead at `offset`. So we need to add
+                // (offset - self.offset) bytes of padding to reach the
+                // property.
+                self.add_pad_field(self.offset, offset)?
+            }
+
+            Ordering::Greater => {
+                // The property is some bytes behind our reckoning of the
+                // current offset. Until we figure out a better way to handle
+                // these lagged properties, we should emit a warning so the SDK
+                // user has some idea as to why some fields in some structures
+                // don't line up with what they're seeing in ReClass.
+                writeln!(self.file, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.Name, offset, self.offset)?
+            }
+
+            Ordering::Equal => {
+                // Nothing to do. Our reckoning off the current offset matches
+                // the property's offset. No padding or warning required.
+            }
         }
 
         Ok(())
@@ -425,8 +446,18 @@ impl<'a> StructGenerator<'a> {
     unsafe fn add_end_of_struct_padding_if_needed(&mut self) -> Result<(), Error> {
         let struct_size = (*self.structure).PropertiesSize;
 
-        if self.offset < struct_size {
-            self.add_pad_field(self.offset, struct_size)?;
+        match self.offset.cmp(&struct_size) {
+            // See comments in `add_padding_if_needed()` for explanation.
+
+            Ordering::Less => {
+                self.add_pad_field(self.offset, struct_size)?
+            }
+
+            Ordering::Greater => {
+                writeln!(self.file, "    // WARNING: This structure thinks its size is {}. We think its size is {}.", struct_size, self.offset)?
+            }
+
+            Ordering::Equal => {}
         }
 
         Ok(())
