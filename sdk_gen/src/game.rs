@@ -494,6 +494,7 @@ pub struct FBoolProperty {
     pad: [u8; 4],
 }
 
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct EClassCastFlags(u64);
 
