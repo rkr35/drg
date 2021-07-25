@@ -1,7 +1,7 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{
-    self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UClass, UEnum, UObject, UPackage,
-    UStruct,
+    self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UClass, UEnum, UObject,
+    UPackage, UStruct,
 };
 use crate::list::List;
 use crate::win::file::{self, File};
@@ -57,7 +57,9 @@ impl Generator {
         Ok(Generator {
             lib_rs,
             packages: List::new(),
-            blueprint_generated_package_file: BufWriter::new(File::new(sdk_file!("src/blueprint_generated.rs"))?),
+            blueprint_generated_package_file: BufWriter::new(File::new(sdk_file!(
+                "src/blueprint_generated.rs"
+            ))?),
         })
     }
 
@@ -168,7 +170,12 @@ impl Generator {
             let class = structure.cast::<UClass>();
 
             if (*class).is_blueprint_generated() {
-                return StructGenerator::new(structure, (*class).package(), &mut self.blueprint_generated_package_file).generate();
+                return StructGenerator::new(
+                    structure,
+                    (*class).package(),
+                    &mut self.blueprint_generated_package_file,
+                )
+                .generate();
             }
         }
 
@@ -227,8 +234,7 @@ unsafe fn write_enum_variant(
         writeln!(
             out,
             "    pub const {}: Self = Self({});",
-            text,
-            variant.Value,
+            text, variant.Value,
         )?;
     }
 
@@ -245,11 +251,7 @@ struct StructGenerator<W: Write> {
 }
 
 impl<W: Write> StructGenerator<W> {
-    pub fn new(
-        structure: *mut UStruct,
-        package: *mut UPackage,
-        out: W,
-    ) -> StructGenerator<W> {
+    pub fn new(structure: *mut UStruct, package: *mut UPackage, out: W) -> StructGenerator<W> {
         StructGenerator {
             structure,
             package,
@@ -307,7 +309,8 @@ impl<W: Write> StructGenerator<W> {
         let base_name = (*base).name();
         let base_package = (*base).package();
 
-        let is_base_blueprint_generated = (*base).fast_is(EClassCastFlags::CASTCLASS_UClass) && (*base.cast::<UClass>()).is_blueprint_generated();
+        let is_base_blueprint_generated = (*base).fast_is(EClassCastFlags::CASTCLASS_UClass)
+            && (*base.cast::<UClass>()).is_blueprint_generated();
 
         if is_base_blueprint_generated || base_package == self.package {
             writeln!(
@@ -351,7 +354,10 @@ impl<W: Write> StructGenerator<W> {
         if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
             let property = property.cast::<FBoolProperty>();
 
-            if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
+            if self
+                .last_bitfield_offset
+                .map_or(false, |o| (*property).base.Offset == o)
+            {
                 self.bitfields
                     .last_mut()
                     .ok_or(Error::LastBitfield)?
@@ -392,7 +398,7 @@ impl<W: Write> StructGenerator<W> {
                         b
                     })
                     .map_err(|_| Error::MaxBitfields)?;
-                
+
                 self.offset += size;
             }
         } else {
@@ -460,14 +466,13 @@ impl<W: Write> StructGenerator<W> {
 
         match self.offset.cmp(&struct_size) {
             // See comments in `add_padding_if_needed()` for explanation.
+            Ordering::Less => self.add_pad_field(self.offset, struct_size)?,
 
-            Ordering::Less => {
-                self.add_pad_field(self.offset, struct_size)?
-            }
-
-            Ordering::Greater => {
-                writeln!(self.out, "    // WARNING: This structure thinks its size is {}. We think its size is {}.", struct_size, self.offset)?
-            }
+            Ordering::Greater => writeln!(
+                self.out,
+                "    // WARNING: This structure thinks its size is {}. We think its size is {}.",
+                struct_size, self.offset
+            )?,
 
             Ordering::Equal => {}
         }
