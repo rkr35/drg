@@ -222,25 +222,25 @@ unsafe fn write_enum_variant(
     Ok(())
 }
 
-struct StructGenerator<'a> {
+struct StructGenerator<W: Write> {
     structure: *mut UStruct,
     package: *mut UPackage,
-    file: BufWriter<&'a mut File>,
+    out: W,
     offset: i32,
     bitfields: List<List<*const FBoolProperty, 64>, 64>,
     last_bitfield_offset: Option<i32>,
 }
 
-impl<'a> StructGenerator<'a> {
+impl<W: Write> StructGenerator<W> {
     pub fn new(
         structure: *mut UStruct,
         package: *mut UPackage,
-        file: BufWriter<&mut File>,
-    ) -> StructGenerator {
+        out: W,
+    ) -> StructGenerator<W> {
         StructGenerator {
             structure,
             package,
-            file,
+            out,
             offset: 0,
             bitfields: List::new(),
             last_bitfield_offset: None,
@@ -255,7 +255,7 @@ impl<'a> StructGenerator<'a> {
         self.write_header()?;
         self.add_fields_and_functions()?;
 
-        writeln!(self.file, "}}\n")?;
+        writeln!(self.out, "}}\n")?;
 
         Ok(())
     }
@@ -265,7 +265,7 @@ impl<'a> StructGenerator<'a> {
 
         if base.is_null() {
             writeln!(
-                self.file,
+                self.out,
                 "// {} is {} bytes.\n#[repr(C)]\npub struct {} {{",
                 *self.structure,
                 (*self.structure).PropertiesSize,
@@ -282,8 +282,9 @@ impl<'a> StructGenerator<'a> {
         self.offset = (*base).PropertiesSize;
 
         writeln!(
-            self.file,
-            "// {} is {} bytes ({} inherited).\n#[repr(C)]\npub struct {} {{",
+            self.out,
+            "// {}: {} is {} bytes ({} inherited).\n#[repr(C)]\npub struct {} {{",
+            self.structure as usize,
             *self.structure,
             (*self.structure).PropertiesSize,
             self.offset,
@@ -295,13 +296,13 @@ impl<'a> StructGenerator<'a> {
 
         if base_package == self.package {
             writeln!(
-                self.file,
+                self.out,
                 "    // offset: 0, size: {}\n    base: {},\n",
                 self.offset, base_name
             )?;
         } else {
             writeln!(
-                self.file,
+                self.out,
                 "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
                 self.offset,
                 (*base_package).short_name(),
@@ -360,7 +361,7 @@ impl<'a> StructGenerator<'a> {
                 };
 
                 writeln!(
-                    self.file,
+                    self.out,
                     "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
                     offset = self.offset,
                     size = size,
@@ -383,7 +384,7 @@ impl<'a> StructGenerator<'a> {
             self.add_padding_if_needed(property)?;
 
             writeln!(
-                self.file,
+                self.out,
                 "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
                 offset = self.offset,
                 size = size,
@@ -398,7 +399,7 @@ impl<'a> StructGenerator<'a> {
 
     unsafe fn add_pad_field(&mut self, from_offset: i32, to_offset: i32) -> Result<(), Error> {
         writeln!(
-            self.file,
+            self.out,
             "    // offset: {offset}, size: {size}\n    pad_at_{offset}: [u8; {size}],\n",
             offset = from_offset,
             size = to_offset - from_offset,
@@ -427,7 +428,7 @@ impl<'a> StructGenerator<'a> {
                 // these lagged properties, we should emit a warning so the SDK
                 // user has some idea as to why some fields in some structures
                 // don't line up with what they're seeing in ReClass.
-                writeln!(self.file, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.Name, offset, self.offset)?
+                writeln!(self.out, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.Name, offset, self.offset)?
             }
 
             Ordering::Equal => {
@@ -450,7 +451,7 @@ impl<'a> StructGenerator<'a> {
             }
 
             Ordering::Greater => {
-                writeln!(self.file, "    // WARNING: This structure thinks its size is {}. We think its size is {}.", struct_size, self.offset)?
+                writeln!(self.out, "    // WARNING: This structure thinks its size is {}. We think its size is {}.", struct_size, self.offset)?
             }
 
             Ordering::Equal => {}
