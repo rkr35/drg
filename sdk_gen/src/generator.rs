@@ -4,6 +4,7 @@ use crate::game::{
     UPackage, UStruct,
 };
 use crate::list::List;
+use crate::split::SplitIterator;
 use crate::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
 
@@ -174,6 +175,7 @@ impl Generator {
                     structure,
                     (*class).package(),
                     &mut self.blueprint_generated_package_file,
+                    true,
                 )
                 .generate();
             }
@@ -185,7 +187,7 @@ impl Generator {
         // Reuse previous buffer to reduce total `WriteFile` calls.
         let file = BufWriter::new(&mut package.file);
 
-        StructGenerator::new(structure, package.ptr, file).generate()
+        StructGenerator::new(structure, package.ptr, file, false).generate()
     }
 }
 
@@ -248,10 +250,11 @@ struct StructGenerator<W: Write> {
     offset: i32,
     bitfields: List<List<*const FBoolProperty, 64>, 64>,
     last_bitfield_offset: Option<i32>,
+    is_blueprint_generated: bool,
 }
 
 impl<W: Write> StructGenerator<W> {
-    pub fn new(structure: *mut UStruct, package: *mut UPackage, out: W) -> StructGenerator<W> {
+    pub fn new(structure: *mut UStruct, package: *mut UPackage, out: W, is_blueprint_generated: bool) -> StructGenerator<W> {
         StructGenerator {
             structure,
             package,
@@ -259,6 +262,7 @@ impl<W: Write> StructGenerator<W> {
             offset: 0,
             bitfields: List::new(),
             last_bitfield_offset: None,
+            is_blueprint_generated,
         }
     }
 
@@ -404,13 +408,50 @@ impl<W: Write> StructGenerator<W> {
         } else {
             self.add_padding_if_needed(property)?;
 
-            writeln!(
-                self.out,
-                "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
-                offset = self.offset,
-                size = size,
-                name = (*property).base.Name,
-            )?;
+            if self.is_blueprint_generated {
+                let name = (*property).base.Name.text();
+                
+                write!(
+                    self.out,
+                    "    // offset: {offset}, size: {size}\n    pub ",
+                    offset = self.offset,
+                    size = size,
+                )?;
+
+                let mut num_pieces_added = 0;
+
+                for piece in SplitIterator::new(name.as_bytes(), |c| !c.is_ascii_alphanumeric() && c != b'_') {
+                    if num_pieces_added > 0 {
+                        self.out.write_char('_')?;
+                    }
+
+                    write!(self.out, "{}", core::str::from_utf8_unchecked(piece))?;
+
+                    num_pieces_added += 1;
+                }
+
+                let number = (*property).base.Name.number();
+                
+                if number > 0 {
+                    write!(self.out, "_{}", number - 1)?;
+                }
+
+                write!(self.out, ": [u8; {}], ", size)?;
+
+                if num_pieces_added > 1 {
+                    writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name, num_pieces_added - 1)?;
+                } else {
+                    writeln!(self.out, "\n")?;
+                }
+            } else {
+                writeln!(
+                    self.out,
+                    "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
+                    offset = self.offset,
+                    size = size,
+                    name = (*property).base.Name,
+                )?;
+            }
 
             self.offset += size;
         }
