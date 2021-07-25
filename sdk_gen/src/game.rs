@@ -383,7 +383,7 @@ impl UObject {
     }
 
     pub unsafe fn fast_is(&self, class: EClassCastFlags) -> bool {
-        (*self.ClassPrivate).ClassCastFlags.is(class)
+        (*self.ClassPrivate).ClassCastFlags.any(class)
     }
 
     pub unsafe fn name(&self) -> &str {
@@ -480,7 +480,7 @@ pub struct FProperty {
 
 impl FProperty {
     pub unsafe fn is(&self, property: EClassCastFlags) -> bool {
-        (*self.base.ClassPrivate).CastFlags.is(property)
+        (*self.base.ClassPrivate).CastFlags.any(property)
     }
 }
 
@@ -504,8 +504,8 @@ impl EClassCastFlags {
     pub const CASTCLASS_UClass: Self = Self(0x20);
     pub const CASTCLASS_FBoolProperty: Self = Self(0x20000);
 
-    pub fn is(&self, Self(class): Self) -> bool {
-        self.0 & class != 0
+    pub fn any(&self, Self(flags): Self) -> bool {
+        self.0 & flags != 0
     }
 }
 
