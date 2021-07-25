@@ -309,7 +309,7 @@ impl<W: Write> StructGenerator<W> {
         let base_name = (*base).name();
         let base_package = (*base).package();
 
-        let is_base_blueprint_generated = (*base).fast_is(EClassCastFlags::CASTCLASS_UClass)
+        let is_base_blueprint_generated = self.is_blueprint_generated && (*base).fast_is(EClassCastFlags::CASTCLASS_UClass)
             && (*base.cast::<UClass>()).is_blueprint_generated();
 
         if is_base_blueprint_generated || base_package == self.package {
