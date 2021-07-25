@@ -499,10 +499,10 @@ pub struct FBoolProperty {
 pub struct EClassCastFlags(u64);
 
 impl EClassCastFlags {
-    pub const CASTCLASS_UEnum: EClassCastFlags = EClassCastFlags(0x4);
-    pub const CASTCLASS_UScriptStruct: EClassCastFlags = EClassCastFlags(0x10);
-    pub const CASTCLASS_UClass: EClassCastFlags = EClassCastFlags(0x20);
-    pub const CASTCLASS_FBoolProperty: EClassCastFlags = EClassCastFlags(0x20000);
+    pub const CASTCLASS_UEnum: Self = Self(0x4);
+    pub const CASTCLASS_UScriptStruct: Self = Self(0x10);
+    pub const CASTCLASS_UClass: Self = Self(0x20);
+    pub const CASTCLASS_FBoolProperty: Self = Self(0x20000);
 
     pub fn is(&self, Self(class): Self) -> bool {
         self.0 & class != 0
