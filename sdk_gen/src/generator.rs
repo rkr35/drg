@@ -1,6 +1,6 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{
-    self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UEnum, UObject, UPackage,
+    self, EClassCastFlags, FBoolProperty, FName, FProperty, TPair, UClass, UEnum, UObject, UPackage,
     UStruct,
 };
 use crate::list::List;
@@ -39,7 +39,8 @@ impl Drop for Package {
 
 pub struct Generator {
     lib_rs: File,
-    packages: List<Package, 1700>,
+    packages: List<Package, 160>,
+    blueprint_generated_package_file: BufWriter<File>,
 }
 
 impl Generator {
@@ -52,6 +53,7 @@ impl Generator {
         Ok(Generator {
             lib_rs,
             packages: List::new(),
+            blueprint_generated_package_file: BufWriter::new(File::new(sdk_file!("src/blueprint_generated.rs"))?),
         })
     }
 
@@ -158,14 +160,21 @@ impl Generator {
     }
 
     unsafe fn generate_structure(&mut self, structure: *mut UStruct) -> Result<(), Error> {
+        if (*structure).fast_is(EClassCastFlags::CASTCLASS_UClass) {
+            let class = structure.cast::<UClass>();
+
+            if (*class).is_blueprint_generated() {
+                return StructGenerator::new(structure, (*class).package(), &mut self.blueprint_generated_package_file).generate();
+            }
+        }
+
         let package = self.get_package(structure.cast())?;
 
         // TODO(perf): Don't need to create a new `BufWriter` if the previous object is from the same package.
         // Reuse previous buffer to reduce total `WriteFile` calls.
         let file = BufWriter::new(&mut package.file);
 
-        StructGenerator::new(structure, package.ptr, file).generate()?;
-        Ok(())
+        StructGenerator::new(structure, package.ptr, file).generate()
     }
 }
 

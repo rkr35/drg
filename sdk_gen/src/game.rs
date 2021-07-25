@@ -540,6 +540,12 @@ pub struct UClass {
 
 impl_deref! { UClass as UStruct }
 
+impl UClass {
+    pub fn is_blueprint_generated(&self) -> bool {
+        self.ClassFlags.any(EClassFlags::CLASS_CompiledFromBlueprint)
+    }
+}
+
 #[repr(C)]
 pub struct FName {
     ComparisonIndex: FNameEntryId,
