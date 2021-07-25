@@ -47,7 +47,11 @@ impl Generator {
     pub unsafe fn new() -> Result<Generator, Error> {
         let mut lib_rs = File::new(sdk_file!("src/lib.rs"))?;
         lib_rs.write_str(
-            "#![no_std]\n#![no_implicit_prelude]\n#![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n",
+            "\
+            #![no_std]\n\
+            #![no_implicit_prelude]\n\
+            #![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n\
+            pub mod blueprint_generated;\n",
         )?;
 
         Ok(Generator {
