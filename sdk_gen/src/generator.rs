@@ -135,14 +135,13 @@ impl Generator {
         };
 
         let mut file = self.get_package_file(enumeration.cast())?;
-        let enum_name = (*enumeration).name();
 
         writeln!(
             file,
             "// {}\n#[repr(transparent)]\npub struct {name}({});\n\nimpl {name} {{",
             *enumeration,
             representation,
-            name = enum_name,
+            name = (*enumeration).name(),
         )?;
 
         for variant in rest.iter() {
