@@ -517,10 +517,23 @@ impl BitOr for EClassCastFlags {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct EClassFlags(u32);
+
+impl EClassFlags {
+    pub const CLASS_CompiledFromBlueprint: Self = Self(0x40000);
+
+    pub fn any(&self, Self(flags): Self) -> bool {
+        self.0 & flags != 0
+    }
+}
+
 #[repr(C)]
 pub struct UClass {
     base: UStruct,
-    pad0: [u8; 32],
+    pad0: [u8; 28],
+    pub ClassFlags: EClassFlags,
     pub ClassCastFlags: EClassCastFlags,
     pad1: [u8; 344],
 }
