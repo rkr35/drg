@@ -76,7 +76,7 @@ impl Generator {
     }
 
     unsafe fn get_package(&mut self, object: *mut UObject) -> Result<&mut Package, Error> {
-        let package = (*object).package();
+        let package = (*object).package_mut();
         let is_unseen_package = (*package).PIEInstanceID == -1;
 
         if is_unseen_package {
@@ -245,7 +245,7 @@ unsafe fn write_enum_variant(
 
 struct StructGenerator<W: Write> {
     structure: *mut UStruct,
-    package: *mut UPackage,
+    package: *const UPackage,
     out: W,
     offset: i32,
     bitfields: List<List<*const FBoolProperty, 64>, 64>,
@@ -254,7 +254,7 @@ struct StructGenerator<W: Write> {
 }
 
 impl<W: Write> StructGenerator<W> {
-    pub fn new(structure: *mut UStruct, package: *mut UPackage, out: W, is_blueprint_generated: bool) -> StructGenerator<W> {
+    pub fn new(structure: *mut UStruct, package: *const UPackage, out: W, is_blueprint_generated: bool) -> StructGenerator<W> {
         StructGenerator {
             structure,
             package,

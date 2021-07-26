@@ -373,7 +373,17 @@ pub struct UObject {
 }
 
 impl UObject {
-    pub unsafe fn package(&mut self) -> *mut UPackage {
+    pub unsafe fn package(&self) -> *const UPackage {
+        let mut top = self as *const UObject;
+
+        while !(*top).OuterPrivate.is_null() {
+            top = (*top).OuterPrivate;
+        }
+
+        top.cast()
+    }
+
+    pub unsafe fn package_mut(&mut self) -> *mut UPackage {
         let mut top = self as *mut UObject;
 
         while !(*top).OuterPrivate.is_null() {
