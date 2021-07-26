@@ -519,6 +519,10 @@ impl Display for FProperty {
                 EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FEnumProperty => {
+                    let property = self as *const _ as *const FEnumProperty;
+                    (*(*property).enumeration).name().fmt(f)?
+                },
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", self.ElementSize, id.0, self as *const _ as usize)?,
             }
 
@@ -547,6 +551,13 @@ pub struct FByteProperty {
     enumeration: *const UEnum,
 }
 
+#[repr(C)]
+pub struct FEnumProperty {
+    pub base: FProperty,
+    pad: [u8; 8],
+    enumeration: *const UEnum,
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct EClassCastFlags(u64);
@@ -570,6 +581,7 @@ impl EClassCastFlags {
     pub const CASTCLASS_FInt64Property: Self = Self(0x400000);
     pub const CASTCLASS_FInt16Property: Self = Self(0x80000000);
     pub const CASTCLASS_FDoubleProperty: Self = Self(0x100000000);
+    pub const CASTCLASS_FEnumProperty: Self = Self(0x1000000000000);
 
     pub const CASTCLASS_FClassProperty: Self = Self(0x400);
     pub const CASTCLASS_FInterfaceProperty: Self = Self(0x1000);
@@ -590,7 +602,6 @@ impl EClassCastFlags {
     pub const CASTCLASS_FSoftClassProperty: Self = Self(0x200000000);
     pub const CASTCLASS_FMapProperty: Self = Self(0x400000000000);
     pub const CASTCLASS_FSetProperty: Self = Self(0x800000000000);
-    pub const CASTCLASS_FEnumProperty: Self = Self(0x1000000000000);
     pub const CASTCLASS_FMulticastInlineDelegateProperty: Self = Self(0x4000000000000);
     pub const CASTCLASS_FMulticastSparseDelegateProperty: Self = Self(0x8000000000000);
     pub const CASTCLASS_FFieldPathProperty: Self = Self(0x10000000000000);
