@@ -465,8 +465,9 @@ pub struct FField {
     pub ClassPrivate: *const FFieldClass,
     pad0: [u8; 16],
     pub Next: *const FField,
-    pub Name: FName,
-    pub Flags: u32,
+    pub NamePrivate: FName,
+    pub FlagsPrivate: u32,
+    pad1: [u8; 4],
 }
 
 #[repr(C)]

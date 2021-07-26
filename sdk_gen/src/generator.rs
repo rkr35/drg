@@ -361,7 +361,7 @@ impl<W: Write> StructGenerator<W> {
             self.add_padding_if_needed(property)?;
 
             if self.is_blueprint_generated {
-                let name = (*property).base.Name.text();
+                let name = (*property).base.NamePrivate.text();
                 
                 write!(
                     self.out,
@@ -382,7 +382,7 @@ impl<W: Write> StructGenerator<W> {
                     num_pieces_added += 1;
                 }
 
-                let number = (*property).base.Name.number();
+                let number = (*property).base.NamePrivate.number();
                 
                 if number > 0 {
                     write!(self.out, "_{}", number - 1)?;
@@ -401,7 +401,7 @@ impl<W: Write> StructGenerator<W> {
                     "    // offset: {offset}, size: {size}\n    pub {name}: {typ},\n",
                     offset = self.offset,
                     size = size,
-                    name = (*property).base.Name,
+                    name = (*property).base.NamePrivate,
                     typ = *property,
                 )?;
             }
@@ -491,7 +491,7 @@ impl<W: Write> StructGenerator<W> {
                 // these lagged properties, we should emit a warning so the SDK
                 // user has some idea as to why some fields in some structures
                 // don't line up with what they're seeing in ReClass.
-                writeln!(self.out, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.Name, offset, self.offset)?
+                writeln!(self.out, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.NamePrivate, offset, self.offset)?
             }
 
             Ordering::Equal => {
