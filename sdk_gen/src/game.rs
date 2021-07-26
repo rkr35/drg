@@ -487,7 +487,7 @@ impl FProperty {
 #[repr(C)]
 pub struct FBoolProperty {
     pub base: FProperty,
-    FieldSize: u8,
+    pub FieldSize: u8,
     ByteOffset: u8,
     ByteMask: u8,
     FieldMask: u8,

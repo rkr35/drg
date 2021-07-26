@@ -18,7 +18,7 @@ pub enum Error {
     Fmt(#[from] fmt::Error),
 
     ZeroSizedField,
-    BadBitfieldSize(i32),
+    BadBitfieldSize(u8),
     LastBitfield,
     MaxPackages,
     MaxBitfields,
@@ -356,55 +356,7 @@ impl<W: Write> StructGenerator<W> {
         }
 
         if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
-            let property = property.cast::<FBoolProperty>();
-
-            if self
-                .last_bitfield_offset
-                .map_or(false, |o| (*property).base.Offset == o)
-            {
-                self.bitfields
-                    .last_mut()
-                    .ok_or(Error::LastBitfield)?
-                    .push(property)
-                    .map_err(|_| Error::BitfieldFull)?;
-
-                // We already emitted the bitfield member variable on the first bit.
-                return Ok(());
-            } else {
-                self.add_padding_if_needed(property.cast())?;
-
-                let representation = if size == 1 {
-                    "u8"
-                } else if size == 2 {
-                    "u16"
-                } else if size == 4 {
-                    "u32"
-                } else if size == 8 {
-                    "u64"
-                } else {
-                    return Err(Error::BadBitfieldSize(size));
-                };
-
-                writeln!(
-                    self.out,
-                    "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
-                    offset = self.offset,
-                    size = size,
-                    representation = representation,
-                )?;
-
-                self.last_bitfield_offset = Some(self.offset);
-
-                self.bitfields
-                    .push({
-                        let mut b = List::new();
-                        b.push(property).map_err(|_| Error::BitfieldFull)?;
-                        b
-                    })
-                    .map_err(|_| Error::MaxBitfields)?;
-
-                self.offset += size;
-            }
+            self.process_bool_property(property.cast())?;
         } else {
             self.add_padding_if_needed(property)?;
 
@@ -454,6 +406,54 @@ impl<W: Write> StructGenerator<W> {
             }
 
             self.offset += size;
+        }
+
+        Ok(())
+    }
+
+    unsafe fn process_bool_property(&mut self, property: *const FBoolProperty) -> Result<(), Error> {
+        if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
+            self.bitfields
+                .last_mut()
+                .ok_or(Error::LastBitfield)?
+                .push(property)
+                .map_err(|_| Error::BitfieldFull)?;
+        } else {
+            self.add_padding_if_needed(property.cast())?;
+
+            let size = (*property).FieldSize;
+
+            let representation = if size == 1 {
+                "u8"
+            } else if size == 2 {
+                "u16"
+            } else if size == 4 {
+                "u32"
+            } else if size == 8 {
+                "u64"
+            } else {
+                return Err(Error::BadBitfieldSize(size));
+            };
+
+            writeln!(
+                self.out,
+                "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
+                offset = self.offset,
+                size = size,
+                representation = representation,
+            )?;
+
+            self.last_bitfield_offset = Some(self.offset);
+
+            self.bitfields
+                .push({
+                    let mut b = List::new();
+                    b.push(property).map_err(|_| Error::BitfieldFull)?;
+                    b
+                })
+                .map_err(|_| Error::MaxBitfields)?;
+
+            self.offset += i32::from(size);
         }
 
         Ok(())
