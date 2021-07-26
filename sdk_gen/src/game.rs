@@ -501,6 +501,16 @@ impl Display for FProperty {
             
             match self.id() {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FByteProperty => {
+                    let property = self as *const _ as *const FByteProperty;
+                    let enumeration = (*property).enumeration;
+
+                    if enumeration.is_null() {
+                        "char".fmt(f)?
+                    } else {
+                        (*enumeration).name().fmt(f)?
+                    }
+                },
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
@@ -509,7 +519,7 @@ impl Display for FProperty {
                 EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
-                _ => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE */", self.ElementSize)?,
+                id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", self.ElementSize, id.0, self as *const _ as usize)?,
             }
 
             if is_array {
@@ -529,6 +539,12 @@ pub struct FBoolProperty {
     ByteMask: u8,
     FieldMask: u8,
     pad: [u8; 4],
+}
+
+#[repr(C)]
+pub struct FByteProperty {
+    pub base: FProperty,
+    enumeration: *const UEnum,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
