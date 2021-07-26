@@ -388,7 +388,7 @@ impl<W: Write> StructGenerator<W> {
                     write!(self.out, "_{}", number - 1)?;
                 }
 
-                write!(self.out, ": [u8; {}],", size)?;
+                write!(self.out, ": {},", *property)?;
 
                 if num_pieces_added > 1 {
                     writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name, num_pieces_added - 1)?;
@@ -398,10 +398,11 @@ impl<W: Write> StructGenerator<W> {
             } else {
                 writeln!(
                     self.out,
-                    "    // offset: {offset}, size: {size}\n    pub {name}: [u8; {size}],\n",
+                    "    // offset: {offset}, size: {size}\n    pub {name}: {typ},\n",
                     offset = self.offset,
                     size = size,
                     name = (*property).base.Name,
+                    typ = *property,
                 )?;
             }
 

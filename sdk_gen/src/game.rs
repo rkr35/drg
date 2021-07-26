@@ -19,6 +19,7 @@ pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
+    Fmt(#[from] fmt::Error),
 }
 
 const FNameMaxBlockBits: u8 = 13;
@@ -452,7 +453,8 @@ impl_deref! { UStruct as UField }
 
 #[repr(C)]
 pub struct FFieldClass {
-    pad0: [u8; 16],
+    pad0: [u8; 8],
+    Id: EClassCastFlags,
     CastFlags: EClassCastFlags,
     pad1: [u8; 40],
 }
@@ -482,6 +484,41 @@ impl FProperty {
     pub unsafe fn is(&self, property: EClassCastFlags) -> bool {
         (*self.base.ClassPrivate).CastFlags.any(property)
     }
+
+    unsafe fn id(&self) -> EClassCastFlags {
+        (*self.base.ClassPrivate).Id
+    }
+}
+
+impl Display for FProperty {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        unsafe {
+            let is_array = self.ArrayDim > 1;
+
+            if is_array {
+                '['.fmt(f)?;
+            }
+            
+            match self.id() {
+                EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FUInt16Property => "u16".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
+                _ => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE */", self.ElementSize)?,
+            }
+
+            if is_array {
+                write!(f, "; {}]", self.ArrayDim)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[repr(C)]
@@ -494,10 +531,11 @@ pub struct FBoolProperty {
     pad: [u8; 4],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct EClassCastFlags(u64);
 
+#[allow(dead_code)] // TODO: Remove me. Silencing while writing code to generate properties.
 impl EClassCastFlags {
     pub const CASTCLASS_UEnum: Self = Self(0x4);
     pub const CASTCLASS_UScriptStruct: Self = Self(0x10);
