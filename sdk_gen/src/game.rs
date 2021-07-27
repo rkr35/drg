@@ -522,6 +522,19 @@ impl Display for PropertyDisplayable {
                 '['.fmt(f)?;
             }
             
+            macro_rules! emit_package_qualified_type {
+                ($property:expr) => {
+                    let name = (*$property).name();
+                    let package = (*$property).package();
+
+                    if package == self.package {
+                        name.fmt(f)?
+                    } else {
+                        write!(f, "crate::{}::{}", (*package).short_name(), name)?
+                    }
+                }
+            }
+
             match (*self.property).id() {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FByteProperty => {
@@ -531,14 +544,7 @@ impl Display for PropertyDisplayable {
                     if enumeration.is_null() {
                         "char".fmt(f)?
                     } else {
-                        let name = (*enumeration).name();
-                        let package = (*enumeration).package();
-
-                        if package == self.package {
-                            name.fmt(f)?
-                        } else {
-                            write!(f, "crate::{}::{}", (*package).short_name(), name)?
-                        }
+                        emit_package_qualified_type!(enumeration);
                     }
                 },
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
@@ -551,27 +557,11 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
-                    let enumeration = (*property).enumeration;
-                    let name = (*enumeration).name();
-                    let package = (*enumeration).package();
-
-                    if package == self.package {
-                        name.fmt(f)?
-                    } else {
-                        write!(f, "crate::{}::{}", (*package).short_name(), name)?
-                    }
+                    emit_package_qualified_type!((*property).enumeration);
                 },
                 EClassCastFlags::CASTCLASS_FStructProperty => {
                     let property = self.property.cast::<FStructProperty>();
-                    let structure = (*property).structure;
-                    let name = (*structure).name();
-                    let package = (*structure).package();
-
-                    if package == self.package {
-                        name.fmt(f)?
-                    } else {
-                        write!(f, "crate::{}::{}", (*package).short_name(), name)?
-                    }
+                    emit_package_qualified_type!((*property).structure);
                 }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
