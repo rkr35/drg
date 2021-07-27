@@ -561,6 +561,18 @@ impl Display for PropertyDisplayable {
                         write!(f, "crate::{}::{}", (*package).short_name(), name)?
                     }
                 },
+                EClassCastFlags::CASTCLASS_FStructProperty => {
+                    let property = self.property.cast::<FStructProperty>();
+                    let structure = (*property).structure;
+                    let name = (*structure).name();
+                    let package = (*structure).package();
+
+                    if package == self.package {
+                        name.fmt(f)?
+                    } else {
+                        write!(f, "crate::{}::{}", (*package).short_name(), name)?
+                    }
+                }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
@@ -587,6 +599,12 @@ pub struct FBoolProperty {
 pub struct FByteProperty {
     pub base: FProperty,
     enumeration: *const UEnum,
+}
+
+#[repr(C)]
+pub struct FStructProperty {
+    pub base: FProperty,
+    structure: *const UStruct,
 }
 
 #[repr(C)]
