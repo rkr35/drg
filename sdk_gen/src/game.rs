@@ -541,7 +541,7 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FByteProperty => {
                     let property = self.property.cast::<FByteProperty>();
-                    let enumeration = (*property).enumeration;
+                    let enumeration = (*property).Enumeration;
 
                     if enumeration.is_null() {
                         "char".fmt(f)?
@@ -559,11 +559,11 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
-                    emit_package_qualified_type!((*property).enumeration);
+                    emit_package_qualified_type!((*property).Enumeration);
                 },
                 EClassCastFlags::CASTCLASS_FStructProperty => {
                     let property = self.property.cast::<FStructProperty>();
-                    emit_package_qualified_type!((*property).structure);
+                    emit_package_qualified_type!((*property).Structure);
                 }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
@@ -590,20 +590,20 @@ pub struct FBoolProperty {
 #[repr(C)]
 pub struct FByteProperty {
     pub base: FProperty,
-    enumeration: *const UEnum,
+    Enumeration: *const UEnum,
 }
 
 #[repr(C)]
 pub struct FStructProperty {
     pub base: FProperty,
-    structure: *const UStruct,
+    Structure: *const UStruct,
 }
 
 #[repr(C)]
 pub struct FEnumProperty {
     pub base: FProperty,
     pad: [u8; 8],
-    enumeration: *const UEnum,
+    Enumeration: *const UEnum,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
