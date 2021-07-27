@@ -504,7 +504,8 @@ impl FProperty {
 impl Display for FProperty {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
-            let is_array = self.ArrayDim > 1;
+            let array_dim = (*self.property).ArrayDim;
+            let is_array = array_dim > 1;
 
             if is_array {
                 '['.fmt(f)?;
@@ -538,7 +539,7 @@ impl Display for FProperty {
             }
 
             if is_array {
-                write!(f, "; {}]", self.ArrayDim)?;
+                write!(f, "; {}]", array_dim)?;
             }
         }
 
