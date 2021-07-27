@@ -494,11 +494,12 @@ pub struct FProperty {
 pub struct PropertyDisplayable {
     property: *const FProperty,
     package: *const UPackage,
+    is_struct_blueprint_generated: bool,
 }
 
 impl PropertyDisplayable {
-    pub fn new(property: *const FProperty, package: *const UPackage) -> Self {
-        Self { property, package }
+    pub fn new(property: *const FProperty, package: *const UPackage, is_struct_blueprint_generated: bool) -> Self {
+        Self { property, package, is_struct_blueprint_generated }
     }
 }
 
@@ -565,6 +566,20 @@ impl Display for PropertyDisplayable {
                     let property = self.property.cast::<FStructProperty>();
                     emit_package_qualified_type!((*property).Structure);
                 }
+                EClassCastFlags::CASTCLASS_FObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    let class = (*property).PropertyClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, "*mut {}", name)?
+                    } else {
+                        write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
+                    }
+                }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
@@ -597,6 +612,12 @@ pub struct FByteProperty {
 pub struct FStructProperty {
     pub base: FProperty,
     Structure: *const UStruct,
+}
+
+#[repr(C)]
+pub struct FObjectPropertyBase {
+    pub base: FProperty,
+    PropertyClass: *const UClass,
 }
 
 #[repr(C)]

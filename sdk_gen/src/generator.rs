@@ -388,7 +388,7 @@ impl<W: Write> StructGenerator<W> {
                     write!(self.out, "_{}", number - 1)?;
                 }
 
-                write!(self.out, ": {},", PropertyDisplayable::new(property, self.package))?;
+                write!(self.out, ": {},", PropertyDisplayable::new(property, self.package, self.is_blueprint_generated))?;
 
                 if num_pieces_added > 1 {
                     writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name, num_pieces_added - 1)?;
@@ -402,7 +402,7 @@ impl<W: Write> StructGenerator<W> {
                     offset = self.offset,
                     size = size,
                     name = (*property).base.NamePrivate,
-                    typ = PropertyDisplayable::new(property, self.package),
+                    typ = PropertyDisplayable::new(property, self.package, self.is_blueprint_generated),
                 )?;
             }
 
