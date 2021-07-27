@@ -535,6 +535,8 @@ impl Display for PropertyDisplayable {
                 }
             }
 
+            // TODO(perf): Move common properties up.
+            // TODO(perf): Investigate lookup table where index == (*self.property).id().trailing_zeros()
             match (*self.property).id() {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FByteProperty => {
