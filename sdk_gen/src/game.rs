@@ -491,6 +491,17 @@ pub struct FProperty {
     pad1: [u8; 40],
 }
 
+pub struct PropertyDisplayable {
+    property: *const FProperty,
+    package: *const UPackage,
+}
+
+impl PropertyDisplayable {
+    pub fn new(property: *const FProperty, package: *const UPackage) -> Self {
+        Self { property, package }
+    }
+}
+
 impl FProperty {
     pub unsafe fn is(&self, property: EClassCastFlags) -> bool {
         (*self.base.ClassPrivate).CastFlags.any(property)
@@ -501,7 +512,7 @@ impl FProperty {
     }
 }
 
-impl Display for FProperty {
+impl Display for PropertyDisplayable {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe {
             let array_dim = (*self.property).ArrayDim;
@@ -511,16 +522,23 @@ impl Display for FProperty {
                 '['.fmt(f)?;
             }
             
-            match self.id() {
+            match (*self.property).id() {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FByteProperty => {
-                    let property = self as *const _ as *const FByteProperty;
+                    let property = self.property.cast::<FByteProperty>();
                     let enumeration = (*property).enumeration;
 
                     if enumeration.is_null() {
                         "char".fmt(f)?
                     } else {
-                        (*enumeration).name().fmt(f)?
+                        let name = (*enumeration).name();
+                        let package = (*enumeration).package();
+
+                        if package == self.package {
+                            name.fmt(f)?
+                        } else {
+                            write!(f, "crate::{}::{}", (*package).short_name(), name)?
+                        }
                     }
                 },
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
@@ -532,10 +550,18 @@ impl Display for FProperty {
                 EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
-                    let property = self as *const _ as *const FEnumProperty;
-                    (*(*property).enumeration).name().fmt(f)?
+                    let property = self.property.cast::<FEnumProperty>();
+                    let enumeration = (*property).enumeration;
+                    let name = (*enumeration).name();
+                    let package = (*enumeration).package();
+
+                    if package == self.package {
+                        name.fmt(f)?
+                    } else {
+                        write!(f, "crate::{}::{}", (*package).short_name(), name)?
+                    }
                 },
-                id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", self.ElementSize, id.0, self as *const _ as usize)?,
+                id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
             if is_array {
