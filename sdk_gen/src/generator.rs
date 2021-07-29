@@ -354,7 +354,7 @@ impl<W: Write> StructGenerator<W> {
             return Err(Error::ZeroSizedField);
         }
 
-        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) {
+        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) && (*property.cast::<FBoolProperty>()).is_bitfield() {
             self.process_bool_property(property.cast())?;
         } else {
             self.add_padding_if_needed(property)?;

@@ -585,6 +585,7 @@ impl Display for PropertyDisplayable {
                     write!(f, "common::TArray<{}>", Self::new(property, self.package, self.is_struct_blueprint_generated))?
                 },
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
 
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
@@ -606,6 +607,12 @@ pub struct FBoolProperty {
     ByteMask: u8,
     FieldMask: u8,
     pad: [u8; 4],
+}
+
+impl FBoolProperty {
+    pub fn is_bitfield(&self) -> bool {
+        self.FieldMask != 255
+    }
 }
 
 #[repr(C)]
