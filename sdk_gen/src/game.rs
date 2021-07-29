@@ -11,8 +11,6 @@ use core::ops::BitOr;
 use core::ptr;
 use core::str;
 
-use common::{FString, TArray};
-
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 
@@ -789,8 +787,8 @@ impl FNameEntryId {
 #[repr(C)]
 pub struct UEnum {
     base: UField,
-    CppType: FString,
-    pub Names: TArray<TPair<FName, i64>>,
+    CppType: common::FString,
+    pub Names: common::TArray<TPair<FName, i64>>,
     CppForm: i32,
     EnumDisplayNameFn: usize,
 }
