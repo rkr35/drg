@@ -579,6 +579,11 @@ impl Display for PropertyDisplayable {
                         write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
                     }
                 }
+                EClassCastFlags::CASTCLASS_FArrayProperty => {
+                    let property = self.property.cast::<FArrayProperty>();
+                    let property = (*property).Inner;
+                    write!(f, "common::TArray<{}>", Self::new(property, self.package, self.is_struct_blueprint_generated))?
+                }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
@@ -617,6 +622,13 @@ pub struct FStructProperty {
 pub struct FObjectPropertyBase {
     pub base: FProperty,
     PropertyClass: *const UClass,
+}
+
+#[repr(C)]
+pub struct FArrayProperty {
+    pub base: FProperty,
+    Inner: *const FProperty,
+    pad: [u8; 8],
 }
 
 #[repr(C)]
