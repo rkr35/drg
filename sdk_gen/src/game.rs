@@ -583,7 +583,9 @@ impl Display for PropertyDisplayable {
                     let property = self.property.cast::<FArrayProperty>();
                     let property = (*property).Inner;
                     write!(f, "common::TArray<{}>", Self::new(property, self.package, self.is_struct_blueprint_generated))?
-                }
+                },
+                EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
+
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
