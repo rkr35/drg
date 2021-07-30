@@ -195,8 +195,6 @@ unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static st
 
     if max_discriminant_value <= u8::MAX.into() {
         "u8"
-    } else if max_discriminant_value <= u16::MAX.into() {
-        "u16"
     } else if max_discriminant_value <= u32::MAX.into() {
         "u32"
     } else {
