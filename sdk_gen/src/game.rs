@@ -586,7 +586,20 @@ impl Display for PropertyDisplayable {
                 },
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FClassProperty => {
+                    let property = self.property.cast::<FClassProperty>();
+                    let class = (*property).MetaClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
 
+                    if same_package {
+                        write!(f, "*mut {}", name)?
+                    } else {
+                        write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
+                    }
+                }
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
@@ -631,6 +644,12 @@ pub struct FStructProperty {
 pub struct FObjectPropertyBase {
     pub base: FProperty,
     PropertyClass: *const UClass,
+}
+
+#[repr(C)]
+pub struct FClassProperty {
+    pub base: FObjectPropertyBase,
+    MetaClass: *const UClass,
 }
 
 #[repr(C)]
