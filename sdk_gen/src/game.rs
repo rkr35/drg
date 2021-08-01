@@ -409,6 +409,21 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FInterfaceProperty => {
+                    let property = self.property.cast::<FInterfaceProperty>();
+                    let class = (*property).InterfaceClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, "TScriptInterface<{}>", name)?
+                    } else {
+                        write!(f, "TScriptInterface<crate::{}::{}>", (*package).short_name(), name)?
+                    }
+                }
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
                 id => write!(
@@ -481,6 +496,12 @@ pub struct FEnumProperty {
     pub base: FProperty,
     pad: [u8; 8],
     Enumeration: *const UEnum,
+}
+
+#[repr(C)]
+pub struct FInterfaceProperty {
+    pub base: FProperty,
+    InterfaceClass: *const UClass,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

@@ -66,3 +66,9 @@ pub struct FScriptDelegate {
     Object: FWeakObjectPtr,
     FunctionName: FName,
 }
+
+#[repr(C)]
+pub struct TScriptInterface<T> {
+    ObjectPointer: *const UObject,
+    InterfacePointer: *const T,
+}
