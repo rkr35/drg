@@ -167,6 +167,22 @@ impl Display for PropertyDisplayable {
                         )?
                     }
                 }
+                EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    let class = (*property).PropertyClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, "common::TWeakObjectPtr<{}>", name)?
+                    } else {
+                        write!(f, "common::TWeakObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
+                    }
+                }
+
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
                 id => write!(

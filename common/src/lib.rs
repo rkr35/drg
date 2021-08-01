@@ -4,6 +4,7 @@
 
 use core::ffi::c_void;
 use core::fmt;
+use core::marker::PhantomData;
 use core::ptr;
 use core::slice;
 
@@ -72,6 +73,12 @@ pub struct FText {
 pub struct FWeakObjectPtr {
     ObjectIndex: i32,
     ObjectSerialNumber: i32,
+}
+
+#[repr(C)]
+pub struct TWeakObjectPtr<T> {
+    base: FWeakObjectPtr,
+    _marker: PhantomData<*const T>,
 }
 
 #[repr(C)]
