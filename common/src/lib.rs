@@ -1,5 +1,7 @@
 #![no_std]
 #![allow(non_snake_case, non_upper_case_globals, non_camel_case_types)]
+#![allow(clippy::missing_safety_doc)]
+
 use core::ffi::c_void;
 use core::fmt;
 use core::ptr;
