@@ -600,11 +600,10 @@ impl Display for PropertyDisplayable {
                         write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
                     }
                 },
-                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastDelegateProperty => "common::FMulticastDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
+                // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
+                // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
                 id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
             }
 
