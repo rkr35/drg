@@ -157,11 +157,11 @@ impl Display for PropertyDisplayable {
                     let same_package = is_in_blueprint_module || package == self.package;
 
                     if same_package {
-                        write!(f, "TScriptInterface<{}>", name)?
+                        write!(f, "common::TScriptInterface<{}>", name)?
                     } else {
                         write!(
                             f,
-                            "TScriptInterface<crate::{}::{}>",
+                            "common::TScriptInterface<crate::{}::{}>",
                             (*package).short_name(),
                             name
                         )?
