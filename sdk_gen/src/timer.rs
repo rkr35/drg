@@ -4,14 +4,14 @@ use core::fmt::{self, Display, Formatter, Write};
 static mut TICKS_PER_SECOND: i64 = 0;
 
 pub unsafe fn initialize_ticks_per_second() {
-    crate::win::QueryPerformanceFrequency(&mut TICKS_PER_SECOND);
+    common::win::QueryPerformanceFrequency(&mut TICKS_PER_SECOND);
     crate::log!("TICKS_PER_SECOND = {}", FormattedTicks(TICKS_PER_SECOND));
 }
 
 fn get_current_tick() -> i64 {
     let mut tick = 0;
     unsafe {
-        crate::win::QueryPerformanceCounter(&mut tick);
+        common::win::QueryPerformanceCounter(&mut tick);
     }
     tick
 }

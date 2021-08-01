@@ -24,8 +24,7 @@ mod split;
 mod timer;
 use timer::Timer;
 mod util;
-mod win;
-use win::File;
+use common::win::File;
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -39,21 +38,22 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
-    Module(#[from] win::module::Error),
+    Module(#[from] common::win::module::Error),
     Game(#[from] game::Error),
-    File(#[from] win::file::Error),
+    File(#[from] common::win::file::Error),
     Fmt(#[from] fmt::Error),
     List(#[from] list::Error),
     Generator(#[from] generator::Error),
+    Common(#[from] common::Error),
 }
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-    win::dll_main(dll, reason, on_attach, on_detach)
+    common::win::dll_main(dll, reason, on_attach, on_detach)
 }
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
-    win::AllocConsole();
+    common::win::AllocConsole();
 
     timer::initialize_ticks_per_second();
 
@@ -62,8 +62,8 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
         idle();
     }
 
-    win::FreeConsole();
-    win::FreeLibraryAndExitThread(dll, 0);
+    common::win::FreeConsole();
+    common::win::FreeLibraryAndExitThread(dll, 0);
     0
 }
 
@@ -79,8 +79,8 @@ unsafe fn run() -> Result<(), Error> {
 
 unsafe fn init_globals() -> Result<(), Error> {
     let timer = Timer::new("init globals");
-    let module = win::Module::current()?;
-    game::FNamePool::init(&module)?;
+    let module = common::win::Module::current()?;
+    common::FNamePool::init(&module)?;
     game::FUObjectArray::init(&module)?;
     timer.stop();
 
@@ -89,7 +89,7 @@ unsafe fn init_globals() -> Result<(), Error> {
         module.start(),
         module.size()
     );
-    log!("NamePoolData = {}", game::NamePoolData as usize);
+    log!("NamePoolData = {}", common::NamePoolData as usize);
     log!("GUObjectArray = {}", game::GUObjectArray as usize);
     Ok(())
 }
@@ -105,7 +105,7 @@ unsafe fn dump_globals() -> Result<(), Error> {
 unsafe fn dump_names() -> Result<(), Error> {
     let mut file = BufWriter::new(File::new(sdk_file!("global_names.txt"))?);
 
-    for (index, name) in (*game::NamePoolData).iter() {
+    for (index, name) in (*common::NamePoolData).iter() {
         let text = (*name).text();
         writeln!(&mut file, "[{}] {}", index.value(), text)?;
     }
@@ -142,5 +142,5 @@ unsafe fn generate_sdk() -> Result<(), Error> {
 
 unsafe fn idle() {
     log!("Idling. Press enter to continue.");
-    win::idle();
+    common::win::idle();
 }

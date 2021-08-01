@@ -1,11 +1,11 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{
-    self, EClassCastFlags, FBoolProperty, FName, FProperty, PropertyDisplayable, TPair, UClass, UEnum, UObject,
+    self, EClassCastFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UClass, UEnum, UObject,
     UPackage, UStruct,
 };
 use crate::list::List;
 use crate::split::SplitIterator;
-use crate::win::file::{self, File};
+use common::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
 
 use core::cmp::Ordering;
@@ -190,7 +190,7 @@ impl Generator {
     }
 }
 
-unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static str {
+unsafe fn get_enum_representation(variants: &[TPair<common::FName, i64>]) -> &'static str {
     let max_discriminant_value = variants.iter().map(|v| v.Value).max().unwrap_or(0);
 
     if max_discriminant_value <= u8::MAX.into() {
@@ -204,7 +204,7 @@ unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static st
 
 unsafe fn write_enum_variant(
     mut out: impl Write,
-    variant: &TPair<FName, i64>,
+    variant: &TPair<common::FName, i64>,
 ) -> Result<(), Error> {
     let mut text = variant.Key.text();
 
