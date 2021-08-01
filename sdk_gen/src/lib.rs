@@ -13,6 +13,7 @@ extern "C" {}
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;
+use common::win;
 
 mod buf_writer;
 use buf_writer::BufWriter;
@@ -24,7 +25,6 @@ mod split;
 mod timer;
 use timer::Timer;
 mod util;
-use common::win::File;
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -38,9 +38,9 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
-    Module(#[from] common::win::module::Error),
+    Module(#[from] win::module::Error),
     Game(#[from] game::Error),
-    File(#[from] common::win::file::Error),
+    File(#[from] win::file::Error),
     Fmt(#[from] fmt::Error),
     List(#[from] list::Error),
     Generator(#[from] generator::Error),
@@ -49,11 +49,11 @@ enum Error {
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
-    common::win::dll_main(dll, reason, on_attach, on_detach)
+    win::dll_main(dll, reason, on_attach, on_detach)
 }
 
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
-    common::win::AllocConsole();
+    win::AllocConsole();
 
     timer::initialize_ticks_per_second();
 
@@ -62,8 +62,8 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
         idle();
     }
 
-    common::win::FreeConsole();
-    common::win::FreeLibraryAndExitThread(dll, 0);
+    win::FreeConsole();
+    win::FreeLibraryAndExitThread(dll, 0);
     0
 }
 
@@ -79,7 +79,7 @@ unsafe fn run() -> Result<(), Error> {
 
 unsafe fn init_globals() -> Result<(), Error> {
     let timer = Timer::new("init globals");
-    let module = common::win::Module::current()?;
+    let module = win::Module::current()?;
     common::FNamePool::init(&module)?;
     game::FUObjectArray::init(&module)?;
     timer.stop();
@@ -103,7 +103,7 @@ unsafe fn dump_globals() -> Result<(), Error> {
 }
 
 unsafe fn dump_names() -> Result<(), Error> {
-    let mut file = BufWriter::new(File::new(sdk_file!("global_names.txt"))?);
+    let mut file = BufWriter::new(win::File::new(sdk_file!("global_names.txt"))?);
 
     for (index, name) in (*common::NamePoolData).iter() {
         let text = (*name).text();
@@ -114,7 +114,7 @@ unsafe fn dump_names() -> Result<(), Error> {
 }
 
 unsafe fn dump_objects() -> Result<(), Error> {
-    let mut file = BufWriter::new(File::new(sdk_file!("global_objects.txt"))?);
+    let mut file = BufWriter::new(win::File::new(sdk_file!("global_objects.txt"))?);
 
     for object in (*game::GUObjectArray).iter() {
         if object.is_null() {
@@ -142,5 +142,5 @@ unsafe fn generate_sdk() -> Result<(), Error> {
 
 unsafe fn idle() {
     log!("Idling. Press enter to continue.");
-    common::win::idle();
+    win::idle();
 }
