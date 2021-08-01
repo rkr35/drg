@@ -20,8 +20,6 @@ use buf_writer::BufWriter;
 mod game;
 mod generator;
 use generator::Generator;
-mod list;
-mod split;
 mod timer;
 use timer::Timer;
 mod util;
@@ -42,7 +40,7 @@ enum Error {
     Game(#[from] game::Error),
     File(#[from] win::file::Error),
     Fmt(#[from] fmt::Error),
-    List(#[from] list::Error),
+    List(#[from] common::list::Error),
     Generator(#[from] generator::Error),
     Common(#[from] common::Error),
 }
@@ -58,7 +56,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     timer::initialize_ticks_per_second();
 
     if let Err(e) = run() {
-        log!("error: {:?}", e);
+        common::log!("error: {:?}", e);
         idle();
     }
 
@@ -81,16 +79,16 @@ unsafe fn init_globals() -> Result<(), Error> {
     let timer = Timer::new("init globals");
     let module = win::Module::current()?;
     common::FNamePool::init(&module)?;
-    game::FUObjectArray::init(&module)?;
+    common::FUObjectArray::init(&module)?;
     timer.stop();
 
-    log!(
+    common::log!(
         "module.start = {}, module.size = {}",
         module.start(),
         module.size()
     );
-    log!("NamePoolData = {}", common::NamePoolData as usize);
-    log!("GUObjectArray = {}", game::GUObjectArray as usize);
+    common::log!("NamePoolData = {}", common::NamePoolData as usize);
+    common::log!("GUObjectArray = {}", common::GUObjectArray as usize);
     Ok(())
 }
 
@@ -116,7 +114,7 @@ unsafe fn dump_names() -> Result<(), Error> {
 unsafe fn dump_objects() -> Result<(), Error> {
     let mut file = BufWriter::new(win::File::new(sdk_file!("global_objects.txt"))?);
 
-    for object in (*game::GUObjectArray).iter() {
+    for object in (*common::GUObjectArray).iter() {
         if object.is_null() {
             writeln!(&mut file, "skipped null object")?;
         } else {
@@ -141,6 +139,6 @@ unsafe fn generate_sdk() -> Result<(), Error> {
 }
 
 unsafe fn idle() {
-    log!("Idling. Press enter to continue.");
+    common::log!("Idling. Press enter to continue.");
     win::idle();
 }

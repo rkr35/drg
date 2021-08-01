@@ -1,11 +1,12 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{
-    self, EClassCastFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UClass, UEnum,
-    UObject, UPackage, UStruct,
+    self, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum
 };
-use crate::list::List;
-use crate::split::SplitIterator;
 use crate::{sdk_file, sdk_path};
+
+use common::List;
+use common::SplitIterator;
+use common::{EClassCastFlags, UClass, UObject, UPackage, UStruct};
 use common::win::file::{self, File};
 
 use core::cmp::Ordering;
@@ -26,7 +27,7 @@ pub enum Error {
 }
 
 struct Package {
-    ptr: *mut game::UPackage,
+    ptr: *mut common::UPackage,
     file: File,
 }
 
@@ -64,7 +65,7 @@ impl Generator {
     }
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
-        for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
+        for object in (*common::GUObjectArray).iter().filter(|o| !o.is_null()) {
             if (*object).fast_is(
                 EClassCastFlags::CASTCLASS_UClass | EClassCastFlags::CASTCLASS_UScriptStruct,
             ) {

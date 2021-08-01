@@ -7,13 +7,26 @@ use core::fmt;
 use core::ptr;
 use core::slice;
 
-mod name;
 pub mod win;
+
+mod name;
 pub use name::*;
+
+mod object;
+pub use object::*;
+
+pub mod list;
+pub use list::*;
+
+mod split;
+pub use split::*;
+
+mod util;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindNamePoolData,
+    FindGUObjectArray,
     Fmt(#[from] fmt::Error),
 }
 
