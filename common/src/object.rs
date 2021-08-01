@@ -1,6 +1,6 @@
+use crate::split::ReverseSplitIterator;
 use crate::Error;
 use crate::List;
-use crate::split::ReverseSplitIterator;
 
 use core::fmt::{self, Display, Formatter};
 use core::ops::BitOr;
@@ -245,7 +245,6 @@ pub struct UStruct {
 }
 
 impl_deref! { UStruct as UField }
-
 
 #[repr(C)]
 pub struct UClass {

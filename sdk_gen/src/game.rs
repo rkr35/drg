@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Display, Formatter};
 
-use common::{EClassCastFlags, FField, UPackage, UStruct, UClass, UField, UObject};
+use common::{EClassCastFlags, FField, UClass, UField, UObject, UPackage, UStruct};
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -159,7 +159,12 @@ impl Display for PropertyDisplayable {
                     if same_package {
                         write!(f, "TScriptInterface<{}>", name)?
                     } else {
-                        write!(f, "TScriptInterface<crate::{}::{}>", (*package).short_name(), name)?
+                        write!(
+                            f,
+                            "TScriptInterface<crate::{}::{}>",
+                            (*package).short_name(),
+                            name
+                        )?
                     }
                 }
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,

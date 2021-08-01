@@ -10,10 +10,10 @@ extern "C" {}
 #[link(name = "vcruntime")]
 extern "C" {}
 
+use common::win;
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;
-use common::win;
 
 mod buf_writer;
 use buf_writer::BufWriter;

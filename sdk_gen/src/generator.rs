@@ -1,13 +1,11 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{
-    self, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum
-};
+use crate::game::{self, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum};
 use crate::{sdk_file, sdk_path};
 
+use common::win::file::{self, File};
 use common::List;
 use common::SplitIterator;
 use common::{EClassCastFlags, UClass, UObject, UPackage, UStruct};
-use common::win::file::{self, File};
 
 use core::cmp::Ordering;
 use core::fmt::{self, Write};
