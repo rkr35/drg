@@ -1,12 +1,12 @@
 use crate::buf_writer::BufWriter;
 use crate::game::{
-    self, EClassCastFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UClass, UEnum, UObject,
-    UPackage, UStruct,
+    self, EClassCastFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UClass, UEnum,
+    UObject, UPackage, UStruct,
 };
 use crate::list::List;
 use crate::split::SplitIterator;
-use common::win::file::{self, File};
 use crate::{sdk_file, sdk_path};
+use common::win::file::{self, File};
 
 use core::cmp::Ordering;
 use core::fmt::{self, Write};
@@ -65,7 +65,9 @@ impl Generator {
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
         for object in (*game::GUObjectArray).iter().filter(|o| !o.is_null()) {
-            if (*object).fast_is(EClassCastFlags::CASTCLASS_UClass | EClassCastFlags::CASTCLASS_UScriptStruct) {
+            if (*object).fast_is(
+                EClassCastFlags::CASTCLASS_UClass | EClassCastFlags::CASTCLASS_UScriptStruct,
+            ) {
                 self.generate_structure(object.cast())?;
             } else if (*object).fast_is(EClassCastFlags::CASTCLASS_UEnum) {
                 self.generate_enum(object.cast())?;
@@ -251,7 +253,12 @@ struct StructGenerator<W: Write> {
 }
 
 impl<W: Write> StructGenerator<W> {
-    pub fn new(structure: *mut UStruct, package: *const UPackage, out: W, is_blueprint_generated: bool) -> StructGenerator<W> {
+    pub fn new(
+        structure: *mut UStruct,
+        package: *const UPackage,
+        out: W,
+        is_blueprint_generated: bool,
+    ) -> StructGenerator<W> {
         StructGenerator {
             structure,
             package,
@@ -310,7 +317,8 @@ impl<W: Write> StructGenerator<W> {
         let base_name = (*base).name();
         let base_package = (*base).package();
 
-        let is_base_blueprint_generated = self.is_blueprint_generated && (*base).fast_is(EClassCastFlags::CASTCLASS_UClass)
+        let is_base_blueprint_generated = self.is_blueprint_generated
+            && (*base).fast_is(EClassCastFlags::CASTCLASS_UClass)
             && (*base.cast::<UClass>()).is_blueprint_generated();
 
         if is_base_blueprint_generated || base_package == self.package {
@@ -352,14 +360,16 @@ impl<W: Write> StructGenerator<W> {
             return Err(Error::ZeroSizedField);
         }
 
-        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) && (*property.cast::<FBoolProperty>()).is_bitfield() {
+        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty)
+            && (*property.cast::<FBoolProperty>()).is_bitfield()
+        {
             self.process_bool_property(property.cast())?;
         } else {
             self.add_padding_if_needed(property)?;
 
             if self.is_blueprint_generated {
                 let name = (*property).base.NamePrivate.text();
-                
+
                 write!(
                     self.out,
                     "    // offset: {offset}, size: {size}\n    pub ",
@@ -369,7 +379,9 @@ impl<W: Write> StructGenerator<W> {
 
                 let mut num_pieces_added = 0;
 
-                for piece in SplitIterator::new(name.as_bytes(), |c| !c.is_ascii_alphanumeric() && c != b'_') {
+                for piece in
+                    SplitIterator::new(name.as_bytes(), |c| !c.is_ascii_alphanumeric() && c != b'_')
+                {
                     if num_pieces_added > 0 {
                         self.out.write_char('_')?;
                     }
@@ -380,12 +392,16 @@ impl<W: Write> StructGenerator<W> {
                 }
 
                 let number = (*property).base.NamePrivate.number();
-                
+
                 if number > 0 {
                     write!(self.out, "_{}", number - 1)?;
                 }
 
-                write!(self.out, ": {},", PropertyDisplayable::new(property, self.package, self.is_blueprint_generated))?;
+                write!(
+                    self.out,
+                    ": {},",
+                    PropertyDisplayable::new(property, self.package, self.is_blueprint_generated)
+                )?;
 
                 if num_pieces_added > 1 {
                     writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name, num_pieces_added - 1)?;
@@ -399,7 +415,11 @@ impl<W: Write> StructGenerator<W> {
                     offset = self.offset,
                     size = size,
                     name = (*property).base.NamePrivate,
-                    typ = PropertyDisplayable::new(property, self.package, self.is_blueprint_generated),
+                    typ = PropertyDisplayable::new(
+                        property,
+                        self.package,
+                        self.is_blueprint_generated
+                    ),
                 )?;
             }
 
@@ -409,8 +429,14 @@ impl<W: Write> StructGenerator<W> {
         Ok(())
     }
 
-    unsafe fn process_bool_property(&mut self, property: *const FBoolProperty) -> Result<(), Error> {
-        if self.last_bitfield_offset.map_or(false, |o| (*property).base.Offset == o) {
+    unsafe fn process_bool_property(
+        &mut self,
+        property: *const FBoolProperty,
+    ) -> Result<(), Error> {
+        if self
+            .last_bitfield_offset
+            .map_or(false, |o| (*property).base.Offset == o)
+        {
             self.bitfields
                 .last_mut()
                 .ok_or(Error::LastBitfield)?

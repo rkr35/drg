@@ -1,11 +1,17 @@
-pub struct SplitIterator<'a, F> where F: FnMut(u8) -> bool {
+pub struct SplitIterator<'a, F>
+where
+    F: FnMut(u8) -> bool,
+{
     source: &'a [u8],
     is_delimiter: F,
 }
 
 impl<'a, F: FnMut(u8) -> bool> SplitIterator<'a, F> {
     pub fn new(source: &[u8], is_delimiter: F) -> SplitIterator<F> {
-        SplitIterator { source, is_delimiter }
+        SplitIterator {
+            source,
+            is_delimiter,
+        }
     }
 }
 
@@ -13,11 +19,7 @@ impl<'a, F: FnMut(u8) -> bool> Iterator for SplitIterator<'a, F> {
     type Item = &'a [u8];
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(split) = self
-            .source
-            .iter()
-            .position(|c| (self.is_delimiter)(*c))
-        {
+        if let Some(split) = self.source.iter().position(|c| (self.is_delimiter)(*c)) {
             // Return everything before the delimiter.
             let ret = &self.source[..split];
 
@@ -39,7 +41,6 @@ impl<'a, F: FnMut(u8) -> bool> Iterator for SplitIterator<'a, F> {
         }
     }
 }
-
 
 pub struct ReverseSplitIterator<'a> {
     source: &'a [u8],

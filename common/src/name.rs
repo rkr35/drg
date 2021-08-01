@@ -1,4 +1,4 @@
-use crate::Error as Error;
+use crate::Error;
 
 use core::cmp::Ordering;
 use core::ffi::c_void;
@@ -250,7 +250,7 @@ impl FNameEntry {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    
+
     pub fn len(&self) -> usize {
         usize::from(self.Header.len())
     }

@@ -289,8 +289,16 @@ pub struct PropertyDisplayable {
 }
 
 impl PropertyDisplayable {
-    pub fn new(property: *const FProperty, package: *const UPackage, is_struct_blueprint_generated: bool) -> Self {
-        Self { property, package, is_struct_blueprint_generated }
+    pub fn new(
+        property: *const FProperty,
+        package: *const UPackage,
+        is_struct_blueprint_generated: bool,
+    ) -> Self {
+        Self {
+            property,
+            package,
+            is_struct_blueprint_generated,
+        }
     }
 }
 
@@ -313,7 +321,7 @@ impl Display for PropertyDisplayable {
             if is_array {
                 '['.fmt(f)?;
             }
-            
+
             macro_rules! emit_package_qualified_type {
                 ($property:expr) => {
                     let name = (*$property).name();
@@ -324,7 +332,7 @@ impl Display for PropertyDisplayable {
                     } else {
                         write!(f, "crate::{}::{}", (*package).short_name(), name)?
                     }
-                }
+                };
             }
 
             // TODO(perf): Move common properties up.
@@ -340,7 +348,7 @@ impl Display for PropertyDisplayable {
                     } else {
                         emit_package_qualified_type!(enumeration);
                     }
-                },
+                }
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
@@ -352,7 +360,7 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
                     emit_package_qualified_type!((*property).Enumeration);
-                },
+                }
                 EClassCastFlags::CASTCLASS_FStructProperty => {
                     let property = self.property.cast::<FStructProperty>();
                     emit_package_qualified_type!((*property).Structure);
@@ -362,7 +370,8 @@ impl Display for PropertyDisplayable {
                     let class = (*property).PropertyClass;
                     let name = (*class).name();
                     let package = (*class).package();
-                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
                     let same_package = is_in_blueprint_module || package == self.package;
 
                     if same_package {
@@ -374,8 +383,12 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FArrayProperty => {
                     let property = self.property.cast::<FArrayProperty>();
                     let property = (*property).Inner;
-                    write!(f, "common::TArray<{}>", Self::new(property, self.package, self.is_struct_blueprint_generated))?
-                },
+                    write!(
+                        f,
+                        "common::TArray<{}>",
+                        Self::new(property, self.package, self.is_struct_blueprint_generated)
+                    )?
+                }
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FClassProperty => {
@@ -383,7 +396,8 @@ impl Display for PropertyDisplayable {
                     let class = (*property).MetaClass;
                     let name = (*class).name();
                     let package = (*class).package();
-                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
                     let same_package = is_in_blueprint_module || package == self.package;
 
                     if same_package {
@@ -391,12 +405,18 @@ impl Display for PropertyDisplayable {
                     } else {
                         write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
                     }
-                },
+                }
                 EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
-                id => write!(f, "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/", (*self.property).ElementSize, id.0, self.property as usize)?,
+                id => write!(
+                    f,
+                    "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
+                    (*self.property).ElementSize,
+                    id.0,
+                    self.property as usize
+                )?,
             }
 
             if is_array {

@@ -7,10 +7,9 @@ use core::fmt;
 use core::ptr;
 use core::slice;
 
-pub mod win;
 mod name;
+pub mod win;
 pub use name::*;
-
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -59,7 +58,7 @@ pub struct FText {
 #[repr(C)]
 pub struct FWeakObjectPtr {
     ObjectIndex: i32,
-	ObjectSerialNumber: i32,
+    ObjectSerialNumber: i32,
 }
 
 #[repr(C)]
