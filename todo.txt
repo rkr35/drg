@@ -2,12 +2,6 @@ SDK Generator:
     * Emit static assertions for generated struct sizes and alignments
         * Could also be a tests module similar to what bindgen generates.
     * Emit remaining properties
-        warning: associated constant is never used: `CASTCLASS_FWeakObjectProperty`
-        --> sdk_gen\src\game.rs:522:5
-            |
-        522 |     pub const CASTCLASS_FWeakObjectProperty: Self = Self(0x8000000);
-            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
         warning: associated constant is never used: `CASTCLASS_FLazyObjectProperty`
         --> sdk_gen\src\game.rs:523:5
             |
