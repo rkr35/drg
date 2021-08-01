@@ -24,6 +24,10 @@ impl<T, const N: usize> List<T, N> {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn len(&self) -> usize {
         self.len
     }
@@ -88,6 +92,12 @@ impl<T, const N: usize> Drop for List<T, N> {
             // Drop initialized `MaybeUninit<T>`s.
             ptr::drop_in_place(self.as_mut_slice());
         }
+    }
+}
+
+impl<T, const N: usize> Default for List<T, N> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
