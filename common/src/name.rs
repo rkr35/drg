@@ -247,6 +247,10 @@ pub struct FNameEntry {
 }
 
 impl FNameEntry {
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    
     pub fn len(&self) -> usize {
         usize::from(self.Header.len())
     }
