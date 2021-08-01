@@ -1,0 +1,89 @@
+SDK Generator:
+    * Emit static assertions for generated struct sizes and alignments
+        * Could also be a tests module similar to what bindgen generates.
+    * Emit remaining properties
+        warning: associated constant is never used: `CASTCLASS_FInterfaceProperty`
+        --> sdk_gen\src\game.rs:511:5
+            |
+        511 |     pub const CASTCLASS_FInterfaceProperty: Self = Self(0x1000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            |
+            = note: `#[warn(dead_code)]` on by default
+
+        warning: associated constant is never used: `CASTCLASS_FNameProperty`
+        --> sdk_gen\src\game.rs:512:5
+            |
+        512 |     pub const CASTCLASS_FNameProperty: Self = Self(0x2000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FProperty`
+        --> sdk_gen\src\game.rs:514:5
+            |
+        514 |     pub const CASTCLASS_FProperty: Self = Self(0x8000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FNumericProperty`
+        --> sdk_gen\src\game.rs:520:5
+            |
+        520 |     pub const CASTCLASS_FNumericProperty: Self = Self(0x1000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FMulticastDelegateProperty`
+        --> sdk_gen\src\game.rs:521:5
+            |
+        521 |     pub const CASTCLASS_FMulticastDelegateProperty: Self = Self(0x2000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FWeakObjectProperty`
+        --> sdk_gen\src\game.rs:522:5
+            |
+        522 |     pub const CASTCLASS_FWeakObjectProperty: Self = Self(0x8000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FLazyObjectProperty`
+        --> sdk_gen\src\game.rs:523:5
+            |
+        523 |     pub const CASTCLASS_FLazyObjectProperty: Self = Self(0x10000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FSoftObjectProperty`
+        --> sdk_gen\src\game.rs:524:5
+            |
+        524 |     pub const CASTCLASS_FSoftObjectProperty: Self = Self(0x20000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FSoftClassProperty`
+        --> sdk_gen\src\game.rs:526:5
+            |
+        526 |     pub const CASTCLASS_FSoftClassProperty: Self = Self(0x200000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FMapProperty`
+        --> sdk_gen\src\game.rs:527:5
+            |
+        527 |     pub const CASTCLASS_FMapProperty: Self = Self(0x400000000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FSetProperty`
+        --> sdk_gen\src\game.rs:528:5
+            |
+        528 |     pub const CASTCLASS_FSetProperty: Self = Self(0x800000000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FMulticastInlineDelegateProperty`
+        --> sdk_gen\src\game.rs:529:5
+            |
+        529 |     pub const CASTCLASS_FMulticastInlineDelegateProperty: Self = Self(0x4000000000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FMulticastSparseDelegateProperty`
+        --> sdk_gen\src\game.rs:530:5
+            |
+        530 |     pub const CASTCLASS_FMulticastSparseDelegateProperty: Self = Self(0x8000000000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        warning: associated constant is never used: `CASTCLASS_FFieldPathProperty`
+        --> sdk_gen\src\game.rs:531:5
+            |
+        531 |     pub const CASTCLASS_FFieldPathProperty: Self = Self(0x10000000000000);
+            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
