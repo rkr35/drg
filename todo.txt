@@ -2,20 +2,6 @@ SDK Generator:
     * Emit static assertions for generated struct sizes and alignments
         * Could also be a tests module similar to what bindgen generates.
     * Emit remaining properties
-        warning: associated constant is never used: `CASTCLASS_FInterfaceProperty`
-        --> sdk_gen\src\game.rs:511:5
-            |
-        511 |     pub const CASTCLASS_FInterfaceProperty: Self = Self(0x1000);
-            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-            |
-            = note: `#[warn(dead_code)]` on by default
-
-        warning: associated constant is never used: `CASTCLASS_FMulticastDelegateProperty`
-        --> sdk_gen\src\game.rs:521:5
-            |
-        521 |     pub const CASTCLASS_FMulticastDelegateProperty: Self = Self(0x2000000);
-            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
         warning: associated constant is never used: `CASTCLASS_FWeakObjectProperty`
         --> sdk_gen\src\game.rs:522:5
             |
