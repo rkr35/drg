@@ -10,12 +10,6 @@ SDK Generator:
             |
             = note: `#[warn(dead_code)]` on by default
 
-        warning: associated constant is never used: `CASTCLASS_FNameProperty`
-        --> sdk_gen\src\game.rs:512:5
-            |
-        512 |     pub const CASTCLASS_FNameProperty: Self = Self(0x2000);
-            |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
         warning: associated constant is never used: `CASTCLASS_FProperty`
         --> sdk_gen\src\game.rs:514:5
             |

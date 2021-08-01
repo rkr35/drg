@@ -408,6 +408,7 @@ impl Display for PropertyDisplayable {
                 }
                 EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
                 id => write!(
