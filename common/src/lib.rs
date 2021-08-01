@@ -22,3 +22,32 @@ impl<T> TArray<T> {
 }
 
 pub type FString = TArray<u16>;
+
+#[repr(C)]
+struct TSharedRef<T> {
+    Object: *const T,
+    SharedReferenceCount: *const c_void,
+}
+
+#[repr(C)]
+struct ITextData {
+    vtable: *const *const usize,
+}
+
+#[repr(C)]
+pub struct FText {
+    TextData: TSharedRef<ITextData>,
+    Flags: u32,
+}
+
+#[repr(C)]
+pub struct FWeakObjectPtr {
+    ObjectIndex: i32,
+	ObjectSerialNumber: i32,
+}
+
+#[repr(C)]
+pub struct FScriptDelegate {
+    Object: FWeakObjectPtr,
+    FunctionName: FName,
+}
