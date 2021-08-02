@@ -182,6 +182,8 @@ impl Display for PropertyDisplayable {
                         write!(f, "common::TWeakObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
                     }
                 }
+                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastScriptDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FSparseDelegate".fmt(f)?,
 
                 // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
                 // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,

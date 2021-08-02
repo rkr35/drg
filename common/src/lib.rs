@@ -92,3 +92,13 @@ pub struct TScriptInterface<T> {
     ObjectPointer: *const UObject,
     InterfacePointer: *const T,
 }
+
+#[repr(C)]
+pub struct FMulticastScriptDelegate {
+    InvocationList: TArray<FScriptDelegate>,
+}
+
+#[repr(C)]
+pub struct FSparseDelegate {
+    bIsBound: bool,
+}
