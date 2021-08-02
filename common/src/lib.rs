@@ -102,3 +102,27 @@ pub struct FMulticastScriptDelegate {
 pub struct FSparseDelegate {
     bIsBound: bool,
 }
+
+#[repr(C)]
+pub struct FSoftObjectPath {
+	AssetPathName: FName,
+	SubPathString: FString,
+}
+
+#[repr(C)]
+pub struct TPersistentObjectPtr<TObjectID> {
+	WeakPtr: FWeakObjectPtr,
+	TagAtLastTest: i32,
+	ObjectID: TObjectID,
+}
+
+#[repr(C)]
+pub struct FSoftObjectPtr {
+    base: TPersistentObjectPtr<FSoftObjectPath>,
+}
+
+#[repr(C)]
+pub struct TSoftObjectPtr<T> {
+    SoftObjectPtr: FSoftObjectPtr,
+    _marker: PhantomData<*const T>,
+}
