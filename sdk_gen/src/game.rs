@@ -210,6 +210,16 @@ impl Display for PropertyDisplayable {
                         write!(f, "common::TSoftObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
                     }
                 }
+                EClassCastFlags::CASTCLASS_FSetProperty => {
+                    let set = self.property.cast::<FSetProperty>();
+
+                    write!(
+                        f,
+                        "[u8; {}] /* Set of {} */",
+                        (*self.property).ElementSize,
+                        Self::new((*set).ElementProp, self.package, self.is_struct_blueprint_generated),
+                    )?
+                }
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
@@ -294,6 +304,13 @@ pub struct FMapProperty {
     KeyProp: *const FProperty,
     ValueProp: *const FProperty,
     pad: [u8; 32],
+}
+
+#[repr(C)]
+pub struct FSetProperty {
+    pub base: FProperty,
+    ElementProp: *const FProperty,
+    pad: [u8; 24],
 }
 
 #[repr(C)]
