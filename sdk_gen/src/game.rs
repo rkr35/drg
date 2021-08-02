@@ -184,9 +184,17 @@ impl Display for PropertyDisplayable {
                 }
                 EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastScriptDelegate".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FSparseDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMapProperty => {
+                    let map = self.property.cast::<FMapProperty>();
 
-                // EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FMulticastSparseDelegate".fmt(f)?,
-                // EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastInlineDelegate".fmt(f)?,
+                    write!(
+                        f,
+                        "[u8; {}] /* Maps {} to {} */",
+                        (*self.property).ElementSize,
+                        Self::new((*map).KeyProp, self.package, self.is_struct_blueprint_generated),
+                        Self::new((*map).ValueProp, self.package, self.is_struct_blueprint_generated)
+                    )?
+                }
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
@@ -263,6 +271,14 @@ pub struct FEnumProperty {
 pub struct FInterfaceProperty {
     pub base: FProperty,
     InterfaceClass: *const UClass,
+}
+
+#[repr(C)]
+pub struct FMapProperty {
+    pub base: FProperty,
+    KeyProp: *const FProperty,
+    ValueProp: *const FProperty,
+    pad: [u8; 32],
 }
 
 #[repr(C)]
