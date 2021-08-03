@@ -179,11 +179,20 @@ impl Display for PropertyDisplayable {
                     if same_package {
                         write!(f, "common::TWeakObjectPtr<{}>", name)?
                     } else {
-                        write!(f, "common::TWeakObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
+                        write!(
+                            f,
+                            "common::TWeakObjectPtr<crate::{}::{}>",
+                            (*package).short_name(),
+                            name
+                        )?
                     }
                 }
-                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastScriptDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FSparseDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
+                    "common::FMulticastScriptDelegate".fmt(f)?
+                }
+                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
+                    "common::FSparseDelegate".fmt(f)?
+                }
                 EClassCastFlags::CASTCLASS_FMapProperty => {
                     let map = self.property.cast::<FMapProperty>();
 
@@ -191,8 +200,16 @@ impl Display for PropertyDisplayable {
                         f,
                         "[u8; {}] /* Maps {} to {} */",
                         (*self.property).ElementSize,
-                        Self::new((*map).KeyProp, self.package, self.is_struct_blueprint_generated),
-                        Self::new((*map).ValueProp, self.package, self.is_struct_blueprint_generated)
+                        Self::new(
+                            (*map).KeyProp,
+                            self.package,
+                            self.is_struct_blueprint_generated
+                        ),
+                        Self::new(
+                            (*map).ValueProp,
+                            self.package,
+                            self.is_struct_blueprint_generated
+                        )
                     )?
                 }
                 EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
@@ -207,7 +224,12 @@ impl Display for PropertyDisplayable {
                     if same_package {
                         write!(f, "common::TSoftObjectPtr<{}>", name)?
                     } else {
-                        write!(f, "common::TSoftObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
+                        write!(
+                            f,
+                            "common::TSoftObjectPtr<crate::{}::{}>",
+                            (*package).short_name(),
+                            name
+                        )?
                     }
                 }
                 EClassCastFlags::CASTCLASS_FSetProperty => {
@@ -217,7 +239,11 @@ impl Display for PropertyDisplayable {
                         f,
                         "[u8; {}] /* Set of {} */",
                         (*self.property).ElementSize,
-                        Self::new((*set).ElementProp, self.package, self.is_struct_blueprint_generated),
+                        Self::new(
+                            (*set).ElementProp,
+                            self.package,
+                            self.is_struct_blueprint_generated
+                        ),
                     )?
                 }
                 EClassCastFlags::CASTCLASS_FSoftClassProperty => {
@@ -232,7 +258,12 @@ impl Display for PropertyDisplayable {
                     if same_package {
                         write!(f, "common::TSoftClassPtr<{}>", name)?
                     } else {
-                        write!(f, "common::TSoftClassPtr<crate::{}::{}>", (*package).short_name(), name)?
+                        write!(
+                            f,
+                            "common::TSoftClassPtr<crate::{}::{}>",
+                            (*package).short_name(),
+                            name
+                        )?
                     }
                 }
                 EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
@@ -248,7 +279,12 @@ impl Display for PropertyDisplayable {
                     if same_package {
                         write!(f, "common::TLazyObjectPtr<{}>", name)?
                     } else {
-                        write!(f, "common::TLazyObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
+                        write!(
+                            f,
+                            "common::TLazyObjectPtr<crate::{}::{}>",
+                            (*package).short_name(),
+                            name
+                        )?
                     }
                 }
                 id => write!(

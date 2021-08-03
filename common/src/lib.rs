@@ -105,15 +105,15 @@ pub struct FSparseDelegate {
 
 #[repr(C)]
 pub struct FSoftObjectPath {
-	AssetPathName: FName,
-	SubPathString: FString,
+    AssetPathName: FName,
+    SubPathString: FString,
 }
 
 #[repr(C)]
 pub struct TPersistentObjectPtr<TObjectID> {
-	WeakPtr: FWeakObjectPtr,
-	TagAtLastTest: i32,
-	ObjectID: TObjectID,
+    WeakPtr: FWeakObjectPtr,
+    TagAtLastTest: i32,
+    ObjectID: TObjectID,
 }
 
 #[repr(C)]
@@ -135,7 +135,7 @@ pub struct TSoftClassPtr<T> {
 
 #[repr(C)]
 pub struct FFieldPath {
-	ResolvedField: *const FField,
+    ResolvedField: *const FField,
     ResolvedOwner: TWeakObjectPtr<UStruct>,
     Path: TArray<FName>,
 }
