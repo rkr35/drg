@@ -126,3 +126,9 @@ pub struct TSoftObjectPtr<T> {
     SoftObjectPtr: FSoftObjectPtr,
     _marker: PhantomData<*const T>,
 }
+
+#[repr(C)]
+pub struct TSoftClassPtr<T> {
+    SoftObjectPtr: FSoftObjectPtr,
+    _marker: PhantomData<*const T>,
+}

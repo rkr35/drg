@@ -220,6 +220,21 @@ impl Display for PropertyDisplayable {
                         Self::new((*set).ElementProp, self.package, self.is_struct_blueprint_generated),
                     )?
                 }
+                EClassCastFlags::CASTCLASS_FSoftClassProperty => {
+                    let property = self.property.cast::<FSoftClassProperty>();
+                    let class = (*property).MetaClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, "common::TSoftClassPtr<{}>", name)?
+                    } else {
+                        write!(f, "common::TSoftClassPtr<crate::{}::{}>", (*package).short_name(), name)?
+                    }
+                }
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
@@ -311,6 +326,12 @@ pub struct FSetProperty {
     pub base: FProperty,
     ElementProp: *const FProperty,
     pad: [u8; 24],
+}
+
+#[repr(C)]
+pub struct FSoftClassProperty {
+    pub base: FObjectPropertyBase,
+    MetaClass: *const UClass,
 }
 
 #[repr(C)]
