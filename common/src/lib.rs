@@ -132,3 +132,16 @@ pub struct TSoftClassPtr<T> {
     SoftObjectPtr: FSoftObjectPtr,
     _marker: PhantomData<*const T>,
 }
+
+#[repr(C)]
+pub struct FFieldPath {
+	ResolvedField: *const FField,
+    ResolvedOwner: TWeakObjectPtr<UStruct>,
+    Path: TArray<FName>,
+}
+
+// #[repr(C)]
+// pub struct TFieldPath<T> {
+//     base: FFieldPath,
+//     _marker: PhantomData<*const T>,
+// }

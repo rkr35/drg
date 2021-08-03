@@ -235,6 +235,7 @@ impl Display for PropertyDisplayable {
                         write!(f, "common::TSoftClassPtr<crate::{}::{}>", (*package).short_name(), name)?
                     }
                 }
+                EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
@@ -333,6 +334,12 @@ pub struct FSoftClassProperty {
     pub base: FObjectPropertyBase,
     MetaClass: *const UClass,
 }
+
+// #[repr(C)]
+// pub struct FFieldPathProperty {
+//     pub base: FProperty,
+//     PropertyClass: *const FFieldClass,
+// }
 
 #[repr(C)]
 pub struct UEnum {
