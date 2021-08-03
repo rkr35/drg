@@ -287,46 +287,57 @@ pub struct FField {
 #[repr(transparent)]
 pub struct EClassCastFlags(pub u64);
 
-#[allow(dead_code)] // TODO: Remove me. Silencing while writing code to generate properties.
 impl EClassCastFlags {
+    pub const CASTCLASS_UField: Self = Self(0x1);
+    pub const CASTCLASS_FInt8Property: Self = Self(0x2);
     pub const CASTCLASS_UEnum: Self = Self(0x4);
+    pub const CASTCLASS_UStruct: Self = Self(0x8);
     pub const CASTCLASS_UScriptStruct: Self = Self(0x10);
     pub const CASTCLASS_UClass: Self = Self(0x20);
-
-    // Property types
-
-    // Primitive property types
-    pub const CASTCLASS_FInt8Property: Self = Self(0x2);
     pub const CASTCLASS_FByteProperty: Self = Self(0x40);
     pub const CASTCLASS_FIntProperty: Self = Self(0x80);
     pub const CASTCLASS_FFloatProperty: Self = Self(0x100);
     pub const CASTCLASS_FUInt64Property: Self = Self(0x200);
-    pub const CASTCLASS_FUInt32Property: Self = Self(0x800);
-    pub const CASTCLASS_FUInt16Property: Self = Self(0x40000);
-    pub const CASTCLASS_FInt64Property: Self = Self(0x400000);
-    pub const CASTCLASS_FInt16Property: Self = Self(0x80000000);
-    pub const CASTCLASS_FDoubleProperty: Self = Self(0x100000000);
-    pub const CASTCLASS_FEnumProperty: Self = Self(0x1000000000000);
-
     pub const CASTCLASS_FClassProperty: Self = Self(0x400);
+    pub const CASTCLASS_FUInt32Property: Self = Self(0x800);
     pub const CASTCLASS_FInterfaceProperty: Self = Self(0x1000);
     pub const CASTCLASS_FNameProperty: Self = Self(0x2000);
     pub const CASTCLASS_FStrProperty: Self = Self(0x4000);
     pub const CASTCLASS_FProperty: Self = Self(0x8000);
     pub const CASTCLASS_FObjectProperty: Self = Self(0x10000);
     pub const CASTCLASS_FBoolProperty: Self = Self(0x20000);
+    pub const CASTCLASS_FUInt16Property: Self = Self(0x40000);
+    pub const CASTCLASS_UFunction: Self = Self(0x80000);
     pub const CASTCLASS_FStructProperty: Self = Self(0x100000);
     pub const CASTCLASS_FArrayProperty: Self = Self(0x200000);
+    pub const CASTCLASS_FInt64Property: Self = Self(0x400000);
     pub const CASTCLASS_FDelegateProperty: Self = Self(0x800000);
     pub const CASTCLASS_FNumericProperty: Self = Self(0x1000000);
     pub const CASTCLASS_FMulticastDelegateProperty: Self = Self(0x2000000);
+    pub const CASTCLASS_FObjectPropertyBase: Self = Self(0x4000000);
     pub const CASTCLASS_FWeakObjectProperty: Self = Self(0x8000000);
     pub const CASTCLASS_FLazyObjectProperty: Self = Self(0x10000000);
     pub const CASTCLASS_FSoftObjectProperty: Self = Self(0x20000000);
     pub const CASTCLASS_FTextProperty: Self = Self(0x40000000);
+    pub const CASTCLASS_FInt16Property: Self = Self(0x80000000);
+    pub const CASTCLASS_FDoubleProperty: Self = Self(0x100000000);
     pub const CASTCLASS_FSoftClassProperty: Self = Self(0x200000000);
+    pub const CASTCLASS_UPackage: Self = Self(0x400000000);
+    pub const CASTCLASS_ULevel: Self = Self(0x800000000);
+    pub const CASTCLASS_AActor: Self = Self(0x1000000000);
+    pub const CASTCLASS_APlayerController: Self = Self(0x2000000000);
+    pub const CASTCLASS_APawn: Self = Self(0x4000000000);
+    pub const CASTCLASS_USceneComponent: Self = Self(0x8000000000);
+    pub const CASTCLASS_UPrimitiveComponent: Self = Self(0x10000000000);
+    pub const CASTCLASS_USkinnedMeshComponent: Self = Self(0x20000000000);
+    pub const CASTCLASS_USkeletalMeshComponent: Self = Self(0x40000000000);
+    pub const CASTCLASS_UBlueprint: Self = Self(0x80000000000);
+    pub const CASTCLASS_UDelegateFunction: Self = Self(0x100000000000);
+    pub const CASTCLASS_UStaticMeshComponent: Self = Self(0x200000000000);
     pub const CASTCLASS_FMapProperty: Self = Self(0x400000000000);
     pub const CASTCLASS_FSetProperty: Self = Self(0x800000000000);
+    pub const CASTCLASS_FEnumProperty: Self = Self(0x1000000000000);
+    pub const CASTCLASS_USparseDelegateFunction: Self = Self(0x2000000000000);
     pub const CASTCLASS_FMulticastInlineDelegateProperty: Self = Self(0x4000000000000);
     pub const CASTCLASS_FMulticastSparseDelegateProperty: Self = Self(0x8000000000000);
     pub const CASTCLASS_FFieldPathProperty: Self = Self(0x10000000000000);
