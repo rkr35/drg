@@ -236,6 +236,21 @@ impl Display for PropertyDisplayable {
                     }
                 }
                 EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FLazyObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    let class = (*property).PropertyClass;
+                    let name = (*class).name();
+                    let package = (*class).package();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, "common::TLazyObjectPtr<{}>", name)?
+                    } else {
+                        write!(f, "common::TLazyObjectPtr<crate::{}::{}>", (*package).short_name(), name)?
+                    }
+                }
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",

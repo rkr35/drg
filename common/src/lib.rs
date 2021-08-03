@@ -140,6 +140,30 @@ pub struct FFieldPath {
     Path: TArray<FName>,
 }
 
+#[repr(C)]
+pub struct FGuid {
+    A: u32,
+    B: u32,
+    C: u32,
+    D: u32,
+}
+
+#[repr(C)]
+pub struct FUniqueObjectGuid {
+    Guid: FGuid,
+}
+
+#[repr(C)]
+pub struct FLazyObjectPtr {
+    base: TPersistentObjectPtr<FUniqueObjectGuid>,
+}
+
+#[repr(C)]
+pub struct TLazyObjectPtr<T> {
+    base: FLazyObjectPtr,
+    _marker: PhantomData<*const T>,
+}
+
 // #[repr(C)]
 // pub struct TFieldPath<T> {
 //     base: FFieldPath,
