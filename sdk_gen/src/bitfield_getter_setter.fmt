@@ -1,0 +1,11 @@
+    pub unsafe fn {property_name}(this: *mut Self) -> bool {{
+        (*this).bitfield_at_{offset} & ({mask} << (8 * {byte_offset})) != 0
+    }}
+
+    pub unsafe fn set_{property_name}(this: *mut Self, enable: bool) {{
+        if enable {{
+            (*this).bitfield_at_{offset} |= {mask} << (8 * {byte_offset});
+        }} else {{
+            (*this).bitfield_at_{offset} &= !({mask} << (8 * {byte_offset}));
+        }}
+    }}

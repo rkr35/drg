@@ -309,8 +309,8 @@ impl Display for PropertyDisplayable {
 pub struct FBoolProperty {
     pub base: FProperty,
     pub FieldSize: u8,
-    ByteOffset: u8,
-    ByteMask: u8,
+    pub ByteOffset: u8,
+    pub ByteMask: u8,
     FieldMask: u8,
     pad: [u8; 4],
 }

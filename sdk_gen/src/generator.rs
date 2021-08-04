@@ -276,8 +276,11 @@ impl<W: Write> StructGenerator<W> {
 
         self.write_header()?;
         self.add_fields_and_functions()?;
-
         writeln!(self.out, "}}\n")?;
+
+        if !self.bitfields.is_empty() {
+            self.add_bitfield_getters_and_setters()?;
+        }
 
         Ok(())
     }
@@ -434,9 +437,11 @@ impl<W: Write> StructGenerator<W> {
         &mut self,
         property: *const FBoolProperty,
     ) -> Result<(), Error> {
+        let offset = (*property).base.Offset;
+
         if self
             .last_bitfield_offset
-            .map_or(false, |o| (*property).base.Offset == o)
+            .map_or(false, |o| offset == o)
         {
             self.bitfields
                 .last_mut()
@@ -463,12 +468,12 @@ impl<W: Write> StructGenerator<W> {
             writeln!(
                 self.out,
                 "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
-                offset = self.offset,
+                offset = offset,
                 size = size,
                 representation = representation,
             )?;
 
-            self.last_bitfield_offset = Some(self.offset);
+            self.last_bitfield_offset = Some(offset);
 
             self.bitfields
                 .push({
@@ -542,6 +547,27 @@ impl<W: Write> StructGenerator<W> {
 
             Ordering::Equal => {}
         }
+
+        Ok(())
+    }
+
+    unsafe fn add_bitfield_getters_and_setters(&mut self) -> Result<(), Error> {
+        writeln!(self.out, "impl {} {{", (*self.structure).name())?;
+
+        for bitfield in self.bitfields.iter() {
+            for &property in bitfield.iter() {
+                writeln!(
+                    self.out,
+                    include_str!("bitfield_getter_setter.fmt"),
+                    property_name=(*property).base.base.NamePrivate,
+                    offset=(*property).base.Offset,
+                    mask=(*property).ByteMask,
+                    byte_offset=(*property).ByteOffset
+                )?;
+            }
+        }
+
+        writeln!(self.out, "}}\n")?;
 
         Ok(())
     }
