@@ -241,7 +241,8 @@ pub struct UStruct {
     pub Children: *const UField,
     pub ChildProperties: *const FField,
     pub PropertiesSize: i32,
-    pad1: [u8; 84],
+    pub MinAlignment: i32,
+    pad1: [u8; 80],
 }
 
 impl_deref! { UStruct as UField }

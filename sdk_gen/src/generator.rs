@@ -288,9 +288,10 @@ impl<W: Write> StructGenerator<W> {
         if base.is_null() {
             writeln!(
                 self.out,
-                "// {} is {} bytes.\n#[repr(C)]\npub struct {} {{",
+                "// {} is {} bytes.\n#[repr(C, align({}))]\npub struct {} {{",
                 *self.structure,
                 (*self.structure).PropertiesSize,
+                (*self.structure).MinAlignment,
                 (*self.structure).name()
             )?;
         } else {
@@ -305,11 +306,12 @@ impl<W: Write> StructGenerator<W> {
 
         writeln!(
             self.out,
-            "// {}: {} is {} bytes ({} inherited).\n#[repr(C)]\npub struct {} {{",
+            "// {}: {} is {} bytes ({} inherited).\n#[repr(C, align({}))]\npub struct {} {{",
             self.structure as usize,
             *self.structure,
             (*self.structure).PropertiesSize,
             self.offset,
+            (*self.structure).MinAlignment,
             (*self.structure).name()
         )?;
 
