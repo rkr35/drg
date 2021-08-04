@@ -1,3 +1,2 @@
 SDK Generator:
-    * Emit static assertions for generated struct sizes and alignments
-        * Could also be a tests module similar to what bindgen generates.
+    * Emit getters and setters for bitfields.
