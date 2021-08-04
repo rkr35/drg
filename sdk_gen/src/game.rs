@@ -82,7 +82,7 @@ impl Display for PropertyDisplayable {
                     let enumeration = (*property).Enumeration;
 
                     if enumeration.is_null() {
-                        "char".fmt(f)?
+                        "u8".fmt(f)?
                     } else {
                         emit_package_qualified_type!(enumeration);
                     }
