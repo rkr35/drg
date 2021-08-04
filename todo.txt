@@ -1,3 +1,2 @@
 SDK Generator:
-    * Emit getters and setters for bitfields.
     * Emit functions.
