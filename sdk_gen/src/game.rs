@@ -75,13 +75,18 @@ impl Display for PropertyDisplayable {
                 ($property:expr, $custom_format:literal) => {
                     let name = (*$property).name();
                     let package = (*$property).package();
-                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*$property).is_blueprint_generated();
+                    let is_in_blueprint_module =
+                        self.is_struct_blueprint_generated && (*$property).is_blueprint_generated();
                     let same_package = is_in_blueprint_module || package == self.package;
 
                     if same_package {
                         write!(f, $custom_format, name)?
                     } else {
-                        write!(f, $custom_format, format_args!("crate::{}::{}", (*package).short_name(), name))?
+                        write!(
+                            f,
+                            $custom_format,
+                            format_args!("crate::{}::{}", (*package).short_name(), name)
+                        )?
                     }
                 };
             }
@@ -113,8 +118,12 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastScriptDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FSparseDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
+                    "common::FMulticastScriptDelegate".fmt(f)?
+                }
+                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
+                    "common::FSparseDelegate".fmt(f)?
+                }
                 EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
@@ -176,23 +185,38 @@ impl Display for PropertyDisplayable {
                 }
                 EClassCastFlags::CASTCLASS_FInterfaceProperty => {
                     let property = self.property.cast::<FInterfaceProperty>();
-                    emit_package_qualified_type!((*property).InterfaceClass, "common::TScriptInterface<{}>");
+                    emit_package_qualified_type!(
+                        (*property).InterfaceClass,
+                        "common::TScriptInterface<{}>"
+                    );
                 }
                 EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!((*property).PropertyClass, "common::TWeakObjectPtr<{}>");
+                    emit_package_qualified_type!(
+                        (*property).PropertyClass,
+                        "common::TWeakObjectPtr<{}>"
+                    );
                 }
                 EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!((*property).PropertyClass, "common::TSoftObjectPtr<{}>");
+                    emit_package_qualified_type!(
+                        (*property).PropertyClass,
+                        "common::TSoftObjectPtr<{}>"
+                    );
                 }
                 EClassCastFlags::CASTCLASS_FSoftClassProperty => {
                     let property = self.property.cast::<FSoftClassProperty>();
-                    emit_package_qualified_type!((*property).MetaClass, "common::TSoftClassPtr<{}>");
+                    emit_package_qualified_type!(
+                        (*property).MetaClass,
+                        "common::TSoftClassPtr<{}>"
+                    );
                 }
                 EClassCastFlags::CASTCLASS_FLazyObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!((*property).PropertyClass, "common::TLazyObjectPtr<{}>");
+                    emit_package_qualified_type!(
+                        (*property).PropertyClass,
+                        "common::TLazyObjectPtr<{}>"
+                    );
                 }
                 id => write!(
                     f,
