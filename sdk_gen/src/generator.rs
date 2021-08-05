@@ -439,10 +439,7 @@ impl<W: Write> StructGenerator<W> {
     ) -> Result<(), Error> {
         let offset = (*property).base.Offset;
 
-        if self
-            .last_bitfield_offset
-            .map_or(false, |o| offset == o)
-        {
+        if self.last_bitfield_offset.map_or(false, |o| offset == o) {
             self.bitfields
                 .last_mut()
                 .ok_or(Error::LastBitfield)?
@@ -562,9 +559,9 @@ impl<W: Write> StructGenerator<W> {
                 writeln!(
                     self.out,
                     include_str!("bitfield_getter_setter.fmt"),
-                    property_name=(*property).base.base.NamePrivate,
-                    offset=(*property).base.Offset,
-                    mask=mask,
+                    property_name = (*property).base.base.NamePrivate,
+                    offset = (*property).base.Offset,
+                    mask = mask,
                 )?;
             }
         }
