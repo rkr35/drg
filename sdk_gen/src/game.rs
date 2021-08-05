@@ -71,12 +71,28 @@ impl Display for PropertyDisplayable {
                         write!(f, "crate::{}::{}", (*package).short_name(), name)?
                     }
                 };
+
+                ($property:expr, $custom_format:literal) => {
+                    let name = (*$property).name();
+                    let package = (*$property).package();
+                    let is_in_blueprint_module = self.is_struct_blueprint_generated && (*$property).is_blueprint_generated();
+                    let same_package = is_in_blueprint_module || package == self.package;
+
+                    if same_package {
+                        write!(f, $custom_format, name)?
+                    } else {
+                        write!(f, $custom_format, format_args!("crate::{}::{}", (*package).short_name(), name))?
+                    }
+                };
             }
 
             // TODO(perf): Move common properties up.
             // TODO(perf): Investigate lookup table where index == (*self.property).id().trailing_zeros()
             match (*self.property).id() {
                 EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FByteProperty => {
                     let property = self.property.cast::<FByteProperty>();
                     let enumeration = (*property).Enumeration;
@@ -87,14 +103,19 @@ impl Display for PropertyDisplayable {
                         emit_package_qualified_type!(enumeration);
                     }
                 }
-                EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FUInt16Property => "u16".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => "common::FMulticastScriptDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => "common::FSparseDelegate".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
                     emit_package_qualified_type!((*property).Enumeration);
@@ -102,21 +123,6 @@ impl Display for PropertyDisplayable {
                 EClassCastFlags::CASTCLASS_FStructProperty => {
                     let property = self.property.cast::<FStructProperty>();
                     emit_package_qualified_type!((*property).Structure);
-                }
-                EClassCastFlags::CASTCLASS_FObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    let class = (*property).PropertyClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "*mut {}", name)?
-                    } else {
-                        write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
-                    }
                 }
                 EClassCastFlags::CASTCLASS_FArrayProperty => {
                     let property = self.property.cast::<FArrayProperty>();
@@ -126,72 +132,6 @@ impl Display for PropertyDisplayable {
                         "common::TArray<{}>",
                         Self::new(property, self.package, self.is_struct_blueprint_generated)
                     )?
-                }
-                EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FClassProperty => {
-                    let property = self.property.cast::<FClassProperty>();
-                    let class = (*property).MetaClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "*mut {}", name)?
-                    } else {
-                        write!(f, "*mut crate::{}::{}", (*package).short_name(), name)?
-                    }
-                }
-                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FInterfaceProperty => {
-                    let property = self.property.cast::<FInterfaceProperty>();
-                    let class = (*property).InterfaceClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "common::TScriptInterface<{}>", name)?
-                    } else {
-                        write!(
-                            f,
-                            "common::TScriptInterface<crate::{}::{}>",
-                            (*package).short_name(),
-                            name
-                        )?
-                    }
-                }
-                EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    let class = (*property).PropertyClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "common::TWeakObjectPtr<{}>", name)?
-                    } else {
-                        write!(
-                            f,
-                            "common::TWeakObjectPtr<crate::{}::{}>",
-                            (*package).short_name(),
-                            name
-                        )?
-                    }
-                }
-                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
-                    "common::FMulticastScriptDelegate".fmt(f)?
-                }
-                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
-                    "common::FSparseDelegate".fmt(f)?
                 }
                 EClassCastFlags::CASTCLASS_FMapProperty => {
                     let map = self.property.cast::<FMapProperty>();
@@ -212,26 +152,6 @@ impl Display for PropertyDisplayable {
                         )
                     )?
                 }
-                EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    let class = (*property).PropertyClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "common::TSoftObjectPtr<{}>", name)?
-                    } else {
-                        write!(
-                            f,
-                            "common::TSoftObjectPtr<crate::{}::{}>",
-                            (*package).short_name(),
-                            name
-                        )?
-                    }
-                }
                 EClassCastFlags::CASTCLASS_FSetProperty => {
                     let set = self.property.cast::<FSetProperty>();
 
@@ -246,46 +166,33 @@ impl Display for PropertyDisplayable {
                         ),
                     )?
                 }
+                EClassCastFlags::CASTCLASS_FObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!((*property).PropertyClass, "*mut {}");
+                }
+                EClassCastFlags::CASTCLASS_FClassProperty => {
+                    let property = self.property.cast::<FClassProperty>();
+                    emit_package_qualified_type!((*property).MetaClass, "*mut {}");
+                }
+                EClassCastFlags::CASTCLASS_FInterfaceProperty => {
+                    let property = self.property.cast::<FInterfaceProperty>();
+                    emit_package_qualified_type!((*property).InterfaceClass, "common::TScriptInterface<{}>");
+                }
+                EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!((*property).PropertyClass, "common::TWeakObjectPtr<{}>");
+                }
+                EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!((*property).PropertyClass, "common::TSoftObjectPtr<{}>");
+                }
                 EClassCastFlags::CASTCLASS_FSoftClassProperty => {
                     let property = self.property.cast::<FSoftClassProperty>();
-                    let class = (*property).MetaClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "common::TSoftClassPtr<{}>", name)?
-                    } else {
-                        write!(
-                            f,
-                            "common::TSoftClassPtr<crate::{}::{}>",
-                            (*package).short_name(),
-                            name
-                        )?
-                    }
+                    emit_package_qualified_type!((*property).MetaClass, "common::TSoftClassPtr<{}>");
                 }
-                EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
                 EClassCastFlags::CASTCLASS_FLazyObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
-                    let class = (*property).PropertyClass;
-                    let name = (*class).name();
-                    let package = (*class).package();
-                    let is_in_blueprint_module =
-                        self.is_struct_blueprint_generated && (*class).is_blueprint_generated();
-                    let same_package = is_in_blueprint_module || package == self.package;
-
-                    if same_package {
-                        write!(f, "common::TLazyObjectPtr<{}>", name)?
-                    } else {
-                        write!(
-                            f,
-                            "common::TLazyObjectPtr<crate::{}::{}>",
-                            (*package).short_name(),
-                            name
-                        )?
-                    }
+                    emit_package_qualified_type!((*property).PropertyClass, "common::TLazyObjectPtr<{}>");
                 }
                 id => write!(
                     f,
