@@ -556,13 +556,15 @@ impl<W: Write> StructGenerator<W> {
 
         for bitfield in self.bitfields.iter() {
             for &property in bitfield.iter() {
+                let mask = u64::from((*property).ByteMask);
+                let offset = (*property).ByteOffset;
+                let mask = mask << (8 * offset);
                 writeln!(
                     self.out,
                     include_str!("bitfield_getter_setter.fmt"),
                     property_name=(*property).base.base.NamePrivate,
                     offset=(*property).base.Offset,
-                    mask=(*property).ByteMask,
-                    byte_offset=(*property).ByteOffset
+                    mask=mask,
                 )?;
             }
         }
