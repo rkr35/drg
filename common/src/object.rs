@@ -2,7 +2,9 @@ use crate::split::ReverseSplitIterator;
 use crate::Error;
 use crate::List;
 
+use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
+use core::mem;
 use core::ops::BitOr;
 use core::ptr;
 use core::str;
@@ -149,7 +151,7 @@ macro_rules! impl_deref {
 
 #[repr(C)]
 pub struct UObject {
-    vtable: usize,
+    vtable: *const *const c_void,
     ObjectFlags: u32, //EObjectFlags
     pub InternalIndex: i32,
     ClassPrivate: *const UClass,
@@ -184,6 +186,13 @@ impl UObject {
 
     pub unsafe fn name(&self) -> &str {
         self.NamePrivate.text()
+    }
+
+    pub unsafe fn process_event(this: *mut UObject, function: *mut UFunction, parameters: *mut c_void) {
+        const PROCESS_EVENT_VTABLE_INDEX: usize = 66;
+        type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
+        let process_event = mem::transmute::<*const c_void, ProcessEvent>(*(*this).vtable.add(PROCESS_EVENT_VTABLE_INDEX));
+        process_event(this, function, parameters);
     }
 }
 
@@ -264,6 +273,80 @@ impl UClass {
             .any(EClassFlags::CLASS_CompiledFromBlueprint)
     }
 }
+
+// #define RESULT_DECL void*const RESULT_PARAM
+// typedef void (*FNativeFuncPtr)(UObject* Context, FFrame& TheStack, RESULT_DECL);
+
+#[repr(C)]
+struct FFrame {
+    // TODO: fill in from UnrealEngine\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h
+    // struct FFrame : public FOutputDevice
+    replace_me: *const c_void,
+}
+
+type FNativeFuncPtr = unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut FFrame, Result: *const c_void);
+
+// 	// Scope required for scoped script stats.
+// 	{
+// 		uint8* Frame = NULL;
+// #if USE_UBER_GRAPH_PERSISTENT_FRAME
+// 		if (Function->HasAnyFunctionFlags(FUNC_UbergraphFunction))
+// 		{
+// 			Frame = Function->GetOuterUClassUnchecked()->GetPersistentUberGraphFrame(this, Function);
+// 		}
+// #endif
+// 		const bool bUsePersistentFrame = (NULL != Frame);
+// 		if (!bUsePersistentFrame)
+// 		{
+// 			Frame = (uint8*)FMemory_Alloca(Function->PropertiesSize);
+// 			// zero the local property memory
+// 			FMemory::Memzero(Frame + Function->ParmsSize, Function->PropertiesSize - Function->ParmsSize);
+// 		}
+
+// 		// initialize the parameter properties
+// 		FMemory::Memcpy(Frame, Parms, Function->ParmsSize);
+
+// 		// Create a new local execution stack.
+// 		FFrame NewStack(this, Function, Frame, NULL, Function->ChildProperties);
+
+// 		checkSlow(NewStack.Locals || Function->ParmsSize == 0);
+
+
+// inline FFrame::FFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame, FField* InPropertyChainForCompiledIn )
+// 	: Node(InNode)
+// 	, Object(InObject)
+// 	, Code(InNode->Script.GetData())
+// 	, Locals((uint8*)InLocals)
+// 	, MostRecentProperty(NULL)
+// 	, MostRecentPropertyAddress(NULL)
+// 	, PreviousFrame(InPreviousFrame)
+// 	, OutParms(NULL)
+// 	, PropertyChainForCompiledIn(InPropertyChainForCompiledIn)
+// 	, CurrentNativeFunction(NULL)
+// 	, bArrayContextFailed(false)
+// {
+// #if DO_BLUEPRINT_GUARD
+// 	FBlueprintExceptionTracker::Get().ScriptStack.Push(this);
+// #endif
+// }
+
+
+#[repr(C)]
+pub struct UFunction {
+    base: UStruct,
+    FunctionFlags: u32,
+    NumParms: u8,
+    ParmsSize: u16,
+    ReturnValueOffset: u16,
+    RPCId: u16,
+    RPCResponseId: u16,
+    FirstPropertyToInit: *const c_void,
+	EventGraphFunction: *const UFunction,
+	EventGraphCallOffset: i32,
+    Func: FNativeFuncPtr,
+}
+
+impl_deref! { UFunction as UStruct }
 
 #[repr(C)]
 pub struct FFieldClass {
