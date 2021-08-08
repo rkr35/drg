@@ -91,13 +91,43 @@ impl Display for PropertyDisplayable {
                 };
             }
 
-            // TODO(perf): Move common properties up.
             // TODO(perf): Investigate lookup table where index == (*self.property).id().trailing_zeros()
             match (*self.property).id() {
-                EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
+                EClassCastFlags::CASTCLASS_FObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!((*property).PropertyClass, "*mut {}");
+                }
+                
+                EClassCastFlags::CASTCLASS_FStructProperty => {
+                    let property = self.property.cast::<FStructProperty>();
+                    emit_package_qualified_type!((*property).Structure);
+                }
+                
+                EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
+                
+                EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
+                
+                EClassCastFlags::CASTCLASS_FArrayProperty => {
+                    let property = self.property.cast::<FArrayProperty>();
+                    let property = (*property).Inner;
+                    write!(
+                        f,
+                        "common::TArray<{}>",
+                        Self::new(property, self.package, self.is_struct_blueprint_generated)
+                    )?
+                }
+                
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
+                
+                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
+                    "common::FMulticastScriptDelegate".fmt(f)?
+                }
+                
+                EClassCastFlags::CASTCLASS_FEnumProperty => {
+                    let property = self.property.cast::<FEnumProperty>();
+                    emit_package_qualified_type!((*property).Enumeration);
+                }
+                
                 EClassCastFlags::CASTCLASS_FByteProperty => {
                     let property = self.property.cast::<FByteProperty>();
                     let enumeration = (*property).Enumeration;
@@ -108,40 +138,18 @@ impl Display for PropertyDisplayable {
                         emit_package_qualified_type!(enumeration);
                     }
                 }
-                EClassCastFlags::CASTCLASS_FUInt16Property => "u16".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
+                
                 EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
+                
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
+                
+                EClassCastFlags::CASTCLASS_FClassProperty => {
+                    let property = self.property.cast::<FClassProperty>();
+                    emit_package_qualified_type!((*property).MetaClass, "*mut {}");
+                }
+                
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
-                    "common::FMulticastScriptDelegate".fmt(f)?
-                }
-                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
-                    "common::FSparseDelegate".fmt(f)?
-                }
-                EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
-                EClassCastFlags::CASTCLASS_FEnumProperty => {
-                    let property = self.property.cast::<FEnumProperty>();
-                    emit_package_qualified_type!((*property).Enumeration);
-                }
-                EClassCastFlags::CASTCLASS_FStructProperty => {
-                    let property = self.property.cast::<FStructProperty>();
-                    emit_package_qualified_type!((*property).Structure);
-                }
-                EClassCastFlags::CASTCLASS_FArrayProperty => {
-                    let property = self.property.cast::<FArrayProperty>();
-                    let property = (*property).Inner;
-                    write!(
-                        f,
-                        "common::TArray<{}>",
-                        Self::new(property, self.package, self.is_struct_blueprint_generated)
-                    )?
-                }
+                
                 EClassCastFlags::CASTCLASS_FMapProperty => {
                     let map = self.property.cast::<FMapProperty>();
 
@@ -161,6 +169,35 @@ impl Display for PropertyDisplayable {
                         )
                     )?
                 }
+                
+                EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!(
+                        (*property).PropertyClass,
+                        "common::TWeakObjectPtr<{}>"
+                    );
+                }
+                
+                EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
+                
+                EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
+                    let property = self.property.cast::<FObjectPropertyBase>();
+                    emit_package_qualified_type!(
+                        (*property).PropertyClass,
+                        "common::TSoftObjectPtr<{}>"
+                    );
+                }
+
+                EClassCastFlags::CASTCLASS_FSoftClassProperty => {
+                    let property = self.property.cast::<FSoftClassProperty>();
+                    emit_package_qualified_type!(
+                        (*property).MetaClass,
+                        "common::TSoftClassPtr<{}>"
+                    );
+                }
+
+                EClassCastFlags::CASTCLASS_FDelegateProperty => "common::FScriptDelegate".fmt(f)?,
+
                 EClassCastFlags::CASTCLASS_FSetProperty => {
                     let set = self.property.cast::<FSetProperty>();
 
@@ -175,14 +212,7 @@ impl Display for PropertyDisplayable {
                         ),
                     )?
                 }
-                EClassCastFlags::CASTCLASS_FObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!((*property).PropertyClass, "*mut {}");
-                }
-                EClassCastFlags::CASTCLASS_FClassProperty => {
-                    let property = self.property.cast::<FClassProperty>();
-                    emit_package_qualified_type!((*property).MetaClass, "*mut {}");
-                }
+
                 EClassCastFlags::CASTCLASS_FInterfaceProperty => {
                     let property = self.property.cast::<FInterfaceProperty>();
                     emit_package_qualified_type!(
@@ -190,27 +220,21 @@ impl Display for PropertyDisplayable {
                         "common::TScriptInterface<{}>"
                     );
                 }
-                EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!(
-                        (*property).PropertyClass,
-                        "common::TWeakObjectPtr<{}>"
-                    );
+
+                EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
+                    "common::FSparseDelegate".fmt(f)?
                 }
-                EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
-                    let property = self.property.cast::<FObjectPropertyBase>();
-                    emit_package_qualified_type!(
-                        (*property).PropertyClass,
-                        "common::TSoftObjectPtr<{}>"
-                    );
-                }
-                EClassCastFlags::CASTCLASS_FSoftClassProperty => {
-                    let property = self.property.cast::<FSoftClassProperty>();
-                    emit_package_qualified_type!(
-                        (*property).MetaClass,
-                        "common::TSoftClassPtr<{}>"
-                    );
-                }
+
+                EClassCastFlags::CASTCLASS_FUInt16Property => "u16".fmt(f)?,
+
+                EClassCastFlags::CASTCLASS_FDoubleProperty => "f64".fmt(f)?,
+
+                EClassCastFlags::CASTCLASS_FFieldPathProperty => "common::FFieldPath".fmt(f)?,
+
+                EClassCastFlags::CASTCLASS_FInt8Property => "i8".fmt(f)?,
+
+                EClassCastFlags::CASTCLASS_FInt16Property => "i16".fmt(f)?,
+
                 EClassCastFlags::CASTCLASS_FLazyObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
                     emit_package_qualified_type!(
@@ -218,6 +242,11 @@ impl Display for PropertyDisplayable {
                         "common::TLazyObjectPtr<{}>"
                     );
                 }
+
+                EClassCastFlags::CASTCLASS_FUInt64Property => "u64".fmt(f)?,
+
+                EClassCastFlags::CASTCLASS_FInt64Property => "i64".fmt(f)?,
+
                 id => write!(
                     f,
                     "[u8; {}] /* WARN: UNKNOWN PROPERTY TYPE Id=={}, Address=={}*/",
