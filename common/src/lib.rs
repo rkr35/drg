@@ -39,6 +39,7 @@ pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
     Fmt(#[from] fmt::Error),
+    Module(#[from] win::module::Error),
 }
 
 #[repr(C)]
@@ -183,4 +184,19 @@ pub struct TLazyObjectPtr<T> {
 pub unsafe fn idle() {
     log!("Idling. Press enter to continue.");
     win::idle();
+}
+
+pub unsafe fn init_globals() -> Result<(), Error> {
+    let module = win::Module::current()?;
+    FNamePool::init(&module)?;
+    FUObjectArray::init(&module)?;
+
+    log!(
+        "module.start = {}, module.size = {}",
+        module.start(),
+        module.size()
+    );
+    log!("NamePoolData = {}", NamePoolData as usize);
+    log!("GUObjectArray = {}", GUObjectArray as usize);
+    Ok(())
 }

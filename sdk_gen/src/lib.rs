@@ -26,7 +26,6 @@ mod util;
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
-    Module(#[from] win::module::Error),
     Game(#[from] game::Error),
     File(#[from] win::file::Error),
     Fmt(#[from] fmt::Error),
@@ -58,27 +57,10 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 unsafe fn on_detach() {}
 
 unsafe fn run() -> Result<(), Error> {
-    init_globals()?;
+    common::init_globals()?;
     dump_globals()?;
     generate_sdk()?;
     common::idle();
-    Ok(())
-}
-
-unsafe fn init_globals() -> Result<(), Error> {
-    let timer = Timer::new("init globals");
-    let module = win::Module::current()?;
-    common::FNamePool::init(&module)?;
-    common::FUObjectArray::init(&module)?;
-    timer.stop();
-
-    common::log!(
-        "module.start = {}, module.size = {}",
-        module.start(),
-        module.size()
-    );
-    common::log!("NamePoolData = {}", common::NamePoolData as usize);
-    common::log!("GUObjectArray = {}", common::GUObjectArray as usize);
     Ok(())
 }
 
