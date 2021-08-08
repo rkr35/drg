@@ -1,5 +1,5 @@
 [workspace]
-members = ["common", "macros", "sdk", "sdk_gen"]
+members = ["common", "hook", "macros", "sdk", "sdk_gen"]
 
 [profile.dev]
 panic = "abort"
