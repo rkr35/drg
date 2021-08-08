@@ -57,7 +57,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 
     if let Err(e) = run() {
         common::log!("error: {:?}", e);
-        idle();
+        common::idle();
     }
 
     win::FreeConsole();
@@ -71,7 +71,7 @@ unsafe fn run() -> Result<(), Error> {
     init_globals()?;
     dump_globals()?;
     generate_sdk()?;
-    idle();
+    common::idle();
     Ok(())
 }
 
@@ -136,9 +136,4 @@ unsafe fn generate_sdk() -> Result<(), Error> {
     Generator::new()?.generate_sdk()?;
     timer.stop();
     Ok(())
-}
-
-unsafe fn idle() {
-    common::log!("Idling. Press enter to continue.");
-    win::idle();
 }

@@ -169,3 +169,8 @@ pub struct TLazyObjectPtr<T> {
 //     base: FFieldPath,
 //     _marker: PhantomData<*const T>,
 // }
+
+pub unsafe fn idle() {
+    log!("Idling. Press enter to continue.");
+    win::idle();
+}
