@@ -24,16 +24,6 @@ mod timer;
 use timer::Timer;
 mod util;
 
-#[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
-    extern "Rust" {
-        #[link_name = "\n\nDetected possible panic in your code. Remove all panics.\n"]
-        fn f() -> !;
-    }
-
-    unsafe { f() }
-}
-
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
     Module(#[from] win::module::Error),
