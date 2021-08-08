@@ -50,6 +50,7 @@ impl Generator {
             "\
             #![no_std]\n\
             #![allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]\n\
+            #![allow(clippy::missing_safety_doc)]\n\
             pub mod blueprint_generated;\n",
         )?;
 
