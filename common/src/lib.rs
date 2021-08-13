@@ -39,7 +39,6 @@ pub enum Error {
     FindNamePoolData,
     FindGUObjectArray,
     Fmt(#[from] fmt::Error),
-    Module(#[from] win::module::Error),
 }
 
 #[repr(C)]
@@ -186,10 +185,9 @@ pub unsafe fn idle() {
     win::idle();
 }
 
-pub unsafe fn init_globals() -> Result<(), Error> {
-    let module = win::Module::current()?;
-    FNamePool::init(&module)?;
-    FUObjectArray::init(&module)?;
+pub unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
+    FNamePool::init(module)?;
+    FUObjectArray::init(module)?;
 
     log!(
         "module.start = {}, module.size = {}",

@@ -28,6 +28,7 @@ mod util;
 enum Error {
     Game(#[from] game::Error),
     File(#[from] win::file::Error),
+    Module(#[from] win::module::Error),
     Fmt(#[from] fmt::Error),
     List(#[from] common::list::Error),
     Generator(#[from] generator::Error),
@@ -57,7 +58,7 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 unsafe fn on_detach() {}
 
 unsafe fn run() -> Result<(), Error> {
-    common::init_globals()?;
+    common::init_globals(&win::Module::current()?)?;
     dump_globals()?;
     generate_sdk()?;
     common::idle();
