@@ -7,6 +7,8 @@ use core::mem;
 use core::ptr;
 use core::str;
 
+use crate::util;
+
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 
 const FNameMaxBlockBits: u8 = 13;
@@ -270,7 +272,7 @@ impl FNameEntry {
             self.len()
         };
         let bytes = mem::size_of::<FNameEntryHeader>() + num_text_bytes;
-        align(bytes, Stride)
+        util::align(bytes, Stride)
     }
 }
 
@@ -278,8 +280,4 @@ impl Display for FNameEntry {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         unsafe { f.write_str(self.text()) }
     }
-}
-
-fn align(x: usize, alignment: usize) -> usize {
-    (x + alignment - 1) & !(alignment - 1)
 }

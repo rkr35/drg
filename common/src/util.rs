@@ -24,3 +24,7 @@ macro_rules! log {
         let _ = writeln!(&mut Stdout, $($arg)*);
     }}
 }
+
+pub fn align(x: usize, alignment: usize) -> usize {
+    (x + alignment - 1) & !(alignment - 1)
+}

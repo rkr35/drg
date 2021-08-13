@@ -1,3 +1,5 @@
+use crate::util;
+
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     GetModuleHandle,
@@ -12,7 +14,8 @@ pub struct Module {
 impl Module {
     pub unsafe fn current() -> Result<Self, Error> {
         const SECTION: [u8; 5] = *b".text";
-        const PE_HEADER_SIZE: usize = 0x1000; // one page size, kind of overkill for our search.
+        const PAGE: usize = 0x1000;
+        const PE_HEADER_SIZE: usize = PAGE; // overkill for our search.
 
         let base = super::GetModuleHandleA(core::ptr::null());
 
@@ -30,7 +33,7 @@ impl Module {
 
         Ok(Self {
             start: base as usize + (*section_header).virtual_address as usize,
-            size: (*section_header).size_of_raw_data as usize,
+            size: util::align((*section_header).size_of_raw_data as usize, PAGE),
         })
     }
 
