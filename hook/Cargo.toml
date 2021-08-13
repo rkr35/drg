@@ -8,3 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 common = { path = "../common" }
+macros = { path = "../macros" }
