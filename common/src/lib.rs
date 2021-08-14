@@ -18,8 +18,6 @@ use core::marker::PhantomData;
 use core::ptr;
 use core::slice;
 
-pub mod win;
-
 mod name;
 pub use name::*;
 
@@ -32,7 +30,12 @@ pub use list::*;
 mod split;
 pub use split::*;
 
+pub mod timer;
+pub use timer::Timer;
+
 mod util;
+
+pub mod win;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {

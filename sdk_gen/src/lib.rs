@@ -10,7 +10,7 @@ extern "C" {}
 #[link(name = "vcruntime")]
 extern "C" {}
 
-use common::win;
+use common::{timer, Timer, win};
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;
@@ -20,8 +20,6 @@ use buf_writer::BufWriter;
 mod game;
 mod generator;
 use generator::Generator;
-mod timer;
-use timer::Timer;
 mod util;
 
 #[derive(macros::NoPanicErrorDebug)]

@@ -1,17 +1,17 @@
-use common::List;
+use crate::List;
 use core::fmt::{self, Display, Formatter, Write};
 
 static mut TICKS_PER_SECOND: i64 = 0;
 
 pub unsafe fn initialize_ticks_per_second() {
-    common::win::QueryPerformanceFrequency(&mut TICKS_PER_SECOND);
-    common::log!("TICKS_PER_SECOND = {}", FormattedTicks(TICKS_PER_SECOND));
+    crate::win::QueryPerformanceFrequency(&mut TICKS_PER_SECOND);
+    crate::log!("TICKS_PER_SECOND = {}", FormattedTicks(TICKS_PER_SECOND));
 }
 
 fn get_current_tick() -> i64 {
     let mut tick = 0;
     unsafe {
-        common::win::QueryPerformanceCounter(&mut tick);
+        crate::win::QueryPerformanceCounter(&mut tick);
     }
     tick
 }
@@ -23,7 +23,7 @@ pub struct Timer<A: Display> {
 
 impl<A: Display> Timer<A> {
     pub fn new(action: A) -> Self {
-        common::log!("BEGIN: {}", action);
+        crate::log!("BEGIN: {}", action);
 
         Self {
             start_tick: get_current_tick(),
@@ -34,7 +34,7 @@ impl<A: Display> Timer<A> {
     pub fn stop(self) {
         let current_tick = get_current_tick();
         let elapsed_ticks = current_tick - self.start_tick;
-        common::log!(
+        crate::log!(
             "END: {} ({} ticks elapsed)",
             self.action,
             FormattedTicks(elapsed_ticks)
