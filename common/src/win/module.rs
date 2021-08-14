@@ -57,77 +57,36 @@ impl Module {
     }
 
     pub fn find_code_cave(&self) -> Option<&[u8]> {
-        struct Searcher<'a> {
-            space: &'a [u8],
-            largest: Option<&'a [u8]>,
+        fn find_next_cave<'a>(space: &mut &'a [u8]) -> Option<&'a [u8]> {
+            let beginning = space.iter().position(|&b| b == 0)?;
+
+            // SAFETY: Per above `position` call, `beginning` is within bounds of `space`.
+            let mut cave = unsafe { space.get_unchecked(beginning..) };
+
+            if let Some(length) = cave.iter().position(|&b| b != 0) {
+                // SAFETY: Per above `position` call, `length` is within bounds of `cave`.
+                cave = unsafe { cave.get_unchecked(..length) };
+
+                // SAFETY: `cave` is a subset of `space`, so we can skip past this subset while still being within
+                // bounds.
+                *space = unsafe { space.get_unchecked(beginning + length..) };
+            } else {
+                *space = &[];
+            }
+
+            Some(cave)
         }
 
-        impl<'a> Searcher<'a> {
-            fn new(space: &[u8]) -> Searcher {
-                Searcher {
-                    space,
-                    largest: None,
-                }
-            }
+        let mut search_space = unsafe { core::slice::from_raw_parts(self.start as *const u8, self.size) };
+        let mut largest: Option<&[u8]> = None;
 
-            fn largest(&mut self) -> Option<&'a [u8]> {
-                while let Some(cave) = self.find_next_cave() {
-                    if self.is_cave_new_largest(cave) {
-                        self.set_new_largest(cave);
-                    }
-                }
-                self.largest
-            }
-
-            fn find_next_cave(&mut self) -> Option<&'a [u8]> {
-                let cave = self.find_next_cave_beginning()?;
-                Some(self.end_cave(cave))
-            }
-
-            fn find_next_cave_beginning(&mut self) -> Option<&'a [u8]> {
-                let beginning = self.find_zero_position()?;
-                let cave = unsafe { self.space.get_unchecked(beginning..) };
-                self.advance_search_space_to(beginning);
-                Some(cave)
-            }
-
-            fn find_zero_position(&self) -> Option<usize> {
-                self.space.iter().position(|&b| b == 0)
-            }
-
-            fn end_cave(&mut self, mut cave: &'a [u8]) -> &'a [u8] {
-                if let Some(ending) = Self::find_non_zero_position(cave) {
-                    cave = unsafe { cave.get_unchecked(..ending) };
-                    self.advance_search_space_to(ending);
-                } else {
-                    self.end_search_space();
-                }
-                cave
-            }
-
-            fn find_non_zero_position(cave: &'a [u8]) -> Option<usize> {
-                cave.iter().position(|&b| b != 0)
-            }
-
-            fn advance_search_space_to(&mut self, position: usize) {
-                self.space = unsafe { self.space.get_unchecked(position..) };
-            }
-
-            fn end_search_space(&mut self) {
-                self.space = &[];
-            }
-
-            fn is_cave_new_largest(&self, cave: &[u8]) -> bool {
-                cave.len() > self.largest.map_or(0, |l| l.len())
-            }
-
-            fn set_new_largest(&mut self, cave: &'a [u8]) {
-                self.largest = Some(cave);
+        while let Some(cave) = find_next_cave(&mut search_space) {
+            if cave.len() > largest.map_or(0, |l| l.len()) {
+                largest = Some(cave);
             }
         }
 
-        let search_space = unsafe { core::slice::from_raw_parts(self.start as *const u8, self.size) };
-        Searcher::new(search_space).largest()
+        largest
     }
 }
 
