@@ -198,13 +198,5 @@ pub unsafe fn idle() {
 pub unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     FNamePool::init(module)?;
     FUObjectArray::init(module)?;
-
-    log!(
-        "module.start = {}, module.size = {}",
-        module.start(),
-        module.size()
-    );
-    log!("NamePoolData = {}", NamePoolData as usize);
-    log!("GUObjectArray = {}", GUObjectArray as usize);
     Ok(())
 }
