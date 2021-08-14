@@ -1,9 +1,11 @@
 #[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {{
+        use core::fmt::Write;
+
         struct Stdout;
 
-        impl core::fmt::Write for Stdout {
+        impl Write for Stdout {
             fn write_str(&mut self, text: &str) -> Result<(), core::fmt::Error> { unsafe {
                 #[allow(clippy::cast_possible_truncation)]
                 crate::win::WriteConsoleA(
