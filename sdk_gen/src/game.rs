@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Display, Formatter};
 
-use common::{EClassCastFlags, FField, UClass, UField, UObject, UPackage, UStruct};
+use common::{EClassCastFlags, FField, FName, FString, impl_deref, TArray, UClass, UField, UObject, UPackage, UStruct};
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -355,13 +355,13 @@ pub struct FSoftClassProperty {
 #[repr(C)]
 pub struct UEnum {
     base: UField,
-    CppType: common::FString,
-    pub Names: common::TArray<TPair<common::FName, i64>>,
+    CppType: FString,
+    pub Names: TArray<TPair<FName, i64>>,
     CppForm: i32,
     EnumDisplayNameFn: usize,
 }
 
-common::impl_deref! { UEnum as UField }
+impl_deref! { UEnum as UField }
 
 #[repr(C)]
 pub struct TPair<K, V> {

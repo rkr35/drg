@@ -5,7 +5,7 @@ use crate::{sdk_file, sdk_path};
 use common::win::file::{self, File};
 use common::List;
 use common::SplitIterator;
-use common::{EClassCastFlags, UClass, UObject, UPackage, UStruct};
+use common::{EClassCastFlags, FName, GUObjectArray, UClass, UObject, UPackage, UStruct};
 
 use core::cmp::Ordering;
 use core::fmt::{self, Write};
@@ -25,7 +25,7 @@ pub enum Error {
 }
 
 struct Package {
-    ptr: *mut common::UPackage,
+    ptr: *mut UPackage,
     file: File,
 }
 
@@ -64,7 +64,7 @@ impl Generator {
     }
 
     pub unsafe fn generate_sdk(&mut self) -> Result<(), Error> {
-        for object in (*common::GUObjectArray).iter().filter(|o| !o.is_null()) {
+        for object in (*GUObjectArray).iter().filter(|o| !o.is_null()) {
             if (*object).fast_is(
                 EClassCastFlags::CASTCLASS_UClass | EClassCastFlags::CASTCLASS_UScriptStruct,
             ) {
@@ -192,7 +192,7 @@ impl Generator {
     }
 }
 
-unsafe fn get_enum_representation(variants: &[TPair<common::FName, i64>]) -> &'static str {
+unsafe fn get_enum_representation(variants: &[TPair<FName, i64>]) -> &'static str {
     let max_discriminant_value = variants.iter().map(|v| v.Value).max().unwrap_or(0);
 
     if max_discriminant_value <= u8::MAX.into() {
@@ -206,7 +206,7 @@ unsafe fn get_enum_representation(variants: &[TPair<common::FName, i64>]) -> &'s
 
 unsafe fn write_enum_variant(
     mut out: impl Write,
-    variant: &TPair<common::FName, i64>,
+    variant: &TPair<FName, i64>,
 ) -> Result<(), Error> {
     let mut text = variant.Key.text();
 

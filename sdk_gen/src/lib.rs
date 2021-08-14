@@ -10,7 +10,7 @@ extern "C" {}
 #[link(name = "vcruntime")]
 extern "C" {}
 
-use common::{timer, Timer, win};
+use common::{GUObjectArray, list, NamePoolData, timer, Timer, win};
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;
@@ -28,7 +28,7 @@ enum Error {
     File(#[from] win::file::Error),
     Module(#[from] win::module::Error),
     Fmt(#[from] fmt::Error),
-    List(#[from] common::list::Error),
+    List(#[from] list::Error),
     Generator(#[from] generator::Error),
     Common(#[from] common::Error),
 }
@@ -74,7 +74,7 @@ unsafe fn dump_globals() -> Result<(), Error> {
 unsafe fn dump_names() -> Result<(), Error> {
     let mut file = BufWriter::new(win::File::new(sdk_file!("global_names.txt"))?);
 
-    for (index, name) in (*common::NamePoolData).iter() {
+    for (index, name) in (*NamePoolData).iter() {
         let text = (*name).text();
         writeln!(&mut file, "[{}] {}", index.value(), text)?;
     }
@@ -85,7 +85,7 @@ unsafe fn dump_names() -> Result<(), Error> {
 unsafe fn dump_objects() -> Result<(), Error> {
     let mut file = BufWriter::new(win::File::new(sdk_file!("global_objects.txt"))?);
 
-    for object in (*common::GUObjectArray).iter() {
+    for object in (*GUObjectArray).iter() {
         if object.is_null() {
             writeln!(&mut file, "skipped null object")?;
         } else {
