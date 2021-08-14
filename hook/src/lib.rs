@@ -1,6 +1,6 @@
 #![no_std]
 
-use common::{self, win};
+use common::{self, win, UFunction, UObject};
 use core::ffi::c_void;
 
 #[derive(macros::NoPanicErrorDebug)]

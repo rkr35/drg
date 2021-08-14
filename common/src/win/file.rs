@@ -1,4 +1,6 @@
+use core::ffi::c_void;
 use core::fmt::{self, Write};
+use core::ptr;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -7,7 +9,7 @@ pub enum Error {
 }
 
 pub struct File {
-    handle: *mut core::ffi::c_void,
+    handle: *mut c_void,
 }
 
 impl File {
@@ -22,10 +24,10 @@ impl File {
             name.as_ref().as_ptr(),
             GENERIC_WRITE,
             FILE_SHARE_READ,
-            core::ptr::null_mut(),
+            ptr::null_mut(),
             CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL,
-            core::ptr::null_mut(),
+            ptr::null_mut(),
         );
 
         if handle as usize == INVALID_HANDLE_VALUE {
@@ -45,7 +47,7 @@ impl File {
                 bytes.as_ptr(),
                 bytes.len() as u32,
                 &mut num_written,
-                core::ptr::null_mut(),
+                ptr::null_mut(),
             );
 
             if result == 0 {

@@ -1,4 +1,6 @@
 use crate::Error;
+use crate::util;
+use crate::win;
 
 use core::cmp::Ordering;
 use core::ffi::c_void;
@@ -7,7 +9,6 @@ use core::mem;
 use core::ptr;
 use core::str;
 
-use crate::util;
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 
@@ -94,7 +95,7 @@ pub struct FNamePool {
 }
 
 impl FNamePool {
-    pub unsafe fn init(module: &crate::win::Module) -> Result<(), Error> {
+    pub unsafe fn init(module: &win::Module) -> Result<(), Error> {
         // 00007FF7F9DC1F96 | 897424 30                | mov dword ptr ss:[rsp+30],esi                           |
         // 00007FF7F9DC1F9A | 894424 34                | mov dword ptr ss:[rsp+34],eax                           |
         // 00007FF7F9DC1F9E | 74 09                    | je fsd-win64-shipping.7FF7F9DC1FA9                      |

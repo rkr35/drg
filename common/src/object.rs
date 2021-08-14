@@ -1,6 +1,8 @@
 use crate::split::ReverseSplitIterator;
 use crate::Error;
 use crate::List;
+use crate::win;
+use crate::FName;
 
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
@@ -28,7 +30,7 @@ pub struct FUObjectArray {
 }
 
 impl FUObjectArray {
-    pub unsafe fn init(module: &crate::win::Module) -> Result<(), Error> {
+    pub unsafe fn init(module: &win::Module) -> Result<(), Error> {
         // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
         // 00007FF773FACC9F | 48:8D0D 3A7E5503         | lea rcx,qword ptr ds:[7FF777504AE0]                     |
         // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
@@ -155,7 +157,7 @@ pub struct UObject {
     ObjectFlags: u32, //EObjectFlags
     pub InternalIndex: i32,
     ClassPrivate: *const UClass,
-    NamePrivate: crate::FName,
+    NamePrivate: FName,
     OuterPrivate: *mut UObject,
 }
 
@@ -367,7 +369,7 @@ pub struct FField {
     pub ClassPrivate: *const FFieldClass,
     pad0: [u8; 16],
     pub Next: *const FField,
-    pub NamePrivate: crate::FName,
+    pub NamePrivate: FName,
     pub FlagsPrivate: u32,
     pad1: [u8; 4],
 }
@@ -475,6 +477,6 @@ impl UPackage {
         // split on an ASCII delimiter (`/`). Therefore, we still have a valid
         // ASCII string after the split. Since ASCII is a subset of UTF-8, the
         // bytes in `name` are valid UTF-8.
-        unsafe { core::str::from_utf8_unchecked(name) }
+        unsafe { str::from_utf8_unchecked(name) }
     }
 }

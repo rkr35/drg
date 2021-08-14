@@ -9,6 +9,7 @@ use common::{EClassCastFlags, FName, GUObjectArray, UClass, UObject, UPackage, U
 
 use core::cmp::Ordering;
 use core::fmt::{self, Write};
+use core::str;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -391,7 +392,7 @@ impl<W: Write> StructGenerator<W> {
                         self.out.write_char('_')?;
                     }
 
-                    write!(self.out, "{}", core::str::from_utf8_unchecked(piece))?;
+                    write!(self.out, "{}", str::from_utf8_unchecked(piece))?;
 
                     num_pieces_added += 1;
                 }
