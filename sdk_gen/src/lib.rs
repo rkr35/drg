@@ -10,7 +10,7 @@ extern "C" {}
 #[link(name = "vcruntime")]
 extern "C" {}
 
-use common::{GUObjectArray, list, NamePoolData, timer, Timer, win};
+use common::{list, timer, win, GUObjectArray, NamePoolData, Timer};
 use core::ffi::c_void;
 use core::fmt::{self, Write};
 use core::str;

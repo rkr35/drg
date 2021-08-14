@@ -188,10 +188,16 @@ impl UObject {
         self.NamePrivate.text()
     }
 
-    pub unsafe fn process_event(this: *mut UObject, function: *mut UFunction, parameters: *mut c_void) {
+    pub unsafe fn process_event(
+        this: *mut UObject,
+        function: *mut UFunction,
+        parameters: *mut c_void,
+    ) {
         const PROCESS_EVENT_VTABLE_INDEX: usize = 66;
         type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
-        let process_event = mem::transmute::<*const c_void, ProcessEvent>(*(*this).vtable.add(PROCESS_EVENT_VTABLE_INDEX));
+        let process_event = mem::transmute::<*const c_void, ProcessEvent>(
+            *(*this).vtable.add(PROCESS_EVENT_VTABLE_INDEX),
+        );
         process_event(this, function, parameters);
     }
 }
@@ -284,7 +290,8 @@ struct FFrame {
     replace_me: *const c_void,
 }
 
-type FNativeFuncPtr = unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut FFrame, Result: *const c_void);
+type FNativeFuncPtr =
+    unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut FFrame, Result: *const c_void);
 
 // 	// Scope required for scoped script stats.
 // 	{
@@ -311,7 +318,6 @@ type FNativeFuncPtr = unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut
 
 // 		checkSlow(NewStack.Locals || Function->ParmsSize == 0);
 
-
 // inline FFrame::FFrame( UObject* InObject, UFunction* InNode, void* InLocals, FFrame* InPreviousFrame, FField* InPropertyChainForCompiledIn )
 // 	: Node(InNode)
 // 	, Object(InObject)
@@ -330,7 +336,6 @@ type FNativeFuncPtr = unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut
 // #endif
 // }
 
-
 #[repr(C)]
 pub struct UFunction {
     base: UStruct,
@@ -341,8 +346,8 @@ pub struct UFunction {
     RPCId: u16,
     RPCResponseId: u16,
     FirstPropertyToInit: *const c_void,
-	EventGraphFunction: *const UFunction,
-	EventGraphCallOffset: i32,
+    EventGraphFunction: *const UFunction,
+    EventGraphCallOffset: i32,
     Func: FNativeFuncPtr,
 }
 

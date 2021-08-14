@@ -1,5 +1,7 @@
 use crate::util;
 
+use core::{ptr, slice};
+
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     GetModuleHandle,
@@ -17,13 +19,13 @@ impl Module {
         const PAGE: usize = 0x1000;
         const PE_HEADER_SIZE: usize = PAGE; // overkill for our search.
 
-        let base = super::GetModuleHandleA(core::ptr::null());
+        let base = super::GetModuleHandleA(ptr::null());
 
         if base.is_null() {
             return Err(Error::GetModuleHandle);
         }
 
-        let pe_header: &[u8] = core::slice::from_raw_parts(base.cast(), PE_HEADER_SIZE);
+        let pe_header: &[u8] = slice::from_raw_parts(base.cast(), PE_HEADER_SIZE);
 
         let section_header: *const SectionHeader = pe_header
             .windows(SECTION.len())
@@ -38,7 +40,7 @@ impl Module {
     }
 
     pub unsafe fn find<T>(&self, pattern: &[Option<u8>]) -> Option<*const T> {
-        core::slice::from_raw_parts(self.start as *const u8, self.size)
+        slice::from_raw_parts(self.start as *const u8, self.size)
             .windows(pattern.len())
             .find(|w| {
                 w.iter()
@@ -87,7 +89,7 @@ impl Module {
             Some(cave)
         }
 
-        let mut search_space = unsafe { core::slice::from_raw_parts(self.start as *const u8, self.size) };
+        let mut search_space = unsafe { slice::from_raw_parts(self.start as *const u8, self.size) };
         let mut largest: Option<&[u8]> = None;
 
         while let Some(cave) = find_next_cave(&mut search_space) {

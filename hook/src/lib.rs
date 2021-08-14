@@ -2,6 +2,7 @@
 
 use common::{self, win};
 use core::ffi::c_void;
+
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
     Module(#[from] win::module::Error),
@@ -35,9 +36,17 @@ unsafe fn run() -> Result<(), Error> {
     let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
     let cave_size = code_cave.len();
 
-    common::log!("Module starts at {} and is {} bytes.", module.start(), module.size());
-    common::log!("Largest code cave begins at {} and is {} bytes.", code_cave.as_ptr() as usize, cave_size);
-    
+    common::log!(
+        "Module starts at {} and is {} bytes.",
+        module.start(),
+        module.size()
+    );
+    common::log!(
+        "Largest code cave begins at {} and is {} bytes.",
+        code_cave.as_ptr() as usize,
+        cave_size
+    );
+
     Ok(())
 }
 unsafe fn on_detach() {}

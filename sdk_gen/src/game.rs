@@ -2,7 +2,10 @@
 
 use core::fmt::{self, Display, Formatter};
 
-use common::{EClassCastFlags, FField, FName, FString, impl_deref, TArray, UClass, UField, UObject, UPackage, UStruct};
+use common::{
+    impl_deref, EClassCastFlags, FField, FName, FString, TArray, UClass, UField, UObject, UPackage,
+    UStruct,
+};
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -97,16 +100,16 @@ impl Display for PropertyDisplayable {
                     let property = self.property.cast::<FObjectPropertyBase>();
                     emit_package_qualified_type!((*property).PropertyClass, "*mut {}");
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FStructProperty => {
                     let property = self.property.cast::<FStructProperty>();
                     emit_package_qualified_type!((*property).Structure);
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FFloatProperty => "f32".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FBoolProperty => "bool".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FArrayProperty => {
                     let property = self.property.cast::<FArrayProperty>();
                     let property = (*property).Inner;
@@ -116,18 +119,18 @@ impl Display for PropertyDisplayable {
                         Self::new(property, self.package, self.is_struct_blueprint_generated)
                     )?
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
                     "common::FMulticastScriptDelegate".fmt(f)?
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
                     let property = self.property.cast::<FEnumProperty>();
                     emit_package_qualified_type!((*property).Enumeration);
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FByteProperty => {
                     let property = self.property.cast::<FByteProperty>();
                     let enumeration = (*property).Enumeration;
@@ -138,18 +141,18 @@ impl Display for PropertyDisplayable {
                         emit_package_qualified_type!(enumeration);
                     }
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FNameProperty => "common::FName".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FStrProperty => "common::FString".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FClassProperty => {
                     let property = self.property.cast::<FClassProperty>();
                     emit_package_qualified_type!((*property).MetaClass, "*mut {}");
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FTextProperty => "common::FText".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FMapProperty => {
                     let map = self.property.cast::<FMapProperty>();
 
@@ -169,7 +172,7 @@ impl Display for PropertyDisplayable {
                         )
                     )?
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
                     emit_package_qualified_type!(
@@ -177,9 +180,9 @@ impl Display for PropertyDisplayable {
                         "common::TWeakObjectPtr<{}>"
                     );
                 }
-                
+
                 EClassCastFlags::CASTCLASS_FUInt32Property => "u32".fmt(f)?,
-                
+
                 EClassCastFlags::CASTCLASS_FSoftObjectProperty => {
                     let property = self.property.cast::<FObjectPropertyBase>();
                     emit_package_qualified_type!(
