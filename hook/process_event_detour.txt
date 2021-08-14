@@ -1,0 +1,43 @@
+E9 27 32 0A 02 90 41 55 41 56 41 57
+
+00007FF681AF2BC0 | E9 27320A02                  | jmp fsd-win64-shipping.7FF683B95DEC                    | ProcessEvent
+00007FF681AF2BC5 | 90                           | nop                                                    |
+00007FF681AF2BC6 | 41:55                        | push r13                                               |
+00007FF681AF2BC8 | 41:56                        | push r14                                               |
+00007FF681AF2BCA | 41:57                        | push r15                                               |
+00007FF681AF2BCC | 48:81EC F0000000             | sub rsp,F0                                             |
+00007FF681AF2BD3 | 48:8D6C24 30                 | lea rbp,qword ptr ss:[rsp+30]                          |
+00007FF681AF2BD8 | 48:899D 18010000             | mov qword ptr ss:[rbp+118],rbx                         |
+00007FF681AF2BDF | 48:8B05 52A74703             | mov rax,qword ptr ds:[7FF684F6D338]                    |
+00007FF681AF2BE6 | 48:33C5                      | xor rax,rbp                                            |
+00007FF681AF2BE9 | 48:8985 B0000000             | mov qword ptr ss:[rbp+B0],rax                          |
+00007FF681AF2BF0 | 8B41 0C                      | mov eax,dword ptr ds:[rcx+C]                           | rcx+C:"ŸØ\x02"
+00007FF681AF2BF3 | 45:33F6                      | xor r14d,r14d                                          |
+00007FF681AF2BF6 | 3B05 081F5603                | cmp eax,dword ptr ds:[7FF685054B04]                    | 00007FF685054B04:"¢Ä\x04"
+00007FF681AF2BFC | 4D:8BF8                      | mov r15,r8                                             |
+00007FF681AF2BFF | 48:8BF2                      | mov rsi,rdx                                            |
+00007FF681AF2C02 | 4C:8BE1                      | mov r12,rcx                                            | r12:&"00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899Error"
+00007FF681AF2C05 | 41:B8 FFFF0000               | mov r8d,FFFF                                           |
+00007FF681AF2C0B | 7D 2A                        | jge fsd-win64-shipping.7FF681AF2C37                    |
+00007FF681AF2C0D | 99                           | cdq                                                    |
+00007FF681AF2C0E | 41:23D0                      | and edx,r8d                                            |
+
+51 52 41 50 48 B8 50 17 B7 0E FD 7F 00 00 FF D0 41 58 5A 59 40 55 56 57 41 54 E9 BB CD F5 FD 90 00 00 00 00
+
+00007FF683B95DEC | 51                           | push rcx                                               | Codecave
+00007FF683B95DED | 52                           | push rdx                                               |
+00007FF683B95DEE | 41:50                        | push r8                                                |
+00007FF683B95DF0 | 48:B8 5017B70EFD7F0000       | mov rax,<hook.hook::my_process_event>                  | 0x7FFD0EB71750
+00007FF683B95DFA | FFD0                         | call rax                                               |
+00007FF683B95DFC | 41:58                        | pop r8                                                 |
+00007FF683B95DFE | 5A                           | pop rdx                                                |
+00007FF683B95DFF | 59                           | pop rcx                                                |
+00007FF683B95E00 | 40:55                        | push rbp                                               |
+00007FF683B95E02 | 56                           | push rsi                                               |
+00007FF683B95E03 | 57                           | push rdi                                               |
+00007FF683B95E04 | 41:54                        | push r12                                               | r12:&"00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899Error"
+00007FF683B95E06 | E9 BBCDF5FD                  | jmp fsd-win64-shipping.7FF681AF2BC6                    |
+00007FF683B95E0B | 90                           | nop                                                    |
+00007FF683B95E0C | 0000                         | add byte ptr ds:[rax],al                               |
+00007FF683B95E0E | 0000                         | add byte ptr ds:[rax],al                               |
+00007FF683B95E10 | 0000                         | add byte ptr ds:[rax],al                               |
