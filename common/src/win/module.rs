@@ -58,19 +58,29 @@ impl Module {
 
     pub fn find_code_cave(&self) -> Option<&[u8]> {
         fn find_next_cave<'a>(space: &mut &'a [u8]) -> Option<&'a [u8]> {
+            // A cave begins at the next zero and extends to the first non-zero.
+
+            // Find the next zero.
             let beginning = space.iter().position(|&b| b == 0)?;
 
-            // SAFETY: Per above `position` call, `beginning` is within bounds of `space`.
-            let mut cave = unsafe { space.get_unchecked(beginning..) };
+            let mut cave = unsafe {
+                // SAFETY: Per above `position` call, `beginning` is within bounds of `space`.
+                space.get_unchecked(beginning..)
+            };
 
+            // Find the first non-zero after the zero.
             if let Some(length) = cave.iter().position(|&b| b != 0) {
-                // SAFETY: Per above `position` call, `length` is within bounds of `cave`.
-                cave = unsafe { cave.get_unchecked(..length) };
-
-                // SAFETY: `cave` is a subset of `space`, so we can skip past this subset while still being within
-                // bounds.
-                *space = unsafe { space.get_unchecked(beginning + length..) };
+                cave = unsafe {
+                    // SAFETY: Per above `position` call, `length` is within bounds of `cave`.
+                    cave.get_unchecked(..length)
+                };
+                *space = unsafe {
+                    // SAFETY: `cave` is a subset of `space`, so we can skip past this subset while still being within
+                    // `space`'s bounds.
+                    space.get_unchecked(beginning + length..)
+                };
             } else {
+                // This cave extends to the end of the .text section. Our search space is now empty.
                 *space = &[];
             }
 
