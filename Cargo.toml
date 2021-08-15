@@ -8,3 +8,4 @@ panic = "abort"
 panic = "abort"
 lto = "fat"
 codegen-units = 1
+debug = true

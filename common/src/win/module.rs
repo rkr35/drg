@@ -50,6 +50,26 @@ impl Module {
             .map(|w| w.as_ptr().cast())
     }
 
+    pub unsafe fn find_mut<T>(&self, pattern: &[Option<u8>]) -> Option<*mut T> {
+        let mut cursor = self.start as *mut u8;
+        let end = cursor.add(self.size - pattern.len());
+
+        'outer: while cursor != end {
+            for (i, &p) in pattern.iter().enumerate() {
+                if let Some(p) = p {
+                    if *cursor.add(i) != p {
+                        cursor = cursor.add(1);
+                        continue 'outer;
+                    }
+                }
+            }
+
+            return Some(cursor.cast())
+        }
+
+        None
+    }
+
     pub fn start(&self) -> usize {
         self.start
     }
