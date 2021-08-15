@@ -58,47 +58,37 @@ impl Module {
         self.size
     }
 
-    pub fn find_code_cave(&self) -> Option<&[u8]> {
-        fn find_next_cave<'a>(space: &mut &'a [u8]) -> Option<&'a [u8]> {
-            // A cave begins at the next zero and extends to the first non-zero.
+    pub unsafe fn find_code_cave(&self) -> Option<&mut [u8]> {
+        let mut cursor = self.start as *mut u8;
+        let end = cursor.add(self.size);
+        let mut largest_cave: Option<(*mut u8, isize)> = None;
 
-            // Find the next zero.
-            let beginning = space.iter().position(|&b| b == 0)?;
+        'outer: while cursor != end {
+            // Advance to the beginning of the next code cave.
+            while *cursor != 0 {
+                cursor = cursor.add(1);
 
-            let mut cave = unsafe {
-                // SAFETY: Per above `position` call, `beginning` is within bounds of `space`.
-                space.get_unchecked(beginning..)
-            };
-
-            // Find the first non-zero after the zero.
-            if let Some(length) = cave.iter().position(|&b| b != 0) {
-                cave = unsafe {
-                    // SAFETY: Per above `position` call, `length` is within bounds of `cave`.
-                    cave.get_unchecked(..length)
-                };
-                *space = unsafe {
-                    // SAFETY: `cave` is a subset of `space`, so we can skip past this subset while still being within
-                    // `space`'s bounds.
-                    space.get_unchecked(beginning + length..)
-                };
-            } else {
-                // This cave extends to the end of the .text section. Our search space is now empty.
-                *space = &[];
+                if cursor == end {
+                    // No more code caves since we reached the end of the .text section.
+                    break 'outer;
+                }
             }
 
-            Some(cave)
-        }
+            let cave_begin = cursor;
+            
+            // Advance to the end of this code cave.
+            while cursor != end && *cursor == 0 {
+                cursor = cursor.add(1);
+            }
 
-        let mut search_space = unsafe { slice::from_raw_parts(self.start as *const u8, self.size) };
-        let mut largest: Option<&[u8]> = None;
+            let size = cursor.offset_from(cave_begin);
 
-        while let Some(cave) = find_next_cave(&mut search_space) {
-            if cave.len() > largest.map_or(0, |l| l.len()) {
-                largest = Some(cave);
+            if size > largest_cave.map_or(0, |(_, size)| size) {
+                largest_cave = Some((cave_begin, size));
             }
         }
 
-        largest
+        largest_cave.map(|(begin, size)| slice::from_raw_parts_mut(begin, size as usize))
     }
 }
 
