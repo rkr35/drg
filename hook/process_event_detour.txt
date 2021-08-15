@@ -1,4 +1,4 @@
-E9 27 32 0A 02 90 41 55 41 56 41 57
+E9 27 32 0A 02 90
 
 00007FF681AF2BC0 | E9 27320A02                  | jmp fsd-win64-shipping.7FF683B95DEC                    | ProcessEvent
 00007FF681AF2BC5 | 90                           | nop                                                    |
@@ -22,7 +22,7 @@ E9 27 32 0A 02 90 41 55 41 56 41 57
 00007FF681AF2C0D | 99                           | cdq                                                    |
 00007FF681AF2C0E | 41:23D0                      | and edx,r8d                                            |
 
-51 52 41 50 48 B8 50 17 B7 0E FD 7F 00 00 FF D0 41 58 5A 59 40 55 56 57 41 54 E9 BB CD F5 FD 90 00 00 00 00
+51 52 41 50 48 B8 50 17 B7 0E FD 7F 00 00 FF D0 41 58 5A 59 40 55 56 57 41 54 E9 BB CD F5 FD
 
 00007FF683B95DEC | 51                           | push rcx                                               | Codecave
 00007FF683B95DED | 52                           | push rdx                                               |
