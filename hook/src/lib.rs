@@ -99,7 +99,7 @@ impl ProcessEventHook {
 
             let patch_len = patch.len();
 
-            (&mut patch[27..27+4]).copy_from_slice({
+            (&mut patch[27..27+mem::size_of::<u32>()]).copy_from_slice({
                 let destination = process_event as usize + 6;
                 let source = code_cave.as_ptr() as usize + patch_len;
                 let relative_distance = destination.wrapping_sub(source) as u32;
