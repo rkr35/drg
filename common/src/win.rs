@@ -39,6 +39,7 @@ extern "system" {
     ) -> *mut c_void;
     fn DisableThreadLibraryCalls(dll: *mut c_void) -> i32;
     fn FlushFileBuffers(file: *mut c_void) -> i32;
+    pub fn FlushInstructionCache(hProcess: *mut c_void, lpBaseAddress: *const c_void, dwSize: usize) -> i32;
     pub fn FreeConsole() -> i32;
     pub fn FreeLibraryAndExitThread(dll: *mut c_void, exit_code: u32);
     pub fn GetModuleHandleA(module_name: *const u8) -> *mut c_void;
@@ -52,6 +53,7 @@ extern "system" {
     ) -> i32;
     pub fn QueryPerformanceCounter(lpPerformanceCount: *mut i64) -> i32;
     pub fn QueryPerformanceFrequency(lpFrequency: *mut i64) -> i32;
+    pub fn VirtualProtect(lpAddress: *mut c_void, dwSize: usize, flNewProtect: u32, lpflOldProtect: *mut u32) -> i32;
     pub fn WriteConsoleA(
         console: *mut c_void,
         buffer: *const u8,
