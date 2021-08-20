@@ -64,7 +64,7 @@ impl Module {
                 }
             }
 
-            return Some(cursor.cast())
+            return Some(cursor.cast());
         }
 
         None
@@ -95,7 +95,7 @@ impl Module {
             }
 
             let cave_begin = cursor;
-            
+
             // Advance to the end of this code cave.
             while cursor != end && *cursor == 0 {
                 cursor = cursor.add(1);

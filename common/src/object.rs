@@ -1,8 +1,8 @@
 use crate::split::ReverseSplitIterator;
-use crate::Error;
-use crate::List;
 use crate::win;
+use crate::Error;
 use crate::FName;
+use crate::List;
 
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};

@@ -1,6 +1,6 @@
-use crate::Error;
 use crate::util;
 use crate::win;
+use crate::Error;
 
 use core::cmp::Ordering;
 use core::ffi::c_void;
@@ -8,7 +8,6 @@ use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ptr;
 use core::str;
-
 
 pub static mut NamePoolData: *const FNamePool = ptr::null();
 

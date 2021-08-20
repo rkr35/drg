@@ -62,7 +62,12 @@ impl<const N: usize> Patch<N> {
     unsafe fn write(address: *mut u8, bytes: [u8; N]) {
         const PAGE_EXECUTE_READWRITE: u32 = 0x40;
         let mut old_protection = 0;
-        win::VirtualProtect(address.cast(), N, PAGE_EXECUTE_READWRITE, &mut old_protection);
+        win::VirtualProtect(
+            address.cast(),
+            N,
+            PAGE_EXECUTE_READWRITE,
+            &mut old_protection,
+        );
         slice::from_raw_parts_mut(address, N).copy_from_slice(&bytes);
         win::VirtualProtect(address.cast(), N, old_protection, &mut old_protection);
         win::FlushInstructionCache(win::GetCurrentProcess(), address.cast(), N);
@@ -86,7 +91,7 @@ impl Drop for ProcessEventHook {
     fn drop(&mut self) {
         unsafe {
             ManuallyDrop::drop(&mut self.jmp);
-            // Before we destroy the code cave, give the CPU time to e      xit the cave.
+            // Before we destroy the code cave, give the CPU time to exit the cave.
             win::Sleep(100);
             ManuallyDrop::drop(&mut self.code_cave);
         }
@@ -98,46 +103,31 @@ impl ProcessEventHook {
         let code_cave_patch = {
             let mut patch = [
                 // push rcx
-                0x51,
-
-                // push rdx
-                0x52, 
-                
-                // push r8
-                0x41, 0x50,
-                
-                // mov rax, my_process_event (need to fill in)
-                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                
-                // call rax
-                0xFF, 0xD0,
-                
-                // pop r8
-                0x41, 0x58,
-                
-                // pop rdx
-                0x5A,
-                
-                // pop rcx
-                0x59,
-                
-                // first six bytes of ProcessEvent (need to fill in)
+                0x51, // push rdx
+                0x52, // push r8
+                0x41, 0x50, // mov rax, my_process_event (need to fill in)
+                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // call rax
+                0xFF, 0xD0, // pop r8
+                0x41, 0x58, // pop rdx
+                0x5A, // pop rcx
+                0x59, // first six bytes of ProcessEvent (need to fill in)
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                
                 // jmp ProcessEvent+6 (need to fill in)
                 0xE9, 0x00, 0x00, 0x00, 0x00,
             ];
 
             // mov rax, my_process_event
-            (&mut patch[6..6+mem::size_of::<usize>()]).copy_from_slice(&(my_process_event as usize).to_le_bytes());
-            
+            (&mut patch[6..6 + mem::size_of::<usize>()])
+                .copy_from_slice(&(my_process_event as usize).to_le_bytes());
+
             // first six bytes of ProcessEvent
             let first_six_process_event_bytes = slice::from_raw_parts(process_event, 6);
-            (&mut patch[20..20+first_six_process_event_bytes.len()]).copy_from_slice(first_six_process_event_bytes);
+            (&mut patch[20..20 + first_six_process_event_bytes.len()])
+                .copy_from_slice(first_six_process_event_bytes);
 
             // jmp ProcessEvent+6
             let patch_len = patch.len();
-            (&mut patch[27..27+mem::size_of::<u32>()]).copy_from_slice({
+            (&mut patch[27..27 + mem::size_of::<u32>()]).copy_from_slice({
                 let destination = process_event as usize + first_six_process_event_bytes.len();
                 let source = code_cave.as_ptr() as usize + patch_len;
                 let relative_distance = destination.wrapping_sub(source) as u32;
@@ -151,7 +141,6 @@ impl ProcessEventHook {
             let mut patch = [
                 // jmp code_cave (need to fill in)
                 0xE9, 0x00, 0x00, 0x00, 0x00,
-
                 // nop (otherwise we would cut a two byte instruction in half)
                 0x90,
             ];
@@ -159,7 +148,8 @@ impl ProcessEventHook {
             let destination = code_cave.as_ptr() as usize;
             let source = process_event as usize + 5;
             let relative_distance = destination.wrapping_sub(source) as u32;
-            (&mut patch[1..1+mem::size_of::<u32>()]).copy_from_slice(&relative_distance.to_le_bytes());
+            (&mut patch[1..1 + mem::size_of::<u32>()])
+                .copy_from_slice(&relative_distance.to_le_bytes());
 
             patch
         };
@@ -189,7 +179,28 @@ unsafe fn run() -> Result<(), Error> {
         my_process_event as usize,
     );
 
-    let process_event = module.find_mut(&[Some(0x40), Some(0x55), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x55), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0xF0), Some(0x00), Some(0x00), Some(0x00)])
+    let process_event = module
+        .find_mut(&[
+            Some(0x40),
+            Some(0x55),
+            Some(0x56),
+            Some(0x57),
+            Some(0x41),
+            Some(0x54),
+            Some(0x41),
+            Some(0x55),
+            Some(0x41),
+            Some(0x56),
+            Some(0x41),
+            Some(0x57),
+            Some(0x48),
+            Some(0x81),
+            Some(0xEC),
+            Some(0xF0),
+            Some(0x00),
+            Some(0x00),
+            Some(0x00),
+        ])
         .ok_or(Error::FindProcessEvent)?;
 
     let _process_event_hook = ProcessEventHook::new(process_event, code_cave);
@@ -201,6 +212,15 @@ unsafe fn run() -> Result<(), Error> {
 
 unsafe fn on_detach() {}
 
-unsafe extern "C" fn my_process_event(object: *mut UObject, function: *mut UFunction, parameters: *mut c_void) {
-    common::log!("my_process_event({}, {}, {})", *object, *function, parameters as usize);
+unsafe extern "C" fn my_process_event(
+    object: *mut UObject,
+    function: *mut UFunction,
+    parameters: *mut c_void,
+) {
+    common::log!(
+        "my_process_event({}, {}, {})",
+        *object,
+        *function,
+        parameters as usize
+    );
 }

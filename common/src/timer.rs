@@ -1,5 +1,5 @@
-use crate::List;
 use crate::win;
+use crate::List;
 use core::fmt::{self, Display, Formatter, Write};
 
 static mut TICKS_PER_SECOND: i64 = 0;
