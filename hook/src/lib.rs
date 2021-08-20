@@ -12,7 +12,7 @@ extern "C" {}
 
 use common::{self, win, UFunction, UObject};
 use core::ffi::c_void;
-use core::mem;
+use core::mem::{self, ManuallyDrop};
 use core::slice;
 
 #[derive(macros::NoPanicErrorDebug)]
@@ -31,7 +31,7 @@ unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *
 unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     win::AllocConsole();
 
-    if let Err(e) = run(dll) {
+    if let Err(e) = run() {
         common::log!("error: {:?}", e);
         common::idle();
     }
@@ -42,56 +42,59 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
 }
 
 struct Patch<const N: usize> {
-    dll: *mut c_void,
     address: *mut u8,
     original_bytes: [u8; N],
 }
 
 impl<const N: usize> Patch<N> {
-    pub unsafe fn new(dll: *mut c_void, address: *mut u8, new_bytes: [u8; N]) -> Patch<N> {
+    pub unsafe fn new(address: *mut u8, new_bytes: [u8; N]) -> Patch<N> {
         let mut original_bytes = [0; N];
         (&mut original_bytes).copy_from_slice(slice::from_raw_parts(address, N));
 
-        Self::write(dll, address, new_bytes);
+        Self::write(address, new_bytes);
 
         Patch {
-            dll,
             address,
             original_bytes,
         }
     }
 
-    unsafe fn write(dll: *mut c_void, address: *mut u8, bytes: [u8; N]) {
+    unsafe fn write(address: *mut u8, bytes: [u8; N]) {
         const PAGE_EXECUTE_READWRITE: u32 = 0x40;
         let mut old_protection = 0;
         win::VirtualProtect(address.cast(), N, PAGE_EXECUTE_READWRITE, &mut old_protection);
         slice::from_raw_parts_mut(address, N).copy_from_slice(&bytes);
-        win::FlushInstructionCache(dll, address.cast(), N);
         win::VirtualProtect(address.cast(), N, old_protection, &mut old_protection);
+        win::FlushInstructionCache(win::GetCurrentProcess(), address.cast(), N);
     }
 }
 
 impl<const N: usize> Drop for Patch<N> {
     fn drop(&mut self) {
         unsafe {
-            Self::write(self.dll, self.address, self.original_bytes);
+            Self::write(self.address, self.original_bytes);
         }
     }
 }
 
 struct ProcessEventHook {
-    // Fields in a struct are dropped in their declaration order.
-    // We restore a patch by dropping it.
-    // We want to restore the jmp patch first (otherwise if we restored the code cave first, then the game would jump to a bunch of zeros).
-    // So always ensure `_jmp` is declared before `_code_cave` in this structure.
-    _jmp: Patch<6>,
-    _code_cave: Patch<31>,
+    jmp: ManuallyDrop<Patch<6>>,
+    code_cave: ManuallyDrop<Patch<31>>,
+}
+
+impl Drop for ProcessEventHook {
+    fn drop(&mut self) {
+        unsafe {
+            ManuallyDrop::drop(&mut self.jmp);
+            // Before we destroy the code cave, give the CPU time to e      xit the cave.
+            win::Sleep(100);
+            ManuallyDrop::drop(&mut self.code_cave);
+        }
+    }
 }
 
 impl ProcessEventHook {
-    pub unsafe fn new(dll: *mut c_void, process_event: *mut u8, code_cave: &mut [u8]) -> ProcessEventHook {
-        let first_six_process_event_bytes = slice::from_raw_parts(process_event, 6);
-
+    pub unsafe fn new(process_event: *mut u8, code_cave: &mut [u8]) -> ProcessEventHook {
         let code_cave_patch = {
             let mut patch = [
                 // push rcx
@@ -127,14 +130,15 @@ impl ProcessEventHook {
 
             // mov rax, my_process_event
             (&mut patch[6..6+mem::size_of::<usize>()]).copy_from_slice(&(my_process_event as usize).to_le_bytes());
-
+            
             // first six bytes of ProcessEvent
-            (&mut patch[20..20+6]).copy_from_slice(first_six_process_event_bytes);
+            let first_six_process_event_bytes = slice::from_raw_parts(process_event, 6);
+            (&mut patch[20..20+first_six_process_event_bytes.len()]).copy_from_slice(first_six_process_event_bytes);
 
             // jmp ProcessEvent+6
             let patch_len = patch.len();
             (&mut patch[27..27+mem::size_of::<u32>()]).copy_from_slice({
-                let destination = process_event as usize + 6;
+                let destination = process_event as usize + first_six_process_event_bytes.len();
                 let source = code_cave.as_ptr() as usize + patch_len;
                 let relative_distance = destination.wrapping_sub(source) as u32;
                 &relative_distance.to_le_bytes()
@@ -161,13 +165,13 @@ impl ProcessEventHook {
         };
 
         ProcessEventHook {
-            _jmp: Patch::new(dll, process_event, jmp_patch),
-            _code_cave: Patch::new(dll, code_cave.as_mut_ptr(), code_cave_patch),
+            jmp: ManuallyDrop::new(Patch::new(process_event, jmp_patch)),
+            code_cave: ManuallyDrop::new(Patch::new(code_cave.as_mut_ptr(), code_cave_patch)),
         }
     }
 }
 
-unsafe fn run(dll: *mut c_void) -> Result<(), Error> {
+unsafe fn run() -> Result<(), Error> {
     let module = win::Module::current()?;
     common::init_globals(&module)?;
 
@@ -188,7 +192,7 @@ unsafe fn run(dll: *mut c_void) -> Result<(), Error> {
     let process_event = module.find_mut(&[Some(0x40), Some(0x55), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x55), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0xF0), Some(0x00), Some(0x00), Some(0x00)])
         .ok_or(Error::FindProcessEvent)?;
 
-    let _process_event_hook = ProcessEventHook::new(dll, process_event, code_cave);
+    let _process_event_hook = ProcessEventHook::new(process_event, code_cave);
 
     common::idle();
 
