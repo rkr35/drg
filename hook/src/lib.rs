@@ -103,15 +103,32 @@ impl ProcessEventHook {
         let code_cave_patch = {
             let mut patch = [
                 // push rcx
-                0x51, // push rdx
-                0x52, // push r8
-                0x41, 0x50, // mov rax, my_process_event (need to fill in)
-                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // call rax
-                0xFF, 0xD0, // pop r8
-                0x41, 0x58, // pop rdx
-                0x5A, // pop rcx
-                0x59, // first six bytes of ProcessEvent (need to fill in)
+                0x51,
+
+                // push rdx
+                0x52, 
+                
+                // push r8
+                0x41, 0x50,
+                
+                // mov rax, my_process_event (need to fill in)
+                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                
+                // call rax
+                0xFF, 0xD0,
+                
+                // pop r8
+                0x41, 0x58,
+                
+                // pop rdx
+                0x5A,
+                
+                // pop rcx
+                0x59,
+                
+                // first six bytes of ProcessEvent (need to fill in)
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                
                 // jmp ProcessEvent+6 (need to fill in)
                 0xE9, 0x00, 0x00, 0x00, 0x00,
             ];
