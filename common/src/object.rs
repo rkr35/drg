@@ -350,6 +350,7 @@ pub struct UFunction {
     FirstPropertyToInit: *const c_void,
     EventGraphFunction: *const UFunction,
     EventGraphCallOffset: i32,
+    pub seen_count: u32,
     Func: FNativeFuncPtr,
 }
 

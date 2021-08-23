@@ -10,10 +10,11 @@ extern "C" {}
 #[link(name = "vcruntime")]
 extern "C" {}
 
-use common::{self, win, UFunction, UObject};
+use common::{self, win, EClassCastFlags, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem::{self, ManuallyDrop};
 use core::slice;
+use sdk::Engine::Actor;
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
@@ -224,20 +225,47 @@ unsafe fn run() -> Result<(), Error> {
 
     common::idle();
 
+    for &function in RESET_THESE_SEEN_COUNTS.iter() {
+        (*function).seen_count = 0;
+    }
+
     Ok(())
 }
 
 unsafe fn on_detach() {}
 
+static mut RESET_THESE_SEEN_COUNTS: List<*mut UFunction, 4096> = List::new();
+
 unsafe extern "C" fn my_process_event(
     object: *mut UObject,
     function: *mut UFunction,
-    parameters: *mut c_void,
+    _parameters: *mut c_void,
 ) {
-    common::log!(
-        "my_process_event({}, {}, {})",
-        *object,
-        *function,
-        parameters as usize
-    );
+    const MAX_PRINTS: u32 = 1;
+
+    let seen_count = (*function).seen_count;
+
+    if seen_count == 0 && RESET_THESE_SEEN_COUNTS.push(function).is_err() {
+        common::log!("Warning: RESET_THESE_SEEN_COUNTS reached its max capacity of {}. We won't print any more unseen UFunctions.", RESET_THESE_SEEN_COUNTS.capacity());
+        return;
+    } 
+    
+    if seen_count < MAX_PRINTS {
+        (*function).seen_count += 1;
+
+        let is_actor = (*object).fast_is(EClassCastFlags::CASTCLASS_AActor);
+
+        common::log!("{}{}\n\t{}", if is_actor { "\n" } else { "" }, (*object).name(), *function);
+
+        if is_actor {
+            let mut owner = (*object.cast::<Actor>()).Owner;
+
+            while !owner.is_null() {
+                common::log!("owned by\n\t{}", (*owner.cast::<UObject>()).name());
+                owner = (*owner).Owner;
+            }
+
+            common::log!();
+        }        
+    }
 }
