@@ -241,8 +241,8 @@ unsafe fn run() -> Result<(), Error> {
 unsafe fn on_detach() {}
 
 unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
-    common::init_globals(&module)?;
-    find_global_engine(&module)?;
+    common::init_globals(module)?;
+    find_global_engine(module)?;
     Ok(())
 }
 
