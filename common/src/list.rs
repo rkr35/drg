@@ -17,7 +17,7 @@ pub struct List<T, const N: usize> {
 impl<T, const N: usize> List<T, N> {
     const UNINITIALIZED_VALUE: MaybeUninit<T> = MaybeUninit::uninit();
 
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             data: [Self::UNINITIALIZED_VALUE; N],
             len: 0,
