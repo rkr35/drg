@@ -13,8 +13,9 @@ extern "C" {}
 use common::{self, win, EClassCastFlags, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem::{self, ManuallyDrop};
+use core::ptr;
 use core::slice;
-use sdk::Engine::Actor;
+use sdk::Engine::{Actor, Engine};
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
@@ -22,7 +23,11 @@ enum Error {
     Module(#[from] win::module::Error),
     NoCodeCave,
     FindProcessEvent,
+    FindGlobalEngine,
 }
+
+#[allow(non_upper_case_globals)]
+static mut GEngine: *const Engine = ptr::null();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -181,7 +186,8 @@ impl ProcessEventHook {
 
 unsafe fn run() -> Result<(), Error> {
     let module = win::Module::current()?;
-    common::init_globals(&module)?;
+
+    init_globals(&module)?;
 
     let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
     let cave_size = code_cave.len();
@@ -233,6 +239,25 @@ unsafe fn run() -> Result<(), Error> {
 }
 
 unsafe fn on_detach() {}
+
+unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
+    common::init_globals(&module)?;
+    find_global_engine(&module)?;
+    Ok(())
+}
+
+unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
+    // 00007FF63919DE6E   48:8B0D 137D3204   mov rcx,qword ptr ds:[7FF63D4C5B88]
+    // 00007FF63919DE75   49:8BD7            mov rdx,r15
+    // 00007FF63919DE78   48:8B01            mov rax,qword ptr ds:[rcx]
+    // 00007FF63919DE7B   FF90 80020000      call qword ptr ds:[rax+280]
+    const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0x0D), None, None, None, None, Some(0x49), Some(0x8B), Some(0xD7), Some(0x48), Some(0x8B), Some(0x01), Some(0xFF), Some(0x90), Some(0x80), Some(0x02), Some(0x00), Some(0x00),];
+    let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
+    let relative_offset = mov_rcx_global_engine.add(3).cast::<u32>().read_unaligned();
+    GEngine = *mov_rcx_global_engine.add(7 + relative_offset as usize).cast::<*const Engine>();
+    common::log!("GEngine = {}", GEngine as usize);
+    Ok(())
+}
 
 static mut RESET_THESE_SEEN_COUNTS: List<*mut UFunction, 4096> = List::new();
 
