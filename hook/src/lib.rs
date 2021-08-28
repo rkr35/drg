@@ -112,7 +112,6 @@ impl DrawTransitionHook {
     pub unsafe fn new() -> Self {
         const VTABLE_INDEX: usize = 0x310 / 8;
         let address = (*(*GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
-        common::log!("address = {}", address as usize);
         ORIGINAL_DRAW_TRANSITION = *address;
         Self { _patch: Patch::new(address, my_draw_transition as *const c_void) }
     }
