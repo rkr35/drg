@@ -15,7 +15,7 @@ use core::ffi::c_void;
 use core::mem::{self, ManuallyDrop};
 use core::ptr;
 use core::slice;
-use sdk::Engine::{Actor, Engine};
+use sdk::Engine::{Actor, Canvas, Engine, GameViewportClient};
 
 #[derive(macros::NoPanicErrorDebug)]
 enum Error {
@@ -28,6 +28,8 @@ enum Error {
 
 #[allow(non_upper_case_globals)]
 static mut GEngine: *const Engine = ptr::null();
+
+static mut ORIGINAL_DRAW_TRANSITION: *const c_void = ptr::null();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -47,50 +49,118 @@ unsafe extern "system" fn on_attach(dll: *mut c_void) -> u32 {
     0
 }
 
-struct Patch<const N: usize> {
-    address: *mut u8,
-    original_bytes: [u8; N],
+unsafe fn run() -> Result<(), Error> {
+    let module = win::Module::current()?;
+
+    init_globals(&module)?;
+
+    let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
+    let cave_size = code_cave.len();
+
+    common::log!(
+        "Module starts at {} and is {} bytes.\n\
+        Largest code cave begins at {} and is {} bytes.\n\
+        my_process_event is at {}",
+        module.start(),
+        module.size(),
+        code_cave.as_ptr() as usize,
+        cave_size,
+        my_process_event as usize,
+    );
+
+    let process_event = module
+        .find_mut(&[
+            Some(0x40),
+            Some(0x55),
+            Some(0x56),
+            Some(0x57),
+            Some(0x41),
+            Some(0x54),
+            Some(0x41),
+            Some(0x55),
+            Some(0x41),
+            Some(0x56),
+            Some(0x41),
+            Some(0x57),
+            Some(0x48),
+            Some(0x81),
+            Some(0xEC),
+            Some(0xF0),
+            Some(0x00),
+            Some(0x00),
+            Some(0x00),
+        ])
+        .ok_or(Error::FindProcessEvent)?;
+
+    let _process_event_hook = ProcessEventHook::new(process_event, code_cave);
+    let _draw_transition_hook = DrawTransitionHook::new();
+
+    common::idle();
+
+    for &function in RESET_THESE_SEEN_COUNTS.iter() {
+        (*function).seen_count = 0;
+    }
+
+    Ok(())
 }
 
-impl<const N: usize> Patch<N> {
-    pub unsafe fn new(address: *mut u8, new_bytes: [u8; N]) -> Patch<N> {
-        let mut original_bytes = [0; N];
-        (&mut original_bytes).copy_from_slice(slice::from_raw_parts(address, N));
+struct DrawTransitionHook {
+    _patch: Patch<*const c_void>,
+}
 
-        Self::write(address, new_bytes);
+impl DrawTransitionHook {
+    pub unsafe fn new() -> Self {
+        const VTABLE_INDEX: usize = 0x310 / 8;
+        let address = (*(*GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
+        common::log!("address = {}", address as usize);
+        ORIGINAL_DRAW_TRANSITION = *address;
+        Self { _patch: Patch::new(address, my_draw_transition as *const c_void) }
+    }
+}
+
+unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewportClient, canvas: *mut Canvas) {
+    type DrawTransition = unsafe extern "C" fn (*mut GameViewportClient, *mut Canvas);
+    let original = mem::transmute::<*const c_void, DrawTransition>(ORIGINAL_DRAW_TRANSITION);
+    original(game_viewport_client, canvas);
+}
+
+struct Patch<T: Copy> {
+    address: *mut T,
+    original: T,
+}
+
+impl<T: Copy> Patch<T> {
+    pub unsafe fn new(address: *mut T, new_value: T) -> Patch<T> {
+        let original = *address;
+
+        Self::write(address, new_value);
 
         Patch {
             address,
-            original_bytes,
+            original,
         }
     }
 
-    unsafe fn write(address: *mut u8, bytes: [u8; N]) {
+    unsafe fn write(address: *mut T, new_value: T) {
         const PAGE_EXECUTE_READWRITE: u32 = 0x40;
         let mut old_protection = 0;
-        win::VirtualProtect(
-            address.cast(),
-            N,
-            PAGE_EXECUTE_READWRITE,
-            &mut old_protection,
-        );
-        slice::from_raw_parts_mut(address, N).copy_from_slice(&bytes);
-        win::VirtualProtect(address.cast(), N, old_protection, &mut old_protection);
-        win::FlushInstructionCache(win::GetCurrentProcess(), address.cast(), N);
+        win::VirtualProtect(address.cast(), mem::size_of::<T>(), PAGE_EXECUTE_READWRITE, &mut old_protection);
+        *address = new_value;
+        win::VirtualProtect(address.cast(), mem::size_of::<T>(), old_protection, &mut old_protection);
     }
 }
 
-impl<const N: usize> Drop for Patch<N> {
+impl<T: Copy> Drop for Patch<T> {
     fn drop(&mut self) {
         unsafe {
-            Self::write(self.address, self.original_bytes);
+            Self::write(self.address, self.original);
         }
     }
 }
 
 struct ProcessEventHook {
-    jmp: ManuallyDrop<Patch<6>>,
-    code_cave: ManuallyDrop<Patch<31>>,
+    jmp: ManuallyDrop<Patch<[u8; 6]>>,
+    code_cave: ManuallyDrop<Patch<[u8; 31]>>,
 }
 
 impl Drop for ProcessEventHook {
@@ -178,64 +248,10 @@ impl ProcessEventHook {
         };
 
         ProcessEventHook {
-            jmp: ManuallyDrop::new(Patch::new(process_event, jmp_patch)),
-            code_cave: ManuallyDrop::new(Patch::new(code_cave.as_mut_ptr(), code_cave_patch)),
+            jmp: ManuallyDrop::new(Patch::new(process_event.cast(), jmp_patch)),
+            code_cave: ManuallyDrop::new(Patch::new(code_cave.as_mut_ptr().cast(), code_cave_patch)),
         }
     }
-}
-
-unsafe fn run() -> Result<(), Error> {
-    let module = win::Module::current()?;
-
-    init_globals(&module)?;
-
-    let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
-    let cave_size = code_cave.len();
-
-    common::log!(
-        "Module starts at {} and is {} bytes.\n\
-        Largest code cave begins at {} and is {} bytes.\n\
-        my_process_event is at {}",
-        module.start(),
-        module.size(),
-        code_cave.as_ptr() as usize,
-        cave_size,
-        my_process_event as usize,
-    );
-
-    let process_event = module
-        .find_mut(&[
-            Some(0x40),
-            Some(0x55),
-            Some(0x56),
-            Some(0x57),
-            Some(0x41),
-            Some(0x54),
-            Some(0x41),
-            Some(0x55),
-            Some(0x41),
-            Some(0x56),
-            Some(0x41),
-            Some(0x57),
-            Some(0x48),
-            Some(0x81),
-            Some(0xEC),
-            Some(0xF0),
-            Some(0x00),
-            Some(0x00),
-            Some(0x00),
-        ])
-        .ok_or(Error::FindProcessEvent)?;
-
-    let _process_event_hook = ProcessEventHook::new(process_event, code_cave);
-
-    common::idle();
-
-    for &function in RESET_THESE_SEEN_COUNTS.iter() {
-        (*function).seen_count = 0;
-    }
-
-    Ok(())
 }
 
 unsafe fn on_detach() {}

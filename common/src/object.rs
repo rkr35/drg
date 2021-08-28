@@ -153,7 +153,7 @@ macro_rules! impl_deref {
 
 #[repr(C)]
 pub struct UObject {
-    vtable: *const *const c_void,
+    pub vtable: *mut *const c_void,
     ObjectFlags: u32, //EObjectFlags
     pub InternalIndex: i32,
     ClassPrivate: *const UClass,
