@@ -20,7 +20,6 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 }
 
 use core::ffi::c_void;
-use core::fmt;
 use core::marker::PhantomData;
 use core::ptr;
 use core::slice;
@@ -47,8 +46,7 @@ pub mod win;
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindNamePoolData,
-    FindGUObjectArray,
-    Fmt(#[from] fmt::Error),
+    Object(#[from] object::Error)
 }
 
 #[repr(C)]

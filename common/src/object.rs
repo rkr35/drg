@@ -1,15 +1,18 @@
 use crate::split::ReverseSplitIterator;
 use crate::win;
-use crate::Error;
 use crate::FName;
 use crate::List;
 
+use core::convert::TryFrom;
 use core::ffi::c_void;
 use core::fmt::{self, Display, Formatter};
 use core::mem;
 use core::ops::BitOr;
 use core::ptr;
 use core::str;
+
+mod full_name;
+use full_name::FullName;
 
 pub static mut GUObjectArray: *const FUObjectArray = ptr::null();
 
@@ -19,6 +22,14 @@ const NumElementsPerChunk: usize = 64 * 1024;
 // Set to a large enough number to cover the outers length of all objects.
 // Used when constructing an object's name, as well as for name comparisons.
 const MAX_OUTERS: usize = 32;
+
+#[derive(macros::NoPanicErrorDebug)]
+pub enum Error {
+    FindGUObjectArray,
+    Fmt(#[from] fmt::Error),
+    FullName(#[from] full_name::Error),
+    UnableToFind(&'static str),
+}
 
 #[repr(C)]
 pub struct FUObjectArray {
@@ -72,6 +83,70 @@ impl FUObjectArray {
         GUObjectArray = instruction_after_movsx.add(lea_immediate as usize).cast();
 
         Ok(())
+    }
+
+    pub unsafe fn find(&self, name: &'static str) -> Result<*mut UObject, Error> {
+        // Do a short-circuiting name comparison.
+
+        // Compare the class from `name` against the class in `self`.
+        // Then compare the outers in `name` against the outers in `self`.
+
+        // This way, we don't have to construct the full name of `self` if we
+        // can rule out non-matching classes and outers sooner.
+
+        let target = FullName::<MAX_OUTERS>::try_from(name)?;
+
+        'outer: for object in self.iter() {
+            if object.is_null() {
+                // We're not looking for a null object.
+                continue;
+            }
+
+            let my_name = (*object).name().as_bytes();
+
+            if my_name != target.name {
+                // Object names don't match.
+                // No need to check the class. Let's bail.
+                continue;
+            }
+
+            let my_class = (*(*object).ClassPrivate).name().as_bytes();
+
+            if my_class != target.class {
+                // Classes don't match.
+                // No need to check the outers. Let's bail.
+                continue;
+            }
+
+            let mut my_outer = (*object).OuterPrivate;
+
+            for target_outer in target.outers.iter() {
+                if my_outer.is_null() {
+                    // We have no more outers left to check for this object, but
+                    // we still have target outers. So this object can't be what
+                    // we're looking for. Let's check out the next object.
+                    continue 'outer;
+                }
+
+                let my_outer_name = (*my_outer).name().as_bytes();
+
+                if my_outer_name != *target_outer {
+                    // This outer doesn't match the target outer we're looking for.
+                    // No need to check the remaining outers. Let's bail.
+                    continue 'outer;
+                }
+
+                // Advance up to the next outer.
+                my_outer = (*my_outer).OuterPrivate;
+            }
+
+            // We got here because the name, class, and outers all match the
+            // input name. So our search is over.
+            return Ok(object);
+        }
+
+        // No object matched our search.
+        Err(Error::UnableToFind(name))
     }
 
     pub fn iter(&self) -> ObjectIterator {
