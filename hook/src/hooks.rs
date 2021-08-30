@@ -79,8 +79,8 @@ impl ProcessEventHook {
 
         common::log!(
             "Module starts at {} and is {} bytes.\n\
-        Largest code cave begins at {} and is {} bytes.\n\
-        my_process_event is at {}",
+            Largest code cave begins at {} and is {} bytes.\n\
+            my_process_event is at {}",
             module.start(),
             module.size(),
             code_cave.as_ptr() as usize,
