@@ -89,7 +89,10 @@ impl ProcessEventHook {
         );
 
         Ok(ProcessEventHook {
-            jmp: ManuallyDrop::new(Patch::new(process_event.cast(), Self::create_jmp_patch(code_cave, process_event))),
+            jmp: ManuallyDrop::new(Patch::new(
+                process_event.cast(),
+                Self::create_jmp_patch(code_cave, process_event),
+            )),
 
             code_cave: ManuallyDrop::new(Patch::new(
                 code_cave.as_mut_ptr().cast(),
@@ -109,8 +112,7 @@ impl ProcessEventHook {
         let destination = code_cave.as_ptr() as usize;
         let source = process_event as usize + 5;
         let relative_distance = destination.wrapping_sub(source) as u32;
-        (&mut patch[1..=mem::size_of::<u32>()])
-            .copy_from_slice(&relative_distance.to_le_bytes());
+        (&mut patch[1..=mem::size_of::<u32>()]).copy_from_slice(&relative_distance.to_le_bytes());
 
         patch
     }
