@@ -510,7 +510,7 @@ impl<W: Write> StructGenerator<W> {
                 // property is some bytes ahead at `offset`. So we need to add
                 // (offset - self.offset) bytes of padding to reach the
                 // property.
-                self.add_pad_field(self.offset, offset)?
+                self.add_pad_field(self.offset, offset)?;
             }
 
             Ordering::Greater => {
@@ -519,7 +519,7 @@ impl<W: Write> StructGenerator<W> {
                 // these lagged properties, we should emit a warning so the SDK
                 // user has some idea as to why some fields in some structures
                 // don't line up with what they're seeing in ReClass.
-                writeln!(self.out, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.NamePrivate, offset, self.offset)?
+                writeln!(self.out, "    // WARNING: Property \"{}\" thinks its offset is {}. We think its offset is {}.", (*property).base.NamePrivate, offset, self.offset)?;
             }
 
             Ordering::Equal => {

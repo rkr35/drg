@@ -117,13 +117,13 @@ impl Display for PropertyDisplayable {
                         f,
                         "common::TArray<{}>",
                         Self::new(property, self.package, self.is_struct_blueprint_generated)
-                    )?
+                    )?;
                 }
 
                 EClassCastFlags::CASTCLASS_FIntProperty => "i32".fmt(f)?,
 
                 EClassCastFlags::CASTCLASS_FMulticastInlineDelegateProperty => {
-                    "common::FMulticastScriptDelegate".fmt(f)?
+                    "common::FMulticastScriptDelegate".fmt(f)?;
                 }
 
                 EClassCastFlags::CASTCLASS_FEnumProperty => {
@@ -136,7 +136,7 @@ impl Display for PropertyDisplayable {
                     let enumeration = (*property).Enumeration;
 
                     if enumeration.is_null() {
-                        "u8".fmt(f)?
+                        "u8".fmt(f)?;
                     } else {
                         emit_package_qualified_type!(enumeration);
                     }
@@ -170,7 +170,7 @@ impl Display for PropertyDisplayable {
                             self.package,
                             self.is_struct_blueprint_generated
                         )
-                    )?
+                    )?;
                 }
 
                 EClassCastFlags::CASTCLASS_FWeakObjectProperty => {
@@ -213,7 +213,7 @@ impl Display for PropertyDisplayable {
                             self.package,
                             self.is_struct_blueprint_generated
                         ),
-                    )?
+                    )?;
                 }
 
                 EClassCastFlags::CASTCLASS_FInterfaceProperty => {
@@ -225,7 +225,7 @@ impl Display for PropertyDisplayable {
                 }
 
                 EClassCastFlags::CASTCLASS_FMulticastSparseDelegateProperty => {
-                    "common::FSparseDelegate".fmt(f)?
+                    "common::FSparseDelegate".fmt(f)?;
                 }
 
                 EClassCastFlags::CASTCLASS_FUInt16Property => "u16".fmt(f)?,
