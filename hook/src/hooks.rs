@@ -11,7 +11,7 @@ use patch::Patch;
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindProcessEvent,
-    NoCodeCave
+    NoCodeCave,
 }
 
 pub struct Hooks {
@@ -20,7 +20,7 @@ pub struct Hooks {
 }
 
 impl Hooks {
-    pub unsafe fn new(module: &win::Module) -> Result<Self, Error> {                
+    pub unsafe fn new(module: &win::Module) -> Result<Self, Error> {
         Ok(Self {
             _process_event_hook: ProcessEventHook::new(module)?,
             _draw_transition_hook: DrawTransitionHook::new(),
@@ -74,50 +74,32 @@ impl ProcessEventHook {
             ])
             .ok_or(Error::FindProcessEvent)?;
 
-    
-    let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
-    let cave_size = code_cave.len();
+        let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
+        let cave_size = code_cave.len();
 
-    common::log!(
-        "Module starts at {} and is {} bytes.\n\
+        common::log!(
+            "Module starts at {} and is {} bytes.\n\
         Largest code cave begins at {} and is {} bytes.\n\
         my_process_event is at {}",
-        module.start(),
-        module.size(),
-        code_cave.as_ptr() as usize,
-        cave_size,
-        my_process_event as usize,
-    );
+            module.start(),
+            module.size(),
+            code_cave.as_ptr() as usize,
+            cave_size,
+            my_process_event as usize,
+        );
 
         let code_cave_patch = {
             let mut patch = [
                 // push rcx
-                0x51,
-
-                // push rdx
-                0x52, 
-                
-                // push r8
-                0x41, 0x50,
-                
-                // mov rax, my_process_event (need to fill in)
-                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                
-                // call rax
-                0xFF, 0xD0,
-                
-                // pop r8
-                0x41, 0x58,
-                
-                // pop rdx
-                0x5A,
-                
-                // pop rcx
-                0x59,
-                
-                // first six bytes of ProcessEvent (need to fill in)
+                0x51, // push rdx
+                0x52, // push r8
+                0x41, 0x50, // mov rax, my_process_event (need to fill in)
+                0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // call rax
+                0xFF, 0xD0, // pop r8
+                0x41, 0x58, // pop rdx
+                0x5A, // pop rcx
+                0x59, // first six bytes of ProcessEvent (need to fill in)
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                
                 // jmp ProcessEvent+6 (need to fill in)
                 0xE9, 0x00, 0x00, 0x00, 0x00,
             ];
@@ -162,7 +144,10 @@ impl ProcessEventHook {
 
         Ok(ProcessEventHook {
             jmp: ManuallyDrop::new(Patch::new(process_event.cast(), jmp_patch)),
-            code_cave: ManuallyDrop::new(Patch::new(code_cave.as_mut_ptr().cast(), code_cave_patch)),
+            code_cave: ManuallyDrop::new(Patch::new(
+                code_cave.as_mut_ptr().cast(),
+                code_cave_patch,
+            )),
         })
     }
 }
@@ -215,16 +200,23 @@ struct DrawTransitionHook {
 impl DrawTransitionHook {
     pub unsafe fn new() -> Self {
         const VTABLE_INDEX: usize = 0x310 / 8;
-        let address = (*(*crate::GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
+        let address = (*(*crate::GEngine).GameViewport.cast::<UObject>())
+            .vtable
+            .add(VTABLE_INDEX);
         ORIGINAL_DRAW_TRANSITION = *address;
-        Self { _patch: Patch::new(address, my_draw_transition as *const c_void) }
+        Self {
+            _patch: Patch::new(address, my_draw_transition as *const c_void),
+        }
     }
 }
 
 static mut ORIGINAL_DRAW_TRANSITION: *const c_void = ptr::null();
 
-unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewportClient, canvas: *mut Canvas) {
-    type DrawTransition = unsafe extern "C" fn (*mut GameViewportClient, *mut Canvas);
+unsafe extern "C" fn my_draw_transition(
+    game_viewport_client: *mut GameViewportClient,
+    canvas: *mut Canvas,
+) {
+    type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
     let original = mem::transmute::<*const c_void, DrawTransition>(ORIGINAL_DRAW_TRANSITION);
     original(game_viewport_client, canvas);
 }

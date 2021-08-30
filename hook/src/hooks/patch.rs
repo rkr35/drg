@@ -12,18 +12,25 @@ impl<T: Copy> Patch<T> {
 
         Self::write(address, new_value);
 
-        Patch {
-            address,
-            original,
-        }
+        Patch { address, original }
     }
 
     unsafe fn write(address: *mut T, new_value: T) {
         const PAGE_EXECUTE_READWRITE: u32 = 0x40;
         let mut old_protection = 0;
-        win::VirtualProtect(address.cast(), mem::size_of::<T>(), PAGE_EXECUTE_READWRITE, &mut old_protection);
+        win::VirtualProtect(
+            address.cast(),
+            mem::size_of::<T>(),
+            PAGE_EXECUTE_READWRITE,
+            &mut old_protection,
+        );
         *address = new_value;
-        win::VirtualProtect(address.cast(), mem::size_of::<T>(), old_protection, &mut old_protection);
+        win::VirtualProtect(
+            address.cast(),
+            mem::size_of::<T>(),
+            old_protection,
+            &mut old_protection,
+        );
     }
 }
 

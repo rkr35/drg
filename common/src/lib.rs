@@ -46,7 +46,7 @@ pub mod win;
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindNamePoolData,
-    Object(#[from] object::Error)
+    Object(#[from] object::Error),
 }
 
 #[repr(C)]
