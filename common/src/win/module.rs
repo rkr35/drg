@@ -83,15 +83,11 @@ impl Module {
         let end = cursor.add(self.size);
         let mut largest_cave: Option<(*mut u8, isize)> = None;
 
-        'outer: while cursor != end {
+        while cursor != end {
             // Advance to the beginning of the next code cave.
-            while *cursor != 0 {
+            if *cursor != 0 {
                 cursor = cursor.add(1);
-
-                if cursor == end {
-                    // No more code caves since we reached the end of the .text section.
-                    break 'outer;
-                }
+                continue;
             }
 
             let cave_begin = cursor;
