@@ -1,9 +1,9 @@
-use common::{self, win, EClassCastFlags, List, UFunction, UObject};
+use common::{self, win, EClassCastFlags, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem::{self, ManuallyDrop};
 use core::ptr;
 use core::slice;
-use sdk::Engine::{Actor, Canvas, GameViewportClient};
+use sdk::Engine::{Canvas, GameViewportClient};
 
 mod patch;
 use patch::Patch;
@@ -41,10 +41,6 @@ impl Drop for ProcessEventHook {
             // Before we destroy the code cave, give the CPU time to exit the cave.
             win::Sleep(100);
             ManuallyDrop::drop(&mut self.code_cave);
-
-            for &function in RESET_THESE_SEEN_COUNTS.iter() {
-                (*function).seen_count = 0;
-            }
         }
     }
 }
@@ -162,43 +158,15 @@ impl ProcessEventHook {
     }
 }
 
-static mut RESET_THESE_SEEN_COUNTS: List<*mut UFunction, 4096> = List::new();
-
 unsafe extern "C" fn my_process_event(
     object: *mut UObject,
     function: *mut UFunction,
     _parameters: *mut c_void,
 ) {
-    const MAX_PRINTS: u32 = 1;
-
-    let seen_count = (*function).seen_count;
-
-    if seen_count == 0 && RESET_THESE_SEEN_COUNTS.push(function).is_err() {
-        common::log!("Warning: RESET_THESE_SEEN_COUNTS reached its max capacity of {}. We won't print any more unseen UFunctions.", RESET_THESE_SEEN_COUNTS.capacity());
-        return;
-    }
-
-    if seen_count < MAX_PRINTS {
-        (*function).seen_count += 1;
-
-        let is_actor = (*object).fast_is(EClassCastFlags::CASTCLASS_AActor);
-
-        common::log!(
-            "{}{}\n\t{}",
-            if is_actor { "\n" } else { "" },
-            (*object).name(),
-            *function
-        );
-
-        if is_actor {
-            let mut owner = (*object.cast::<Actor>()).Owner;
-
-            while !owner.is_null() {
-                common::log!("owned by\n\t{}", (*owner.cast::<UObject>()).name());
-                owner = (*owner).Owner;
-            }
-
-            common::log!();
+    // BP_EngineerCharacter_C /Game/Maps/SpaceRig/LVL_SpaceRig.LVL_SpaceRig.PersistentLevel.BP_EngineerCharacter_C_2147480000 Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpAxisKeyEvt_MouseX_K2Node_InputAxisKeyEvent_0
+    if (*object).fast_is(EClassCastFlags::CASTCLASS_APawn) {
+        if !(*function).name().starts_with("InpAxisKeyEvt") {
+            common::log!("{} {}", *object, *function);
         }
     }
 }
