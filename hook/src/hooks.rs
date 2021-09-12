@@ -88,16 +88,19 @@ impl ProcessEventHook {
             my_process_event as usize,
         );
 
-        Ok(ProcessEventHook {
-            jmp: ManuallyDrop::new(Patch::new(
-                process_event.cast(),
-                Self::create_jmp_patch(code_cave, process_event),
-            )),
+        let code_cave_patch = ManuallyDrop::new(Patch::new(
+            code_cave.as_mut_ptr().cast(),
+            Self::create_code_cave_patch(code_cave, process_event),
+        ));
 
-            code_cave: ManuallyDrop::new(Patch::new(
-                code_cave.as_mut_ptr().cast(),
-                Self::create_code_cave_patch(code_cave, process_event),
-            )),
+        let jmp = ManuallyDrop::new(Patch::new(
+            process_event.cast(),
+            Self::create_jmp_patch(code_cave, process_event),
+        ));
+
+        Ok(ProcessEventHook {
+            jmp,
+            code_cave: code_cave_patch,
         })
     }
 
