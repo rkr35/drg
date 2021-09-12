@@ -12,6 +12,7 @@ use patch::Patch;
 pub enum Error {
     FindProcessEvent,
     NoCodeCave,
+    CaveIsTooSmall(usize, usize),
 }
 
 pub struct Hooks {
@@ -90,7 +91,7 @@ impl ProcessEventHook {
 
         let code_cave_patch = ManuallyDrop::new(Patch::new(
             code_cave.as_mut_ptr().cast(),
-            Self::create_code_cave_patch(code_cave, process_event),
+            Self::create_code_cave_patch(code_cave, process_event)?,
         ));
 
         let jmp = ManuallyDrop::new(Patch::new(
@@ -120,7 +121,7 @@ impl ProcessEventHook {
         patch
     }
 
-    unsafe fn create_code_cave_patch(code_cave: &[u8], process_event: *const u8) -> [u8; 31] {
+    unsafe fn create_code_cave_patch(code_cave: &[u8], process_event: *const u8) -> Result<[u8; 31], Error> {
         #[rustfmt::skip]
         let mut patch = [
             0x51, // push rcx
@@ -134,6 +135,10 @@ impl ProcessEventHook {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // first six bytes of ProcessEvent (need to fill in)
             0xE9, 0x00, 0x00, 0x00, 0x00, // jmp ProcessEvent+6 (need to fill in)
         ];
+
+        if code_cave.len() < patch.len() {
+            return Err(Error::CaveIsTooSmall(code_cave.len(), patch.len()));
+        }
 
         // mov rax, my_process_event
         (&mut patch[6..6 + mem::size_of::<usize>()])
@@ -153,7 +158,7 @@ impl ProcessEventHook {
             &relative_distance.to_le_bytes()
         });
 
-        patch
+        Ok(patch)
     }
 }
 
