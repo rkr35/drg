@@ -257,6 +257,10 @@ impl UObject {
         top.cast()
     }
 
+    pub unsafe fn is(&self, class: *const UClass) -> bool {
+        (*self.ClassPrivate).is(class.cast())
+    }
+
     pub unsafe fn fast_is(&self, class: EClassCastFlags) -> bool {
         (*self.ClassPrivate).ClassCastFlags.any(class)
     }
@@ -314,7 +318,7 @@ impl Display for UObject {
 #[repr(C)]
 pub struct UField {
     base: UObject,
-    Next: *const UField,
+    pub Next: *const UField,
 }
 
 impl_deref! { UField as UObject }
@@ -323,6 +327,14 @@ impl_deref! { UField as UObject }
 pub struct FStructBaseChain {
     StructBaseChainArray: *const *const FStructBaseChain,
     NumStructBasesInChainMinusOne: i32,
+}
+
+impl FStructBaseChain {
+    unsafe fn is(&self, parent: *const Self) -> bool {
+        let parent_index = (*parent).NumStructBasesInChainMinusOne;
+        let child_index = self.NumStructBasesInChainMinusOne;
+        parent_index <= child_index && *self.StructBaseChainArray.add(parent_index as usize) == parent
+    }
 }
 
 #[repr(C)]
@@ -335,6 +347,12 @@ pub struct UStruct {
     pub PropertiesSize: i32,
     pub MinAlignment: i32,
     pad1: [u8; 80],
+}
+
+impl UStruct {
+    pub unsafe fn is(&self, parent: *const Self) -> bool {
+        self.struct_base_chain.is(&(*parent).struct_base_chain)
+    }
 }
 
 impl_deref! { UStruct as UField }
