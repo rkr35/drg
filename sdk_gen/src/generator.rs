@@ -5,7 +5,7 @@ use crate::{sdk_file, sdk_path};
 use common::win::file::{self, File};
 use common::List;
 use common::SplitIterator;
-use common::{EClassCastFlags, FName, GUObjectArray, UClass, UObject, UPackage, UStruct};
+use common::{EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, UPackage, UStruct};
 
 use core::cmp::Ordering;
 use core::fmt::{self, Write};
@@ -277,12 +277,15 @@ impl<W: Write> StructGenerator<W> {
         }
 
         self.write_header()?;
-        self.add_fields_and_functions()?;
+        self.add_fields()?;
         writeln!(self.out, "}}\n")?;
 
         if !self.bitfields.is_empty() {
             self.add_bitfield_getters_and_setters()?;
         }
+
+        self.add_functions()?;
+        writeln!(self.out)?;
 
         Ok(())
     }
@@ -346,7 +349,7 @@ impl<W: Write> StructGenerator<W> {
         Ok(())
     }
 
-    unsafe fn add_fields_and_functions(&mut self) -> Result<(), Error> {
+    unsafe fn add_fields(&mut self) -> Result<(), Error> {
         let mut property = (*self.structure).ChildProperties.cast::<FProperty>();
 
         while !property.is_null() {
@@ -570,6 +573,25 @@ impl<W: Write> StructGenerator<W> {
 
         writeln!(self.out, "}}\n")?;
 
+        Ok(())
+    }
+
+    unsafe fn add_functions(&mut self) -> Result<(), Error> {
+        let mut property = (*self.structure).Children;
+
+        while !property.is_null() {
+            if (*property).fast_is(EClassCastFlags::CASTCLASS_UFunction) {
+                self.process_function(property.cast())?;
+            }
+
+            property = (*property).Next;
+        }
+
+        Ok(())
+    }
+
+    unsafe fn process_function(&mut self, function: *const UFunction) -> Result<(), Error> {
+        writeln!(self.out, "// {}", *function)?;
         Ok(())
     }
 }
