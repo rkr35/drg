@@ -9,6 +9,9 @@ use patch::Patch;
 
 mod user;
 
+static mut PROCESS_EVENT: *const c_void = ptr::null();
+static mut DRAW_TRANSITION: *const c_void = ptr::null();
+
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     FindProcessEvent,
@@ -32,7 +35,7 @@ impl Hooks {
 
 struct ProcessEventHook {
     jmp: ManuallyDrop<Patch<[u8; 6]>>,
-    code_cave: ManuallyDrop<Patch<[u8; 31]>>,
+    code_cave: ManuallyDrop<Patch<[u8; 23]>>,
 }
 
 impl Drop for ProcessEventHook {
@@ -78,11 +81,13 @@ impl ProcessEventHook {
         common::log!(
             "Module starts at {} and is {} bytes.\n\
             Largest code cave begins at {} and is {} bytes.\n\
+            process_event is at {}\n\
             my_process_event is at {}",
             module.start(),
             module.size(),
             code_cave.as_ptr() as usize,
             cave_size,
+            process_event as usize,
             user::my_process_event as usize,
         );
 
@@ -121,19 +126,20 @@ impl ProcessEventHook {
     unsafe fn create_code_cave_patch(
         code_cave: &[u8],
         process_event: *const u8,
-    ) -> Result<[u8; 31], Error> {
+    ) -> Result<[u8; 23], Error> {
         #[rustfmt::skip]
         let mut patch = [
-            0x51, // push rcx
-            0x52, // push rdx
-            0x41, 0x50, // push r8
-            0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, my_process_event (need to fill in)
-            0xFF, 0xD0, // call rax
-            0x41, 0x58, // pop r8
-            0x5A, // pop rdx
-            0x59, // pop rcx
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // first six bytes of ProcessEvent (need to fill in)
-            0xE9, 0x00, 0x00, 0x00, 0x00, // jmp ProcessEvent+6 (need to fill in)
+            // mov rax, user::my_process_event (need to fill in)
+            0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+            // jmp rax
+            0xFF, 0xE0,
+
+            // first six bytes of ProcessEvent that we overwrote with the jmp to codecave (need to fill in)
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+            // jmp ProcessEvent+6 (need to fill in)
+            0xE9, 0x00, 0x00, 0x00, 0x00, 
         ];
 
         if code_cave.len() < patch.len() {
@@ -141,17 +147,19 @@ impl ProcessEventHook {
         }
 
         // mov rax, my_process_event
-        (&mut patch[6..6 + mem::size_of::<usize>()])
+        (&mut patch[2..2 + mem::size_of::<usize>()])
             .copy_from_slice(&(user::my_process_event as usize).to_le_bytes());
 
         // first six bytes of ProcessEvent
         let first_six_process_event_bytes = slice::from_raw_parts(process_event, 6);
-        (&mut patch[20..20 + first_six_process_event_bytes.len()])
+        (&mut patch[12..12 + first_six_process_event_bytes.len()])
             .copy_from_slice(first_six_process_event_bytes);
+
+        PROCESS_EVENT = code_cave.as_ptr().add(12).cast();
 
         // jmp ProcessEvent+6
         let patch_len = patch.len();
-        (&mut patch[27..27 + mem::size_of::<u32>()]).copy_from_slice({
+        (&mut patch[19..19 + mem::size_of::<u32>()]).copy_from_slice({
             let destination = process_event as usize + first_six_process_event_bytes.len();
             let source = code_cave.as_ptr() as usize + patch_len;
             let relative_distance = destination.wrapping_sub(source) as u32;
@@ -172,11 +180,9 @@ impl DrawTransitionHook {
         let address = (*(*crate::GEngine).GameViewport.cast::<UObject>())
             .vtable
             .add(VTABLE_INDEX);
-        ORIGINAL_DRAW_TRANSITION = *address;
+        DRAW_TRANSITION = *address;
         Self {
             _patch: Patch::new(address, user::my_draw_transition as *const c_void),
         }
     }
 }
-
-static mut ORIGINAL_DRAW_TRANSITION: *const c_void = ptr::null();

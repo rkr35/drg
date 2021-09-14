@@ -23,23 +23,24 @@ E9 27 32 0A 02 90
 00007FF681AF2C0D | 99                           | cdq                                                    |
 00007FF681AF2C0E | 41:23D0                      | and edx,r8d                                            |
 
-51 52 41 50 48 B8 50 17 B7 0E FD 7F 00 00 FF D0 41 58 5A 59 40 55 56 57 41 54 E9 BB CD F5 FD
-0x51, 0x52, 0x41, 0x50, 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xD0, 0x41, 0x58, 0x5A, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE9, 0x00, 0x00, 0x00, 0x00, 
+48 B8 00 15 AE DA FE 7F 00 00 FF E0 40 55 56 57 41 54 E9 F3 CE F5 FD
 
-00007FF683B95DEC | 51                           | push rcx                                               | Codecave
-00007FF683B95DED | 52                           | push rdx                                               |
-00007FF683B95DEE | 41:50                        | push r8                                                |
-00007FF683B95DF0 | 48:B8 5017B70EFD7F0000       | mov rax,<hook.hook::my_process_event>                  | 0x7FFD0EB71750
-00007FF683B95DFA | FFD0                         | call rax                                               |
-00007FF683B95DFC | 41:58                        | pop r8                                                 |
-00007FF683B95DFE | 5A                           | pop rdx                                                |
-00007FF683B95DFF | 59                           | pop rcx                                                |
-00007FF683B95E00 | 40:55                        | push rbp                                               |
-00007FF683B95E02 | 56                           | push rsi                                               |
-00007FF683B95E03 | 57                           | push rdi                                               |
-00007FF683B95E04 | 41:54                        | push r12                                               | r12:&"00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899Error"
-00007FF683B95E06 | E9 BBCDF5FD                  | jmp fsd-win64-shipping.7FF681AF2BC6                    |
-00007FF683B95E0B | 90                           | nop                                                    |
-00007FF683B95E0C | 0000                         | add byte ptr ds:[rax],al                               |
-00007FF683B95E0E | 0000                         | add byte ptr ds:[rax],al                               |
-00007FF683B95E10 | 0000                         | add byte ptr ds:[rax],al                               |
+00007FF69179F80C | 48:B8 0015AEDAFE7F0000                | mov rax,<hook.hook::hooks::user::my_process_event>                     | Codecave
+00007FF69179F816 | FFE0                                  | jmp rax                                                                |
+00007FF69179F818 | 40:55                                 | push rbp                                                               |
+00007FF69179F81A | 56                                    | push rsi                                                               |
+00007FF69179F81B | 57                                    | push rdi                                                               |
+00007FF69179F81C | 41:54                                 | push r12                                                               |
+00007FF69179F81E | E9 F3CEF5FD                           | jmp fsd-win64-shipping.7FF68F6FC716                                    |
+00007FF69179F823 | 90                                    | nop                                                                    |
+00007FF69179F824 | 0000                                  | add byte ptr ds:[rax],al                                               |
+00007FF69179F826 | 0000                                  | add byte ptr ds:[rax],al                                               |
+
+0x48, 0xB8,
+0x00, 0x15, 0xAE, 0xDA, 0xFE, 0x7F, 0x00, 0x00,
+0xFF, 0xE0,
+0x40, 0x55,
+0x56,
+0x57,
+0x41, 0x54,
+0xE9, 0xF3, 0xCE, 0xF5, 0xFD, 
