@@ -58,9 +58,9 @@ impl<T, const N: usize> List<T, N> {
             Err(Error::CapacityReached)
         }
     }
-
+ 
     pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
-        &mut *self.data.get_unchecked_mut(index).as_mut_ptr()
+        self.data.get_unchecked_mut(index).assume_init_mut()
     }
 
     pub fn as_slice(&self) -> &[T] {
