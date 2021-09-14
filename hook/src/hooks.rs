@@ -118,7 +118,10 @@ impl ProcessEventHook {
         patch
     }
 
-    unsafe fn create_code_cave_patch(code_cave: &[u8], process_event: *const u8) -> Result<[u8; 31], Error> {
+    unsafe fn create_code_cave_patch(
+        code_cave: &[u8],
+        process_event: *const u8,
+    ) -> Result<[u8; 31], Error> {
         #[rustfmt::skip]
         let mut patch = [
             0x51, // push rcx

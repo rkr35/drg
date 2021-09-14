@@ -1,9 +1,8 @@
 use crate::hooks::ORIGINAL_DRAW_TRANSITION;
 use common::{self, EClassCastFlags, UFunction, UObject};
-use core::mem;
 use core::ffi::c_void;
+use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-
 
 pub unsafe extern "C" fn my_process_event(
     object: *mut UObject,
