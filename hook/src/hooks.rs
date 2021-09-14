@@ -1,12 +1,13 @@
-use common::{self, win, EClassCastFlags, UFunction, UObject};
+use common::{self, win, UObject};
 use core::ffi::c_void;
 use core::mem::{self, ManuallyDrop};
 use core::ptr;
 use core::slice;
-use sdk::Engine::{Canvas, GameViewportClient};
 
 mod patch;
 use patch::Patch;
+
+mod user;
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -82,7 +83,7 @@ impl ProcessEventHook {
             module.size(),
             code_cave.as_ptr() as usize,
             cave_size,
-            my_process_event as usize,
+            user::my_process_event as usize,
         );
 
         let code_cave_patch = ManuallyDrop::new(Patch::new(
@@ -138,7 +139,7 @@ impl ProcessEventHook {
 
         // mov rax, my_process_event
         (&mut patch[6..6 + mem::size_of::<usize>()])
-            .copy_from_slice(&(my_process_event as usize).to_le_bytes());
+            .copy_from_slice(&(user::my_process_event as usize).to_le_bytes());
 
         // first six bytes of ProcessEvent
         let first_six_process_event_bytes = slice::from_raw_parts(process_event, 6);
@@ -158,19 +159,6 @@ impl ProcessEventHook {
     }
 }
 
-unsafe extern "C" fn my_process_event(
-    object: *mut UObject,
-    function: *mut UFunction,
-    _parameters: *mut c_void,
-) {
-    // BP_EngineerCharacter_C /Game/Maps/SpaceRig/LVL_SpaceRig.LVL_SpaceRig.PersistentLevel.BP_EngineerCharacter_C_2147480000 Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpAxisKeyEvt_MouseX_K2Node_InputAxisKeyEvent_0
-    if (*object).fast_is(EClassCastFlags::CASTCLASS_APawn) {
-        if !(*function).name().starts_with("InpAxisKeyEvt") {
-            common::log!("{} {}", *object, *function);
-        }
-    }
-}
-
 struct DrawTransitionHook {
     _patch: Patch<*const c_void>,
 }
@@ -183,18 +171,9 @@ impl DrawTransitionHook {
             .add(VTABLE_INDEX);
         ORIGINAL_DRAW_TRANSITION = *address;
         Self {
-            _patch: Patch::new(address, my_draw_transition as *const c_void),
+            _patch: Patch::new(address, user::my_draw_transition as *const c_void),
         }
     }
 }
 
 static mut ORIGINAL_DRAW_TRANSITION: *const c_void = ptr::null();
-
-unsafe extern "C" fn my_draw_transition(
-    game_viewport_client: *mut GameViewportClient,
-    canvas: *mut Canvas,
-) {
-    type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
-    let original = mem::transmute::<*const c_void, DrawTransition>(ORIGINAL_DRAW_TRANSITION);
-    original(game_viewport_client, canvas);
-}
