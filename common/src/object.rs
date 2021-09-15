@@ -232,7 +232,7 @@ pub struct UObject {
     ObjectFlags: u32, //EObjectFlags
     pub InternalIndex: i32,
     ClassPrivate: *const UClass,
-    NamePrivate: FName,
+    pub NamePrivate: FName,
     OuterPrivate: *mut UObject,
 }
 

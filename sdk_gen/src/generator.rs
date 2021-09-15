@@ -7,8 +7,9 @@ use common::List;
 use common::SplitIterator;
 use common::{EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, UPackage, UStruct};
 
+use core::cell::Cell;
 use core::cmp::Ordering;
-use core::fmt::{self, Write};
+use core::fmt::{self, Display, Formatter, Write};
 use core::str;
 
 #[derive(macros::NoPanicErrorDebug)]
@@ -163,7 +164,7 @@ impl Generator {
             write_enum_variant(&mut file, last)?;
         }
 
-        writeln!(file, "}}\n")?;
+        writeln!(file, "}}")?;
 
         Ok(())
     }
@@ -285,7 +286,6 @@ impl<W: Write> StructGenerator<W> {
         }
 
         self.add_functions()?;
-        writeln!(self.out)?;
 
         Ok(())
     }
@@ -369,54 +369,13 @@ impl<W: Write> StructGenerator<W> {
             return Err(Error::ZeroSizedField);
         }
 
-        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty)
-            && (*property.cast::<FBoolProperty>()).is_bitfield()
-        {
+        if (*property).is(EClassCastFlags::CASTCLASS_FBoolProperty) && (*property.cast::<FBoolProperty>()).is_bitfield() {
             self.process_bool_property(property.cast())?;
         } else {
             self.add_padding_if_needed(property)?;
 
             if self.is_blueprint_generated {
-                let name = (*property).base.NamePrivate.text();
-
-                write!(
-                    self.out,
-                    "    // offset: {offset}, size: {size}\n    pub ",
-                    offset = self.offset,
-                    size = size,
-                )?;
-
-                let mut num_pieces_added = 0;
-
-                for piece in
-                    SplitIterator::new(name.as_bytes(), |c| !c.is_ascii_alphanumeric() && c != b'_')
-                {
-                    if num_pieces_added > 0 {
-                        self.out.write_char('_')?;
-                    }
-
-                    write!(self.out, "{}", str::from_utf8_unchecked(piece))?;
-
-                    num_pieces_added += 1;
-                }
-
-                let number = (*property).base.NamePrivate.number();
-
-                if number > 0 {
-                    write!(self.out, "_{}", number - 1)?;
-                }
-
-                write!(
-                    self.out,
-                    ": {},",
-                    PropertyDisplayable::new(property, self.package, self.is_blueprint_generated)
-                )?;
-
-                if num_pieces_added > 1 {
-                    writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name, num_pieces_added - 1)?;
-                } else {
-                    writeln!(self.out, "\n")?;
-                }
+                self.process_blueprint_property(property, size)?;
             } else {
                 writeln!(
                     self.out,
@@ -486,6 +445,35 @@ impl<W: Write> StructGenerator<W> {
                 .map_err(|_| Error::MaxBitfields)?;
 
             self.offset += i32::from(size);
+        }
+
+        Ok(())
+    }
+
+    unsafe fn process_blueprint_property(&mut self, property: *const FProperty, size: i32) -> Result<(), Error> {
+        write!(
+            self.out,
+            "    // offset: {offset}, size: {size}\n    pub ",
+            offset = self.offset,
+            size = size,
+        )?;
+
+        let name = &(*property).base.NamePrivate;
+        let cleaned_name = CleanedName::new(name);
+
+        write!(
+            self.out,
+            "{}: {},",
+            cleaned_name,
+            PropertyDisplayable::new(property, self.package, self.is_blueprint_generated)
+        )?;
+
+        let num_invalid_characters_replaced = cleaned_name.num_invalid_characters_replaced.get();
+
+        if num_invalid_characters_replaced > 1 {
+            writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name.text(), num_invalid_characters_replaced)?;
+        } else {
+            writeln!(self.out, "\n")?;
         }
 
         Ok(())
@@ -578,20 +566,77 @@ impl<W: Write> StructGenerator<W> {
 
     unsafe fn add_functions(&mut self) -> Result<(), Error> {
         let mut property = (*self.structure).Children;
+        let mut has_at_least_one_function = false;
 
         while !property.is_null() {
             if (*property).fast_is(EClassCastFlags::CASTCLASS_UFunction) {
+            
+                if !has_at_least_one_function {
+                    has_at_least_one_function = true;
+                    writeln!(self.out, "impl {} {{", (*self.structure).name())?;
+                }
+
                 self.process_function(property.cast())?;
             }
 
             property = (*property).Next;
         }
 
+        if has_at_least_one_function {
+            writeln!(self.out, "}}\n")?;
+        }
+
         Ok(())
     }
 
     unsafe fn process_function(&mut self, function: *const UFunction) -> Result<(), Error> {
-        writeln!(self.out, "// {}", *function)?;
+        let cleaned_name = CleanedName::new(&(*function).NamePrivate);
+        writeln!(self.out, include_str!("function.fmt"), name=cleaned_name, full_name=*function)?;
+        Ok(())
+    }
+}
+
+struct CleanedName<'a> {
+    name: &'a FName,
+    num_invalid_characters_replaced: Cell<u8>,
+}
+
+impl<'a> CleanedName<'a> {
+    fn new(name: &FName) -> CleanedName {
+        CleanedName {
+            name,
+            num_invalid_characters_replaced: Cell::new(0),
+        }
+    }
+}
+
+impl<'a> Display for CleanedName<'a> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        let mut num_pieces_added = 0;
+        let text = unsafe { self.name.text() };
+
+        if text.starts_with(|c: char| c.is_ascii_digit()) {
+            f.write_str("Func_")?;
+        }
+
+        for piece in SplitIterator::new(text.as_bytes(), |c| !c.is_ascii_alphanumeric() && c != b'_') {
+            if num_pieces_added > 0 {
+                f.write_char('_')?;
+            }
+
+            write!(f, "{}", unsafe { str::from_utf8_unchecked(piece) })?;
+
+            num_pieces_added += 1;
+        }
+
+        let number = self.name.number();
+
+        if number > 0 {
+            write!(f, "_{}", number - 1)?;
+        }
+
+        self.num_invalid_characters_replaced.set(num_pieces_added - 1);
+
         Ok(())
     }
 }
