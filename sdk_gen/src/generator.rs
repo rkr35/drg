@@ -164,7 +164,7 @@ impl Generator {
             write_enum_variant(&mut file, last)?;
         }
 
-        writeln!(file, "}}")?;
+        writeln!(file, "}}\n")?;
 
         Ok(())
     }
