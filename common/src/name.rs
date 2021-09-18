@@ -18,6 +18,7 @@ const FNameBlockOffsets: usize = 1 << FNameBlockOffsetBits;
 const Stride: usize = mem::align_of::<FNameEntry>();
 const BlockSizeBytes: usize = Stride * FNameBlockOffsets;
 
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FName {
     ComparisonIndex: FNameEntryId,
@@ -50,6 +51,7 @@ impl Display for FName {
     }
 }
 
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct FNameEntryId {
     Value: u32,

@@ -1,5 +1,5 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum};
+use crate::game::{self, EPropertyFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum};
 use crate::{sdk_file, sdk_path};
 
 use common::win::file::{self, File};
@@ -10,6 +10,7 @@ use common::{EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, 
 use core::cell::Cell;
 use core::cmp::Ordering;
 use core::fmt::{self, Display, Formatter, Write};
+use core::ptr;
 use core::str;
 
 #[derive(macros::NoPanicErrorDebug)]
@@ -24,6 +25,8 @@ pub enum Error {
     MaxPackages,
     MaxBitfields,
     BitfieldFull,
+
+    MaxParameters,
 }
 
 struct Package {
@@ -590,8 +593,144 @@ impl<W: Write> StructGenerator<W> {
     }
 
     unsafe fn process_function(&mut self, function: *const UFunction) -> Result<(), Error> {
+        enum Kind {
+            Input {
+                by_reference: bool,
+                is_constant: bool,
+            },
+            Output,
+        }
+
+        struct Parameter {
+            property: *const FProperty,
+            kind: Kind,
+        }
+
+        struct Parameters {
+            parameters: List<Parameter, 128>,
+            return_type: *const FProperty,
+            package: *const UPackage,
+            is_struct_blueprint_generated: bool,
+        }
+
+        impl Parameters {
+            fn new(package: *const UPackage, is_struct_blueprint_generated: bool) -> Parameters {
+                Parameters {
+                    parameters: List::new(),
+                    return_type: ptr::null(),
+                    package,
+                    is_struct_blueprint_generated,
+                }
+            }
+
+            fn add(&mut self, parameter: Parameter) -> Result<(), Error> {
+                self.parameters.push(parameter).map_err(|_| Error::MaxParameters)?;
+                Ok(())
+            }
+
+            fn set_return_type(&mut self, property: *const FProperty) {
+                self.return_type = property;
+            }
+
+            fn process(&mut self, property: *const FProperty) -> Result<(), Error> {
+                let flags = unsafe { (*property).PropertyFlags };
+                
+// #define CPF_ParmFlags				(CPF_Parm | CPF_OutParm | CPF_ReturnParm | CPF_ReferenceParm | CPF_ConstParm)
+
+                if flags.contains(EPropertyFlags::CPF_ReturnParm) {
+                    self.set_return_type(property);
+                } else {
+                    let kind = if flags.contains(EPropertyFlags::CPF_ReferenceParm) {
+                        if flags.contains(EPropertyFlags::CPF_ConstParm) {
+                            Kind::Input {
+                                by_reference: true,
+                                is_constant: true,
+                            }
+                        } else if flags.contains(EPropertyFlags::CPF_OutParm) {
+                            Kind::Output
+                        } else {
+                            Kind::Input {
+                                by_reference: true,
+                                is_constant: false,
+                            }
+                        }
+                    } else if flags.contains(EPropertyFlags::CPF_Parm) {
+                        Kind::Input {
+                            by_reference: false,
+                            is_constant: false,
+                        }
+                    } else {
+                        return Ok(());
+                    };
+
+                    self.add(Parameter { property, kind })?;
+                }
+
+                Ok(())
+            }
+        }
+
+        struct Inputs<'a>(&'a Parameters);
+
+        impl<'a> Display for Inputs<'a> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                for parameter in self.0.parameters.iter() {
+                    if let Kind::Input { by_reference, is_constant } = parameter.kind {
+                        let parameter = parameter.property;
+                        let name = unsafe { (*parameter).base.NamePrivate };
+                        let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
+                        
+                        if by_reference {
+                            if is_constant {
+                                write!(f, "{}: *const {} /*ConstRefParam*/, ", name, typ)?;
+                            } else {
+                                write!(f, "{}: *mut {} /*MutRefParam*/, ", name, typ)?;
+                            }
+                        } else {
+                            write!(f, "{}: {} /*ByValParam, {}*/, ", name, typ, unsafe { (*parameter).PropertyFlags.0 })?;
+                        }
+                    }
+                }
+
+                Ok(())
+            }
+        }
+
+        struct Outputs<'a>(&'a Parameters);
+
+        impl<'a> Display for Outputs<'a> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                write!(f, "-> (")?;
+
+                for parameter in self.0.parameters.iter() {
+                    if let Kind::Output = parameter.kind {
+                        let parameter = parameter.property;
+                        let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
+                        write!(f, "{} /*OutputParam*/, ", typ)?;
+                    }
+                }
+
+                if self.0.return_type.is_null() {
+                    write!(f, ") ")?;
+                } else {
+                    let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
+                    write!(f, "{} /*ReturnParam*/,) ", typ)?;
+                }
+
+                Ok(())
+            }
+        }
+
+        let mut parameters = Parameters::new(self.package, self.is_blueprint_generated);
+        let mut property = (*function).ChildProperties.cast::<FProperty>();
+
+        while !property.is_null() {
+            parameters.process(property)?;
+            property = (*property).base.Next.cast::<FProperty>();
+        }
+
         let cleaned_name = CleanedName::new(&(*function).NamePrivate);
-        writeln!(self.out, include_str!("function.fmt"), name=cleaned_name, full_name=*function)?;
+        writeln!(self.out, include_str!("function.fmt"), name=cleaned_name, full_name=*function, inputs=Inputs(&parameters), outputs=Outputs(&parameters))?;
         Ok(())
     }
 }

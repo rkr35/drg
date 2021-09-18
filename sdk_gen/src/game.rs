@@ -17,10 +17,74 @@ pub struct FProperty {
     pub base: FField,
     pub ArrayDim: i32,
     pub ElementSize: i32,
-    pub PropertyFlags: u64,
+    pub PropertyFlags: EPropertyFlags,
     pad0: [u8; 4],
     pub Offset: i32,
     pad1: [u8; 40],
+}
+
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct EPropertyFlags(pub u64);
+
+#[allow(dead_code)]
+impl EPropertyFlags {
+    // Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectMacros.h
+    pub const CPF_None: Self = Self(0);
+    pub const CPF_Edit: Self = Self(0x1); // < Property is user-settable in the editor.
+    pub const CPF_ConstParm: Self = Self(0x2); // < This is a constant function parameter
+    pub const CPF_BlueprintVisible: Self = Self(0x4); // < This property can be read by blueprint code
+    pub const CPF_ExportObject: Self = Self(0x8); // < Object can be exported with actor.
+    pub const CPF_BlueprintReadOnly: Self = Self(0x10); // < This property cannot be modified by blueprint code
+    pub const CPF_Net: Self = Self(0x20); // < Property is relevant to network replication.
+    pub const CPF_EditFixedSize: Self = Self(0x40); // < Indicates that elements of an array can be modified, but its size cannot be changed.
+    pub const CPF_Parm: Self = Self(0x80); // < Function/When call parameter.
+    pub const CPF_OutParm: Self = Self(0x100); // < Value is copied out after function call.
+    pub const CPF_ZeroConstructor: Self = Self(0x200); // < memset is fine for construction
+    pub const CPF_ReturnParm: Self = Self(0x400); // < Return value.
+    pub const CPF_DisableEditOnTemplate: Self = Self(0x800); // < Disable editing of this property on an archetype/sub-blueprint
+    pub const CPF_Transient: Self = Self(0x2000); // < Property is transient: shouldn't be saved or loaded, except for Blueprint CDOs.
+    pub const CPF_Config: Self = Self(0x4000); // < Property should be loaded/saved as permanent profile.
+    pub const CPF_DisableEditOnInstance: Self = Self(0x10000); // < Disable editing on an instance of this class
+    pub const CPF_EditConst: Self = Self(0x20000); // < Property is uneditable in the editor.
+    pub const CPF_GlobalConfig: Self = Self(0x40000); // < Load config from base class, not subclass.
+    pub const CPF_InstancedReference: Self = Self(0x80000); // < Property is a component references.
+    pub const CPF_DuplicateTransient: Self = Self(0x200000); // < Property should always be reset to the default value during any type of duplication (copy/paste, binary duplication, etc.)
+    pub const CPF_SubobjectReference: Self = Self(0x400000); // < Property contains subobject references (TSubobjectPtr)
+    pub const CPF_SaveGame: Self = Self(0x1000000); // < Property should be serialized for save games, this is only checked for game-specific archives with ArIsSaveGame
+    pub const CPF_NoClear: Self = Self(0x2000000); // < Hide clear (and browse) button.
+    pub const CPF_ReferenceParm: Self = Self(0x8000000); // < Value is passed by reference; CPF_OutParam and CPF_Param should also be set.
+    pub const CPF_BlueprintAssignable: Self = Self(0x10000000); // < MC Delegates only.  Property should be exposed for assigning in blueprint code
+    pub const CPF_Deprecated: Self = Self(0x20000000); // < Property is deprecated.  Read it from an archive, but don't save it.
+    pub const CPF_IsPlainOldData: Self = Self(0x40000000); // < If this is set, then the property can be memcopied instead of CopyCompleteValue / CopySingleValue
+    pub const CPF_RepSkip: Self = Self(0x80000000); // < Not replicated. For non replicated properties in replicated structs 
+    pub const CPF_RepNotify: Self = Self(0x100000000); // < Notify actors when a property is replicated
+    pub const CPF_Interp: Self = Self(0x200000000); // < interpolatable property for use with matinee
+    pub const CPF_NonTransactional: Self = Self(0x400000000); // < Property isn't transacted
+    pub const CPF_EditorOnly: Self = Self(0x800000000); // < Property should only be loaded in the editor
+    pub const CPF_NoDestructor: Self = Self(0x1000000000); // < No destructor
+    pub const CPF_AutoWeak: Self = Self(0x4000000000); // < Only used for weak pointers, means the export type is autoweak
+    pub const CPF_ContainsInstancedReference: Self = Self(0x8000000000); // < Property contains component references.
+    pub const CPF_AssetRegistrySearchable: Self = Self(0x10000000000); // < asset instances will add properties with this flag to the asset registry automatically
+    pub const CPF_SimpleDisplay: Self = Self(0x20000000000); // < The property is visible by default in the editor details view
+    pub const CPF_AdvancedDisplay: Self = Self(0x40000000000); // < The property is advanced and not visible by default in the editor details view
+    pub const CPF_Protected: Self = Self(0x80000000000); // < property is protected from the perspective of script
+    pub const CPF_BlueprintCallable: Self = Self(0x100000000000); // < MC Delegates only.  Property should be exposed for calling in blueprint code
+    pub const CPF_BlueprintAuthorityOnly: Self = Self(0x200000000000); // < MC Delegates only.  This delegate accepts (only in blueprint) only events with BlueprintAuthorityOnly.
+    pub const CPF_TextExportTransient: Self = Self(0x400000000000); // < Property shouldn't be exported to text format (e.g. copy/paste)
+    pub const CPF_NonPIEDuplicateTransient: Self = Self(0x800000000000); // < Property should only be copied in PIE
+    pub const CPF_ExposeOnSpawn: Self = Self(0x1000000000000); // < Property is exposed on spawn
+    pub const CPF_PersistentInstance: Self = Self(0x2000000000000); // < A object referenced by the property is duplicated like a component. (Each actor should have an own instance.)
+    pub const CPF_UObjectWrapper: Self = Self(0x4000000000000); // < Property was parsed as a wrapper class like TSubclassOf<T>, FScriptInterface etc., rather than a USomething*
+    pub const CPF_HasGetValueTypeHash: Self = Self(0x8000000000000); // < This property can generate a meaningful hash value.
+    pub const CPF_NativeAccessSpecifierPublic: Self = Self(0x10000000000000); // < Public native access specifier
+    pub const CPF_NativeAccessSpecifierProtected: Self = Self(0x20000000000000); // < Protected native access specifier
+    pub const CPF_NativeAccessSpecifierPrivate: Self = Self(0x40000000000000); // < Private native access specifier
+    pub const CPF_SkipSerialization: Self = Self(0x80000000000000); // < Property shouldn't be serialized, can still be exported to text
+
+    pub fn contains(&self, flag: Self) -> bool {
+        self.0 & flag.0 == flag.0 
+    }
 }
 
 pub struct PropertyDisplayable {
