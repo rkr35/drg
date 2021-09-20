@@ -468,6 +468,12 @@ pub struct FField {
     pad1: [u8; 4],
 }
 
+impl FField {
+    pub unsafe fn name(&self) -> &str {
+        self.NamePrivate.text()
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct EClassCastFlags(pub u64);

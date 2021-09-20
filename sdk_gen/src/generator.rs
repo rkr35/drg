@@ -461,7 +461,7 @@ impl<W: Write> StructGenerator<W> {
             size = size,
         )?;
 
-        let name = &(*property).base.NamePrivate;
+        let name = (*property).base.NamePrivate;
         let cleaned_name = CleanedName::new(name);
 
         write!(
@@ -594,10 +594,7 @@ impl<W: Write> StructGenerator<W> {
 
     unsafe fn process_function(&mut self, function: *const UFunction) -> Result<(), Error> {
         enum Kind {
-            Input {
-                by_reference: bool,
-                is_constant: bool,
-            },
+            Input,
             Output,
         }
 
@@ -635,30 +632,13 @@ impl<W: Write> StructGenerator<W> {
             fn process(&mut self, property: *const FProperty) -> Result<(), Error> {
                 let flags = unsafe { (*property).PropertyFlags };
                 
-// #define CPF_ParmFlags				(CPF_Parm | CPF_OutParm | CPF_ReturnParm | CPF_ReferenceParm | CPF_ConstParm)
-
                 if flags.contains(EPropertyFlags::CPF_ReturnParm) {
                     self.set_return_type(property);
                 } else {
-                    let kind = if flags.contains(EPropertyFlags::CPF_ReferenceParm) {
-                        if flags.contains(EPropertyFlags::CPF_ConstParm) {
-                            Kind::Input {
-                                by_reference: true,
-                                is_constant: true,
-                            }
-                        } else if flags.contains(EPropertyFlags::CPF_OutParm) {
-                            Kind::Output
-                        } else {
-                            Kind::Input {
-                                by_reference: true,
-                                is_constant: false,
-                            }
-                        }
+                    let kind = if flags.contains(EPropertyFlags::CPF_OutParm) && !flags.contains(EPropertyFlags::CPF_ConstParm) {
+                        Kind::Output
                     } else if flags.contains(EPropertyFlags::CPF_Parm) {
-                        Kind::Input {
-                            by_reference: false,
-                            is_constant: false,
-                        }
+                        Kind::Input
                     } else {
                         return Ok(());
                     };
@@ -675,20 +655,11 @@ impl<W: Write> StructGenerator<W> {
         impl<'a> Display for Inputs<'a> {
             fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
                 for parameter in self.0.parameters.iter() {
-                    if let Kind::Input { by_reference, is_constant } = parameter.kind {
+                    if let Kind::Input = parameter.kind {
                         let parameter = parameter.property;
-                        let name = unsafe { (*parameter).base.NamePrivate };
+                        let name = CleanedName::new(unsafe { (*parameter).base.NamePrivate });
                         let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
-                        
-                        if by_reference {
-                            if is_constant {
-                                write!(f, "{}: *const {} /*ConstRefParam*/, ", name, typ)?;
-                            } else {
-                                write!(f, "{}: *mut {} /*MutRefParam*/, ", name, typ)?;
-                            }
-                        } else {
-                            write!(f, "{}: {} /*ByValParam, {}*/, ", name, typ, unsafe { (*parameter).PropertyFlags.0 })?;
-                        }
+                        write!(f, "{}: {}, ", name, typ)?;
                     }
                 }
 
@@ -700,21 +671,37 @@ impl<W: Write> StructGenerator<W> {
 
         impl<'a> Display for Outputs<'a> {
             fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-                write!(f, "-> (")?;
+                let mut has_output_params = false;
 
                 for parameter in self.0.parameters.iter() {
                     if let Kind::Output = parameter.kind {
+                        if !has_output_params {
+                            has_output_params = true;
+                            write!(f, "-> (")?;
+                        }
+
                         let parameter = parameter.property;
                         let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
-                        write!(f, "{} /*OutputParam*/, ", typ)?;
+                        write!(f, "{}, ", typ)?;
                     }
                 }
 
-                if self.0.return_type.is_null() {
-                    write!(f, ") ")?;
-                } else {
-                    let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
-                    write!(f, "{} /*ReturnParam*/,) ", typ)?;
+                let has_return_type = !self.0.return_type.is_null();
+
+                match [has_output_params, has_return_type] {
+                    [false, false] => (),
+
+                    [false, true] => {
+                        let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
+                        write!(f, "-> {} ", typ)?;
+                    }
+
+                    [true, false] => write!(f, ") ")?,
+
+                    [true, true] => {
+                        let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
+                        write!(f, "{}) ", typ)?;
+                    }
                 }
 
                 Ok(())
@@ -729,19 +716,20 @@ impl<W: Write> StructGenerator<W> {
             property = (*property).base.Next.cast::<FProperty>();
         }
 
-        let cleaned_name = CleanedName::new(&(*function).NamePrivate);
+        let cleaned_name = CleanedName::new((*function).NamePrivate);
         writeln!(self.out, include_str!("function.fmt"), name=cleaned_name, full_name=*function, inputs=Inputs(&parameters), outputs=Outputs(&parameters))?;
+
         Ok(())
     }
 }
 
-struct CleanedName<'a> {
-    name: &'a FName,
+struct CleanedName {
+    name: FName,
     num_invalid_characters_replaced: Cell<u8>,
 }
 
-impl<'a> CleanedName<'a> {
-    fn new(name: &FName) -> CleanedName {
+impl CleanedName {
+    fn new(name: FName) -> CleanedName {
         CleanedName {
             name,
             num_invalid_characters_replaced: Cell::new(0),
@@ -749,7 +737,7 @@ impl<'a> CleanedName<'a> {
     }
 }
 
-impl<'a> Display for CleanedName<'a> {
+impl Display for CleanedName {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         let mut num_pieces_added = 0;
         let text = unsafe { self.name.text() };
