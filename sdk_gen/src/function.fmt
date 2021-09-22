@@ -1,3 +1,18 @@
-    pub unsafe fn {name}({inputs}) {outputs}{{
-        todo!("Implement calling {full_name}");
+    pub unsafe fn {name}(this: *mut Self, {inputs}) {outputs}{{
+        #[repr(C)]
+        struct Parameters {{
+
+        }}
+
+        let mut parameters = Parameters {{
+
+        }};
+
+        static mut FUNCTION: *mut common::UFunction = core::ptr::null_mut();
+
+        if FUNCTION.is_null() {{
+            FUNCTION = (*common::GUObjectArray).find_function("{full_name}");
+        }}
+
+        common::UObject::process_event(this.cast(), FUNCTION, (&mut parameters as *mut Parameters).cast());
     }}

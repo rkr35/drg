@@ -85,6 +85,10 @@ impl FUObjectArray {
         Ok(())
     }
 
+    pub unsafe fn find_function(&self, name: &'static str) -> *mut UFunction {
+        self.find(name).map(|f| f.cast()).unwrap_or(core::ptr::null_mut())
+    }
+
     pub unsafe fn find(&self, name: &'static str) -> Result<*mut UObject, Error> {
         // Do a short-circuiting name comparison.
 
