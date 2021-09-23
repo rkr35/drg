@@ -10,7 +10,6 @@ use common::{EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, 
 use core::cell::Cell;
 use core::cmp::Ordering;
 use core::fmt::{self, Display, Formatter, Write};
-use core::ptr;
 use core::str;
 
 #[derive(macros::NoPanicErrorDebug)]
@@ -605,18 +604,18 @@ impl<W: Write> StructGenerator<W> {
 
         struct Parameters {
             parameters: List<Parameter, 128>,
-            return_type: *const FProperty,
             package: *const UPackage,
             is_struct_blueprint_generated: bool,
+            num_outputs: u8,
         }
 
         impl Parameters {
             fn new(package: *const UPackage, is_struct_blueprint_generated: bool) -> Parameters {
                 Parameters {
                     parameters: List::new(),
-                    return_type: ptr::null(),
                     package,
                     is_struct_blueprint_generated,
+                    num_outputs: 0,
                 }
             }
 
@@ -625,26 +624,19 @@ impl<W: Write> StructGenerator<W> {
                 Ok(())
             }
 
-            fn set_return_type(&mut self, property: *const FProperty) {
-                self.return_type = property;
-            }
-
             fn process(&mut self, property: *const FProperty) -> Result<(), Error> {
                 let flags = unsafe { (*property).PropertyFlags };
                 
-                if flags.contains(EPropertyFlags::CPF_ReturnParm) {
-                    self.set_return_type(property);
+                let kind = if flags.contains(EPropertyFlags::CPF_ReturnParm) || (flags.contains(EPropertyFlags::CPF_OutParm) && !flags.contains(EPropertyFlags::CPF_ConstParm)) {
+                    self.num_outputs += 1;
+                    Kind::Output
+                } else if flags.contains(EPropertyFlags::CPF_Parm) {
+                    Kind::Input
                 } else {
-                    let kind = if flags.contains(EPropertyFlags::CPF_OutParm) && !flags.contains(EPropertyFlags::CPF_ConstParm) {
-                        Kind::Output
-                    } else if flags.contains(EPropertyFlags::CPF_Parm) {
-                        Kind::Input
-                    } else {
-                        return Ok(());
-                    };
+                    return Ok(());
+                };
 
-                    self.add(Parameter { property, kind })?;
-                }
+                self.add(Parameter { property, kind })?;
 
                 Ok(())
             }
@@ -671,37 +663,94 @@ impl<W: Write> StructGenerator<W> {
 
         impl<'a> Display for Outputs<'a> {
             fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-                let mut has_output_params = false;
+                match self.0.num_outputs {
+                    0 => return Ok(()),
+                    1 => write!(f, "-> ")?,
+                    _ => write!(f, "-> (")?,
+                }
 
                 for parameter in self.0.parameters.iter() {
                     if let Kind::Output = parameter.kind {
-                        if !has_output_params {
-                            has_output_params = true;
-                            write!(f, "-> (")?;
-                        }
+                        let typ = PropertyDisplayable::new(parameter.property, self.0.package, self.0.is_struct_blueprint_generated);
 
-                        let parameter = parameter.property;
-                        let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
-                        write!(f, "{}, ", typ)?;
+                        if self.0.num_outputs == 1 {
+                            write!(f, "{} ", typ)?;
+                        } else {
+                            write!(f, "{}, ", typ)?;
+                        }
                     }
                 }
 
-                let has_return_type = !self.0.return_type.is_null();
+                if self.0.num_outputs > 1 {
+                    write!(f, ") ")?;
+                }
 
-                match [has_output_params, has_return_type] {
-                    [false, false] => (),
+                Ok(())
+            }
+        }
 
-                    [false, true] => {
-                        let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
-                        write!(f, "-> {} ", typ)?;
+        struct DeclareStructFields<'a>(&'a Parameters);
+
+        impl<'a> Display for DeclareStructFields<'a> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                for parameter in self.0.parameters.iter() {
+                    let property = parameter.property;
+                    let name = CleanedName::new(unsafe { (*property).base.NamePrivate });
+                    let typ = PropertyDisplayable::new(property, self.0.package, self.0.is_struct_blueprint_generated);
+
+                    if let Kind::Input = parameter.kind {
+                        write!(f, "\n            {}: {}, ", name, typ)?;
+                    } else {
+                        write!(f, "\n            {}: core::mem::MaybeUninit<{}>, ", name, typ)?;
                     }
+                }
 
-                    [true, false] => write!(f, ") ")?,
+                Ok(())
+            }
+        }
 
-                    [true, true] => {
-                        let typ = PropertyDisplayable::new(self.0.return_type, self.0.package, self.0.is_struct_blueprint_generated);
-                        write!(f, "{}) ", typ)?;
+        struct InitStructFields<'a>(&'a Parameters);
+
+        impl<'a> Display for InitStructFields<'a> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                for parameter in self.0.parameters.iter() {
+                    let name = CleanedName::new(unsafe { (*parameter.property).base.NamePrivate });
+
+                    if let Kind::Input = parameter.kind {
+                        write!(f, "\n            {}, ", name)?;
+                    } else {
+                        write!(f, "\n            {}: core::mem::MaybeUninit::uninit(), ", name)?;
                     }
+                }
+
+                Ok(())
+            }
+        }
+
+        struct ReturnValues<'a>(&'a Parameters);
+
+        impl<'a> Display for ReturnValues<'a> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                match self.0.num_outputs {
+                    0 => return Ok(()),
+                    1 => write!(f, "\n        ")?,
+                    _ => write!(f, "\n        (")?,
+                }
+
+                for parameter in self.0.parameters.iter() {
+                    if let Kind::Output = parameter.kind {
+                        let name = CleanedName::new(unsafe { (*parameter.property).base.NamePrivate });
+
+                        if self.0.num_outputs == 1 {
+                            write!(f, "parameters.{}.assume_init()", name)?;
+                        } else {
+                            write!(f, "parameters.{}.assume_init(), ", name)?;
+                        }
+                    }
+                }
+
+                if self.0.num_outputs > 1 {
+                    write!(f, ")")?;
                 }
 
                 Ok(())
@@ -717,7 +766,18 @@ impl<W: Write> StructGenerator<W> {
         }
 
         let cleaned_name = CleanedName::new((*function).NamePrivate);
-        writeln!(self.out, include_str!("function.fmt"), name=cleaned_name, full_name=*function, inputs=Inputs(&parameters), outputs=Outputs(&parameters))?;
+
+        writeln!(
+            self.out,
+            include_str!("function.fmt"),
+            name=cleaned_name,
+            full_name=*function,
+            inputs=Inputs(&parameters),
+            outputs=Outputs(&parameters),
+            declare_struct_fields=DeclareStructFields(&parameters),
+            init_struct_fields=InitStructFields(&parameters),
+            return_values=ReturnValues(&parameters),
+        )?;
 
         Ok(())
     }

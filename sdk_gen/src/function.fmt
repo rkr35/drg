@@ -1,11 +1,9 @@
     pub unsafe fn {name}(this: *mut Self, {inputs}) {outputs}{{
         #[repr(C)]
-        struct Parameters {{
-
+        struct Parameters {{{declare_struct_fields}
         }}
 
-        let mut parameters = Parameters {{
-
+        let mut parameters = Parameters {{{init_struct_fields}
         }};
 
         static mut FUNCTION: *mut common::UFunction = core::ptr::null_mut();
@@ -14,5 +12,5 @@
             FUNCTION = (*common::GUObjectArray).find_function("{full_name}");
         }}
 
-        common::UObject::process_event(this.cast(), FUNCTION, (&mut parameters as *mut Parameters).cast());
+        common::UObject::process_event(this.cast(), FUNCTION, (&mut parameters as *mut Parameters).cast());{return_values}
     }}
