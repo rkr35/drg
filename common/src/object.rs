@@ -86,7 +86,9 @@ impl FUObjectArray {
     }
 
     pub unsafe fn find_function(&self, name: &'static str) -> *mut UFunction {
-        self.find(name).map(|f| f.cast()).unwrap_or(core::ptr::null_mut())
+        self.find(name)
+            .map(|f| f.cast())
+            .unwrap_or(core::ptr::null_mut())
     }
 
     pub unsafe fn find(&self, name: &'static str) -> Result<*mut UObject, Error> {
@@ -337,7 +339,8 @@ impl FStructBaseChain {
     unsafe fn is(&self, parent: *const Self) -> bool {
         let parent_index = (*parent).NumStructBasesInChainMinusOne;
         let child_index = self.NumStructBasesInChainMinusOne;
-        parent_index <= child_index && *self.StructBaseChainArray.add(parent_index as usize) == parent
+        parent_index <= child_index
+            && *self.StructBaseChainArray.add(parent_index as usize) == parent
     }
 }
 

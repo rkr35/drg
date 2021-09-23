@@ -57,7 +57,7 @@ impl EPropertyFlags {
     pub const CPF_BlueprintAssignable: Self = Self(0x10000000); // < MC Delegates only.  Property should be exposed for assigning in blueprint code
     pub const CPF_Deprecated: Self = Self(0x20000000); // < Property is deprecated.  Read it from an archive, but don't save it.
     pub const CPF_IsPlainOldData: Self = Self(0x40000000); // < If this is set, then the property can be memcopied instead of CopyCompleteValue / CopySingleValue
-    pub const CPF_RepSkip: Self = Self(0x80000000); // < Not replicated. For non replicated properties in replicated structs 
+    pub const CPF_RepSkip: Self = Self(0x80000000); // < Not replicated. For non replicated properties in replicated structs
     pub const CPF_RepNotify: Self = Self(0x100000000); // < Notify actors when a property is replicated
     pub const CPF_Interp: Self = Self(0x200000000); // < interpolatable property for use with matinee
     pub const CPF_NonTransactional: Self = Self(0x400000000); // < Property isn't transacted
@@ -83,7 +83,7 @@ impl EPropertyFlags {
     pub const CPF_SkipSerialization: Self = Self(0x80000000000000); // < Property shouldn't be serialized, can still be exported to text
 
     pub fn contains(&self, flag: Self) -> bool {
-        self.0 & flag.0 == flag.0 
+        self.0 & flag.0 == flag.0
     }
 }
 

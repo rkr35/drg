@@ -1,4 +1,4 @@
-use crate::hooks::{PROCESS_EVENT, DRAW_TRANSITION};
+use crate::hooks::{DRAW_TRANSITION, PROCESS_EVENT};
 use common::{self, EClassCastFlags, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
@@ -9,7 +9,7 @@ pub unsafe extern "C" fn my_process_event(
     function: *mut UFunction,
     parameters: *mut c_void,
 ) {
-    type ProcessEvent = unsafe extern "C" fn (*mut UObject, *mut UFunction, *mut c_void);
+    type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
 
     // BP_EngineerCharacter_C /Game/Maps/SpaceRig/LVL_SpaceRig.LVL_SpaceRig.PersistentLevel.BP_EngineerCharacter_C_2147480000 Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpAxisKeyEvt_MouseX_K2Node_InputAxisKeyEvent_0
     if (*object).fast_is(EClassCastFlags::CASTCLASS_APawn) {

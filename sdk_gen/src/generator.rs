@@ -1,11 +1,15 @@
 use crate::buf_writer::BufWriter;
-use crate::game::{self, EPropertyFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum};
+use crate::game::{
+    self, EPropertyFlags, FBoolProperty, FProperty, PropertyDisplayable, TPair, UEnum,
+};
 use crate::{sdk_file, sdk_path};
 
 use common::win::file::{self, File};
 use common::List;
 use common::SplitIterator;
-use common::{EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, UPackage, UStruct};
+use common::{
+    EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, UPackage, UStruct,
+};
 
 use core::cell::Cell;
 use core::cmp::Ordering;
@@ -452,7 +456,11 @@ impl<W: Write> StructGenerator<W> {
         Ok(())
     }
 
-    unsafe fn process_blueprint_property(&mut self, property: *const FProperty, size: i32) -> Result<(), Error> {
+    unsafe fn process_blueprint_property(
+        &mut self,
+        property: *const FProperty,
+        size: i32,
+    ) -> Result<(), Error> {
         write!(
             self.out,
             "    // offset: {offset}, size: {size}\n    pub ",
@@ -473,7 +481,12 @@ impl<W: Write> StructGenerator<W> {
         let num_invalid_characters_replaced = cleaned_name.num_invalid_characters_replaced.get();
 
         if num_invalid_characters_replaced > 1 {
-            writeln!(self.out, "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n", name.text(), num_invalid_characters_replaced)?;
+            writeln!(
+                self.out,
+                "// NOTE: Property's original name is \"{}\". Replaced {} invalid characters.\n",
+                name.text(),
+                num_invalid_characters_replaced
+            )?;
         } else {
             writeln!(self.out, "\n")?;
         }
@@ -572,7 +585,6 @@ impl<W: Write> StructGenerator<W> {
 
         while !property.is_null() {
             if (*property).fast_is(EClassCastFlags::CASTCLASS_UFunction) {
-            
                 if !has_at_least_one_function {
                     has_at_least_one_function = true;
                     writeln!(self.out, "impl {} {{", (*self.structure).name())?;
@@ -620,13 +632,15 @@ impl<W: Write> StructGenerator<W> {
             }
 
             fn add(&mut self, parameter: Parameter) -> Result<(), Error> {
-                self.parameters.push(parameter).map_err(|_| Error::MaxParameters)?;
+                self.parameters
+                    .push(parameter)
+                    .map_err(|_| Error::MaxParameters)?;
                 Ok(())
             }
 
             fn process(&mut self, property: *const FProperty) -> Result<(), Error> {
                 let flags = unsafe { (*property).PropertyFlags };
-                
+
                 let kind = if flags.contains(EPropertyFlags::CPF_ReturnParm) || (flags.contains(EPropertyFlags::CPF_OutParm) && !flags.contains(EPropertyFlags::CPF_ConstParm)) {
                     self.num_outputs += 1;
                     Kind::Output
@@ -650,7 +664,11 @@ impl<W: Write> StructGenerator<W> {
                     if let Kind::Input = parameter.kind {
                         let parameter = parameter.property;
                         let name = CleanedName::new(unsafe { (*parameter).base.NamePrivate });
-                        let typ = PropertyDisplayable::new(parameter, self.0.package, self.0.is_struct_blueprint_generated);
+                        let typ = PropertyDisplayable::new(
+                            parameter,
+                            self.0.package,
+                            self.0.is_struct_blueprint_generated,
+                        );
                         write!(f, "{}: {}, ", name, typ)?;
                     }
                 }
@@ -671,7 +689,11 @@ impl<W: Write> StructGenerator<W> {
 
                 for parameter in self.0.parameters.iter() {
                     if let Kind::Output = parameter.kind {
-                        let typ = PropertyDisplayable::new(parameter.property, self.0.package, self.0.is_struct_blueprint_generated);
+                        let typ = PropertyDisplayable::new(
+                            parameter.property,
+                            self.0.package,
+                            self.0.is_struct_blueprint_generated,
+                        );
 
                         if self.0.num_outputs == 1 {
                             write!(f, "{} ", typ)?;
@@ -697,12 +719,20 @@ impl<W: Write> StructGenerator<W> {
                 for parameter in self.0.parameters.iter() {
                     let property = parameter.property;
                     let name = CleanedName::new(unsafe { (*property).base.NamePrivate });
-                    let typ = PropertyDisplayable::new(property, self.0.package, self.0.is_struct_blueprint_generated);
+                    let typ = PropertyDisplayable::new(
+                        property,
+                        self.0.package,
+                        self.0.is_struct_blueprint_generated,
+                    );
 
                     if let Kind::Input = parameter.kind {
                         write!(f, "\n            {}: {}, ", name, typ)?;
                     } else {
-                        write!(f, "\n            {}: core::mem::MaybeUninit<{}>, ", name, typ)?;
+                        write!(
+                            f,
+                            "\n            {}: core::mem::MaybeUninit<{}>, ",
+                            name, typ
+                        )?;
                     }
                 }
 
@@ -720,7 +750,11 @@ impl<W: Write> StructGenerator<W> {
                     if let Kind::Input = parameter.kind {
                         write!(f, "\n            {}, ", name)?;
                     } else {
-                        write!(f, "\n            {}: core::mem::MaybeUninit::uninit(), ", name)?;
+                        write!(
+                            f,
+                            "\n            {}: core::mem::MaybeUninit::uninit(), ",
+                            name
+                        )?;
                     }
                 }
 
@@ -740,7 +774,8 @@ impl<W: Write> StructGenerator<W> {
 
                 for parameter in self.0.parameters.iter() {
                     if let Kind::Output = parameter.kind {
-                        let name = CleanedName::new(unsafe { (*parameter.property).base.NamePrivate });
+                        let name =
+                            CleanedName::new(unsafe { (*parameter.property).base.NamePrivate });
 
                         if self.0.num_outputs == 1 {
                             write!(f, "parameters.{}.assume_init()", name)?;
@@ -772,13 +807,13 @@ impl<W: Write> StructGenerator<W> {
         writeln!(
             self.out,
             include_str!("function.fmt"),
-            name=cleaned_name,
-            full_name=*function,
-            inputs=Inputs(&parameters),
-            outputs=Outputs(&parameters),
-            declare_struct_fields=DeclareStructFields(&parameters),
-            init_struct_fields=InitStructFields(&parameters),
-            return_values=ReturnValues(&parameters),
+            name = cleaned_name,
+            full_name = *function,
+            inputs = Inputs(&parameters),
+            outputs = Outputs(&parameters),
+            declare_struct_fields = DeclareStructFields(&parameters),
+            init_struct_fields = InitStructFields(&parameters),
+            return_values = ReturnValues(&parameters),
         )?;
 
         Ok(())
@@ -824,7 +859,8 @@ impl Display for CleanedName {
             write!(f, "_{}", number - 1)?;
         }
 
-        self.num_invalid_characters_replaced.set(num_pieces_added - 1);
+        self.num_invalid_characters_replaced
+            .set(num_pieces_added - 1);
 
         Ok(())
     }
