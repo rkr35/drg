@@ -85,6 +85,7 @@ impl FUObjectArray {
         Ok(())
     }
 
+    #[inline(never)]
     pub unsafe fn find_function(&self, name: &'static str) -> *mut UFunction {
         self.find(name)
             .map(|f| f.cast())
