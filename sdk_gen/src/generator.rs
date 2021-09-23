@@ -675,6 +675,7 @@ impl<W: Write> StructGenerator<W> {
 
                         if self.0.num_outputs == 1 {
                             write!(f, "{} ", typ)?;
+                            return Ok(());
                         } else {
                             write!(f, "{}, ", typ)?;
                         }
@@ -743,6 +744,7 @@ impl<W: Write> StructGenerator<W> {
 
                         if self.0.num_outputs == 1 {
                             write!(f, "parameters.{}.assume_init()", name)?;
+                            return Ok(());
                         } else {
                             write!(f, "parameters.{}.assume_init(), ", name)?;
                         }
