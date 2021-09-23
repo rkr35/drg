@@ -603,7 +603,7 @@ impl<W: Write> StructGenerator<W> {
         }
 
         struct Parameters {
-            parameters: List<Parameter, 128>,
+            parameters: List<Parameter, 32>,
             package: *const UPackage,
             is_struct_blueprint_generated: bool,
             num_outputs: u8,
