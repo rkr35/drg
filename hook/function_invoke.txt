@@ -1,0 +1,56 @@
+Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp:5531
+
+void UFunction::Invoke(UObject* Obj, FFrame& Stack, RESULT_DECL)
+{
+	checkSlow(Func);
+
+	UClass* OuterClass = (UClass*)GetOuter();
+	if (OuterClass->IsChildOf(UInterface::StaticClass()))
+	{
+		Obj = (UObject*)Obj->GetInterfaceAddress(OuterClass);
+	}
+
+	TGuardValue<UFunction*> NativeFuncGuard(Stack.CurrentNativeFunction, this);
+	return (*Func)(Obj, Stack, RESULT_PARAM);
+}
+
+00007FF6F82751A0 | 48:895C24 08                          | mov qword ptr ss:[rsp+8],rbx                                           | void UFunction::Invoke(UObject* Obj, FFrame& Stack, RESULT_DECL)
+00007FF6F82751A5 | 48:896C24 10                          | mov qword ptr ss:[rsp+10],rbp                                          | [rsp+10]:",;,"
+00007FF6F82751AA | 48:897424 18                          | mov qword ptr ss:[rsp+18],rsi                                          |
+00007FF6F82751AF | 48:897C24 20                          | mov qword ptr ss:[rsp+20],rdi                                          |
+00007FF6F82751B4 | 41:56                                 | push r14                                                               |
+00007FF6F82751B6 | 48:83EC 20                            | sub rsp,20                                                             |
+00007FF6F82751BA | 48:8B59 20                            | mov rbx,qword ptr ds:[rcx+20]                                          | UClass* OuterClass = (UClass*)GetOuter();
+00007FF6F82751BE | 4D:8BF1                               | mov r14,r9                                                             | Result
+00007FF6F82751C1 | 49:8BF8                               | mov rdi,r8                                                             | FFrame
+00007FF6F82751C4 | 48:8BF2                               | mov rsi,rdx                                                            | UObject
+00007FF6F82751C7 | 48:8BE9                               | mov rbp,rcx                                                            | this (UFunction)
+00007FF6F82751CA | E8 A1D80D00                           | call fsd-win64-shipping.7FF6F8352A70                                   |
+00007FF6F82751CF | 48:85C0                               | test rax,rax                                                           |
+00007FF6F82751D2 | 74 28                                 | je fsd-win64-shipping.7FF6F82751FC                                     |
+00007FF6F82751D4 | 48:8D50 30                            | lea rdx,qword ptr ds:[rax+30]                                          |
+00007FF6F82751D8 | 48:6340 38                            | movsxd rax,dword ptr ds:[rax+38]                                       |
+00007FF6F82751DC | 3B43 38                               | cmp eax,dword ptr ds:[rbx+38]                                          |
+00007FF6F82751DF | 7F 1B                                 | jg fsd-win64-shipping.7FF6F82751FC                                     |
+00007FF6F82751E1 | 4C:8BC0                               | mov r8,rax                                                             |
+00007FF6F82751E4 | 48:8B43 30                            | mov rax,qword ptr ds:[rbx+30]                                          |
+00007FF6F82751E8 | 4A:3914C0                             | cmp qword ptr ds:[rax+r8*8],rdx                                        |
+00007FF6F82751EC | 75 0E                                 | jne fsd-win64-shipping.7FF6F82751FC                                    |
+00007FF6F82751EE | 48:8BD3                               | mov rdx,rbx                                                            |
+00007FF6F82751F1 | 48:8BCE                               | mov rcx,rsi                                                            |
+00007FF6F82751F4 | E8 87241400                           | call fsd-win64-shipping.7FF6F83B7680                                   | (UObject*)Obj->GetInterfaceAddress(OuterClass);
+00007FF6F82751F9 | 48:8BF0                               | mov rsi,rax                                                            |
+00007FF6F82751FC | 48:8B9F 88000000                      | mov rbx,qword ptr ds:[rdi+88]                                          |
+00007FF6F8275203 | 4D:8BC6                               | mov r8,r14                                                             |
+00007FF6F8275206 | 48:8BD7                               | mov rdx,rdi                                                            |
+00007FF6F8275209 | 48:89AF 88000000                      | mov qword ptr ds:[rdi+88],rbp                                          |
+00007FF6F8275210 | 48:8BCE                               | mov rcx,rsi                                                            |
+00007FF6F8275213 | FF95 D8000000                         | call qword ptr ss:[rbp+D8]                                             | (*Func)(Obj, Stack, RESULT_PARAM)
+00007FF6F8275219 | 48:8B6C24 38                          | mov rbp,qword ptr ss:[rsp+38]                                          |
+00007FF6F827521E | 48:8B7424 40                          | mov rsi,qword ptr ss:[rsp+40]                                          |
+00007FF6F8275223 | 48:899F 88000000                      | mov qword ptr ds:[rdi+88],rbx                                          |
+00007FF6F827522A | 48:8B5C24 30                          | mov rbx,qword ptr ss:[rsp+30]                                          |
+00007FF6F827522F | 48:8B7C24 48                          | mov rdi,qword ptr ss:[rsp+48]                                          |
+00007FF6F8275234 | 48:83C4 20                            | add rsp,20                                                             |
+00007FF6F8275238 | 41:5E                                 | pop r14                                                                |
+00007FF6F827523A | C3                                    | ret                                                                    |
