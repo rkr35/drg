@@ -24,10 +24,13 @@ enum Error {
     Module(#[from] win::module::Error),
     Hooks(#[from] hooks::Error),
     FindGlobalEngine,
+    FindFunctionInvoke,
 }
 
 #[allow(non_upper_case_globals)]
 static mut GEngine: *const Engine = ptr::null();
+
+static mut FUNCTION_INVOKE: *const c_void = ptr::null();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -65,6 +68,7 @@ unsafe fn run() -> Result<(), Error> {
 unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     common::init_globals(module)?;
     find_global_engine(module)?;
+    find_function_invoke(module)?;
     Ok(())
 }
 
@@ -100,5 +104,12 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
         .add(7 + relative_offset as usize)
         .cast::<*const Engine>();
     common::log!("GEngine = {}", GEngine as usize);
+    Ok(())
+}
+
+unsafe fn find_function_invoke(module: &win::Module) -> Result<(), Error> {
+    const PATTERN: [Option<u8>; 30] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x08), Some(0x48), Some(0x89), Some(0x6C), Some(0x24), Some(0x10), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x7C), Some(0x24), Some(0x20), Some(0x41), Some(0x56), Some(0x48), Some(0x83), Some(0xEC), Some(0x20), Some(0x48), Some(0x8B), Some(0x59), Some(0x20)];
+    FUNCTION_INVOKE = module.find(&PATTERN).ok_or(Error::FindFunctionInvoke)?;
+    common::log!("FUNCTION_INVOKE = {}", FUNCTION_INVOKE as usize);
     Ok(())
 }

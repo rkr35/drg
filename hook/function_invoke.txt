@@ -14,6 +14,8 @@ void UFunction::Invoke(UObject* Obj, FFrame& Stack, RESULT_DECL)
 	return (*Func)(Obj, Stack, RESULT_PARAM);
 }
 
+48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 20 48 8B 59 20
+
 00007FF6F82751A0 | 48:895C24 08                          | mov qword ptr ss:[rsp+8],rbx                                           | void UFunction::Invoke(UObject* Obj, FFrame& Stack, RESULT_DECL)
 00007FF6F82751A5 | 48:896C24 10                          | mov qword ptr ss:[rsp+10],rbp                                          | [rsp+10]:",;,"
 00007FF6F82751AA | 48:897424 18                          | mov qword ptr ss:[rsp+18],rsi                                          |
