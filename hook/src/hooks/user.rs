@@ -19,17 +19,22 @@ pub unsafe extern "C" fn my_draw_transition(
     game_viewport_client: *mut GameViewportClient,
     canvas: *mut Canvas,
 ) {
+    const WIDTH: f32 = 1024.0;
+    const HEIGHT: f32 = 768.0;
+
+    const SIZE: f32 = 100.0;
+
     let position = Vector2D {
-        X: 100.0,
-        Y: 100.0,
+        X: WIDTH / 2.0 - SIZE / 2.0,
+        Y: HEIGHT / 2.0 - SIZE / 2.0,
     };
 
     let size = Vector2D {
-        X: 200.0,
-        Y: 50.0,
+        X: SIZE,
+        Y: SIZE,
     };
 
-    let thickness = 10.0;
+    let thickness = 1.0;
 
     let color = LinearColor {
         R: 0.0,
