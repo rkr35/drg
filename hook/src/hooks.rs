@@ -115,44 +115,21 @@ impl<const JMP_LEN: usize> Drop for Detour<JMP_LEN> {
 }
 
 pub struct Hooks {
-    _process_event_hook: ProcessEventHook,
-    _draw_transition_hook: DrawTransitionHook,
+    _process_event: Detour<6>,
+    _draw_transition: Patch<*const c_void>,
 }
 
 impl Hooks {
     pub unsafe fn new(module: &win::Module) -> Result<Self, Error> {
         Ok(Self {
-            _process_event_hook: ProcessEventHook::new(module)?,
-            _draw_transition_hook: DrawTransitionHook::new(),
+            _process_event: Detour::new(module, &mut crate::PROCESS_EVENT, user::my_process_event as *const c_void)?,
+            
+            _draw_transition: {
+                const VTABLE_INDEX: usize = 0x310 / 8;
+                let address = (*(*crate::GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
+                DRAW_TRANSITION = *address;
+                Patch::new(address, user::my_draw_transition as *const c_void)
+            },
         })
-    }
-}
-
-struct ProcessEventHook {
-    _detour: Detour<6>,
-}
-
-impl ProcessEventHook {
-    pub unsafe fn new(module: &win::Module) -> Result<ProcessEventHook, Error> {
-        Ok(ProcessEventHook {
-            _detour: Detour::new(module, &mut crate::PROCESS_EVENT, user::my_process_event as *const c_void)?,
-        })
-    }
-}
-
-struct DrawTransitionHook {
-    _patch: Patch<*const c_void>,
-}
-
-impl DrawTransitionHook {
-    pub unsafe fn new() -> Self {
-        const VTABLE_INDEX: usize = 0x310 / 8;
-        let address = (*(*crate::GEngine).GameViewport.cast::<UObject>())
-            .vtable
-            .add(VTABLE_INDEX);
-        DRAW_TRANSITION = *address;
-        Self {
-            _patch: Patch::new(address, user::my_draw_transition as *const c_void),
-        }
     }
 }
