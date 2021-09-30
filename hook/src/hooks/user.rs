@@ -1,4 +1,3 @@
-use crate::hooks::{DRAW_TRANSITION, PROCESS_EVENT};
 use common::{self, EClassCastFlags, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
@@ -11,7 +10,7 @@ pub unsafe extern "C" fn my_process_event(
     parameters: *mut c_void,
 ) {
     type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
-    let original = mem::transmute::<*const c_void, ProcessEvent>(PROCESS_EVENT);
+    let original = mem::transmute::<*const c_void, ProcessEvent>(crate::PROCESS_EVENT);
     original(object, function, parameters);
 }
 
@@ -52,6 +51,6 @@ pub unsafe extern "C" fn my_draw_transition(
     );
 
     type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
-    let original = mem::transmute::<*const c_void, DrawTransition>(DRAW_TRANSITION);
+    let original = mem::transmute::<*const c_void, DrawTransition>(crate::hooks::DRAW_TRANSITION);
     original(game_viewport_client, canvas);
 }

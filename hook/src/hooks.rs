@@ -9,12 +9,10 @@ use patch::Patch;
 
 mod user;
 
-static mut PROCESS_EVENT: *mut c_void = ptr::null_mut();
 static mut DRAW_TRANSITION: *const c_void = ptr::null();
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
-    FindProcessEvent,
     NoCodeCave,
     CaveIsTooSmall(usize, usize),
 }
@@ -136,12 +134,8 @@ struct ProcessEventHook {
 
 impl ProcessEventHook {
     pub unsafe fn new(module: &win::Module) -> Result<ProcessEventHook, Error> {
-        const PATTERN: [Option<u8>; 19] = [Some(0x40), Some(0x55), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x55), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0xF0), Some(0x00), Some(0x00), Some(0x00)];
-
-        PROCESS_EVENT = module.find_mut(&PATTERN).ok_or(Error::FindProcessEvent)?;
-
         Ok(ProcessEventHook {
-            _detour: Detour::new(module, &mut PROCESS_EVENT, user::my_process_event as *const c_void)?,
+            _detour: Detour::new(module, &mut crate::PROCESS_EVENT, user::my_process_event as *const c_void)?,
         })
     }
 }
