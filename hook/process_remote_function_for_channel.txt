@@ -268,6 +268,8 @@ void UNetDriver::ProcessRemoteFunctionForChannel(UActorChannel* Ch, const FClass
 	}
 }
 
+48 8B C4 4C 89 48 20 4C 89 40 18 48 89 50 10 48 89 48 08 55 53 56 48 8D A8 F8 FC FF FF
+
 00007FF7AC93E6A0 | 48:8BC4                               | mov rax,rsp                                                            | void UNetDriver::ProcessRemoteFunctionForChannel(UActorChannel* Ch, const FClassNetCache* ClassCache, const FFieldNetCache* FieldCache, UObject* TargetObj, UNetConnection* Connection, UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack, const bool IsServer, const ERemoteFunctionSendPolicy SendPolicy)
 00007FF7AC93E6A3 | 4C:8948 20                            | mov qword ptr ds:[rax+20],r9                                           |
 00007FF7AC93E6A7 | 4C:8940 18                            | mov qword ptr ds:[rax+18],r8                                           | r8:&"pöØ­÷\x7F"
