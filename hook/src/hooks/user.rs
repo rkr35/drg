@@ -28,10 +28,7 @@ pub unsafe extern "C" fn my_draw_transition(
         Y: HEIGHT / 2.0 - SIZE / 2.0,
     };
 
-    let size = Vector2D {
-        X: SIZE,
-        Y: SIZE,
-    };
+    let size = Vector2D { X: SIZE, Y: SIZE };
 
     let thickness = 1.0;
 
@@ -42,13 +39,7 @@ pub unsafe extern "C" fn my_draw_transition(
         A: 1.0,
     };
 
-    Canvas::K2_DrawBox(
-        canvas,
-        position,
-        size,
-        thickness,
-        color,
-    );
+    Canvas::K2_DrawBox(canvas, position, size, thickness, color);
 
     type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
     let original = mem::transmute::<*const c_void, DrawTransition>(crate::hooks::DRAW_TRANSITION);
