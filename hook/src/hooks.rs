@@ -89,7 +89,7 @@ impl<const JMP_LEN: usize> Detour<JMP_LEN> {
     }
 
     unsafe fn create_jmp_patch(code_cave: &[u8], original: *const c_void) -> [u8; JMP_LEN] {
-        let mut patch = [0; JMP_LEN];
+        let mut patch = [0x90; JMP_LEN];
 
         // jmp code_cave
         patch[0] = 0xE9;
@@ -100,9 +100,6 @@ impl<const JMP_LEN: usize> Detour<JMP_LEN> {
             let relative_distance = destination.wrapping_sub(source) as u32;
             &relative_distance.to_le_bytes()
         });
-
-        // no-ops to patch cleaved instructions
-        (&mut patch[5..]).fill(0x90);
 
         patch
     }
