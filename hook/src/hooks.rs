@@ -18,6 +18,7 @@ pub enum Error {
 }
 
 pub struct Hooks {
+    _function_invoke: Detour<5>,
     _process_event: Detour<6>,
     _draw_transition: Patch<*const c_void>,
 }
@@ -25,6 +26,8 @@ pub struct Hooks {
 impl Hooks {
     pub unsafe fn new(module: &win::Module) -> Result<Self, Error> {
         Ok(Self {
+            _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
+            
             _process_event: Detour::new(module, &mut crate::PROCESS_EVENT, user::my_process_event as *const c_void)?,
             
             _draw_transition: {

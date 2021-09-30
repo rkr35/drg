@@ -1,8 +1,19 @@
-use common::{self, EClassCastFlags, UFunction, UObject};
+use common::{self, EClassCastFlags, FFrame, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::CoreUObject::{LinearColor, Vector2D};
 use sdk::Engine::{Canvas, GameViewportClient};
+
+pub unsafe extern "C" fn my_function_invoke(
+    function: *mut UFunction,
+    object: *mut UObject,
+    stack: *mut FFrame,
+    result: *mut c_void,
+) {
+    type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
+    let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
+    original(function, object, stack, result);
+}
 
 pub unsafe extern "C" fn my_process_event(
     object: *mut UObject,

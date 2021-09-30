@@ -387,7 +387,7 @@ impl UClass {
 // typedef void (*FNativeFuncPtr)(UObject* Context, FFrame& TheStack, RESULT_DECL);
 
 #[repr(C)]
-struct FFrame {
+pub struct FFrame {
     // TODO: fill in from UnrealEngine\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h
     // struct FFrame : public FOutputDevice
     replace_me: *const c_void,
