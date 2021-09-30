@@ -1,6 +1,6 @@
-use common::{self, win, UObject};
+use common::{win, UObject};
 use core::ffi::c_void;
-use core::mem::{self, ManuallyDrop};
+use core::mem::ManuallyDrop;
 use core::ptr;
 use core::slice;
 
