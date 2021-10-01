@@ -21,6 +21,7 @@ pub struct Hooks {
     _draw_transition: Patch<*const c_void>,
     _process_event: Detour<6>,
     _function_invoke: Detour<5>,
+    _process_remote_function_for_channel: Detour<7>,
 }
 
 impl Hooks {
@@ -36,6 +37,8 @@ impl Hooks {
             _process_event: Detour::new(module, &mut crate::PROCESS_EVENT, user::my_process_event as *const c_void)?,
             
             _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
+
+            _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
         })
     }
 }
