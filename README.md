@@ -5,7 +5,7 @@ Produce a .DLL that players can use to write native Unreal Engine modifications 
 
 ## Non-goals
 Use these restrictions to learn new things:
-* No Rust standard library (enforced through `#[no_std]`)
+* No Rust standard library (enforced through `#![no_std]`)
 * No third-party crate dependencies
 * No heap allocations
 * No panic branches (enforced through unlinkable panic_handler)
