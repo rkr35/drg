@@ -1,4 +1,4 @@
-use common::{win, UObject};
+use common::{win, UFunction, UObject};
 use core::ffi::c_void;
 use core::ptr;
 
@@ -15,6 +15,7 @@ static mut DRAW_TRANSITION: *const c_void = ptr::null();
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     Detour(#[from] detour::Error),
+    FindStatic(&'static str),
 }
 
 pub struct Hooks {
@@ -26,6 +27,8 @@ pub struct Hooks {
 
 impl Hooks {
     pub unsafe fn new(module: &win::Module) -> Result<Self, Error> {
+        Self::find_statics()?;
+
         Ok(Self {
             _draw_transition: {
                 const VTABLE_INDEX: usize = 0x310 / 8;
@@ -40,5 +43,19 @@ impl Hooks {
 
             _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
         })
+    }
+
+    unsafe fn find_statics() -> Result<(), Error> {
+        Ok(())
+    }
+
+    unsafe fn find_function(s: &'static str) -> Result<*mut UFunction, Error> {
+        let function = (*common::GUObjectArray).find_function(s);
+
+        if function.is_null() {
+            Err(Error::FindStatic(s))
+        } else {
+            Ok(function)
+        }
     }
 }
