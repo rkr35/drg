@@ -9,3 +9,6 @@ Use these restrictions to learn new things:
 * No third-party crate dependencies
 * No heap allocations
 * No panic branches (enforced through unlinkable panic_handler)
+
+## Contact
+Discord: sometimesAcat#2674
