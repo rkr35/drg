@@ -49,11 +49,12 @@ pub enum Error {
     Object(#[from] object::Error),
 }
 
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct TArray<T> {
     data: *const T,
-    len: i32,
-    capacity: i32,
+    pub len: i32,
+    pub capacity: i32,
 }
 
 impl<T> TArray<T> {
