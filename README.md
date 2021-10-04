@@ -11,4 +11,4 @@ Use these restrictions to learn new things:
 * No panic branches (enforced through unlinkable panic_handler)
 
 ## Contact
-Discord: sometimesAcat#2674
+Discord: boop#7751
