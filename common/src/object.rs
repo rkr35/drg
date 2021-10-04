@@ -393,8 +393,8 @@ pub struct FFrame {
     replace_me: *const c_void,
 }
 
-type FNativeFuncPtr =
-    unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut FFrame, Result: *const c_void);
+pub type FNativeFuncPtr =
+    unsafe extern "C" fn(Context: *mut UObject, TheStack: *mut FFrame, Result: *mut c_void);
 
 // 	// Scope required for scoped script stats.
 // 	{
@@ -452,7 +452,7 @@ pub struct UFunction {
     EventGraphFunction: *const UFunction,
     EventGraphCallOffset: i32,
     pub seen_count: u32,
-    Func: FNativeFuncPtr,
+    pub Func: FNativeFuncPtr,
 }
 
 impl_deref! { UFunction as UStruct }
