@@ -80,32 +80,10 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
     // 00007FF63919DE75   49:8BD7            mov rdx,r15
     // 00007FF63919DE78   48:8B01            mov rax,qword ptr ds:[rcx]
     // 00007FF63919DE7B   FF90 80020000      call qword ptr ds:[rax+280]
-    const PATTERN: [Option<u8>; 19] = [
-        Some(0x48),
-        Some(0x8B),
-        Some(0x0D),
-        None,
-        None,
-        None,
-        None,
-        Some(0x49),
-        Some(0x8B),
-        Some(0xD7),
-        Some(0x48),
-        Some(0x8B),
-        Some(0x01),
-        Some(0xFF),
-        Some(0x90),
-        Some(0x80),
-        Some(0x02),
-        Some(0x00),
-        Some(0x00),
-    ];
+    const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0x0D), None, None, None, None, Some(0x49), Some(0x8B), Some(0xD7), Some(0x48), Some(0x8B), Some(0x01), Some(0xFF), Some(0x90), Some(0x80), Some(0x02), Some(0x00), Some(0x00)];
     let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
     let relative_offset = mov_rcx_global_engine.add(3).cast::<u32>().read_unaligned();
-    GEngine = *mov_rcx_global_engine
-        .add(7 + relative_offset as usize)
-        .cast::<*const Engine>();
+    GEngine = *mov_rcx_global_engine.add(7 + relative_offset as usize).cast::<*const Engine>();
     common::log!("GEngine = {}", GEngine as usize);
     Ok(())
 }
