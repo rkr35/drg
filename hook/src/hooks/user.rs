@@ -22,21 +22,13 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
 }
 
-pub unsafe extern "C" fn my_function_invoke(
-    function: *mut UFunction,
-    object: *mut UObject,
-    stack: *mut FFrame,
-    result: *mut c_void,
-) {
+pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
     type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
     let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
     original(function, object, stack, result);
 }
 
-pub unsafe extern "C" fn my_draw_transition(
-    game_viewport_client: *mut GameViewportClient,
-    canvas: *mut Canvas,
-) {
+pub unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewportClient, canvas: *mut Canvas) {
     type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
     let original = mem::transmute::<*const c_void, DrawTransition>(crate::hooks::DRAW_TRANSITION);
     original(game_viewport_client, canvas);
