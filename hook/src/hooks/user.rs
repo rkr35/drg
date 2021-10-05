@@ -33,16 +33,6 @@ pub unsafe extern "C" fn my_function_invoke(
     original(function, object, stack, result);
 }
 
-pub unsafe extern "C" fn my_process_event(
-    object: *mut UObject,
-    function: *mut UFunction,
-    parameters: *mut c_void,
-) {
-    type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
-    let original = mem::transmute::<*const c_void, ProcessEvent>(crate::PROCESS_EVENT);
-    original(object, function, parameters);
-}
-
 pub unsafe extern "C" fn my_draw_transition(
     game_viewport_client: *mut GameViewportClient,
     canvas: *mut Canvas,

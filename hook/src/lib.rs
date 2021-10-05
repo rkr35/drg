@@ -24,7 +24,6 @@ enum Error {
     Module(#[from] win::module::Error),
     Hooks(#[from] hooks::Error),
     FindGlobalEngine,
-    FindProcessEvent,
     FindFunctionInvoke,
     FindProcessRemoteFunctionForChannel,
 }
@@ -32,7 +31,6 @@ enum Error {
 #[allow(non_upper_case_globals)]
 static mut GEngine: *const Engine = ptr::null();
 
-static mut PROCESS_EVENT: *mut c_void = ptr::null_mut();
 static mut FUNCTION_INVOKE: *mut c_void = ptr::null_mut();
 static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
 
@@ -72,7 +70,6 @@ unsafe fn run() -> Result<(), Error> {
 unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     common::init_globals(module)?;
     find_global_engine(module)?;
-    find_process_event(module)?;
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
     Ok(())
@@ -110,13 +107,6 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
         .add(7 + relative_offset as usize)
         .cast::<*const Engine>();
     common::log!("GEngine = {}", GEngine as usize);
-    Ok(())
-}
-
-unsafe fn find_process_event(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 19] = [Some(0x40), Some(0x55), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x55), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0xF0), Some(0x00), Some(0x00), Some(0x00)];
-    PROCESS_EVENT = module.find_mut(&PATTERN).ok_or(Error::FindProcessEvent)?;
-    common::log!("PROCESS_EVENT = {}", PROCESS_EVENT as usize);
     Ok(())
 }
 
