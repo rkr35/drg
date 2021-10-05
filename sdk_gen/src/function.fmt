@@ -1,4 +1,4 @@
-    pub unsafe fn {name}(this: *mut Self, {inputs}) {outputs}{{
+    pub unsafe fn {name}(&mut self, {inputs}) {outputs}{{
         #[repr(C)]
         struct Parameters {{{declare_struct_fields}
         }}
@@ -12,5 +12,5 @@
             FUNCTION = (*common::GUObjectArray).find_function("{full_name}");
         }}
 
-        common::UObject::process_event(this.cast(), FUNCTION, (&mut parameters as *mut Parameters).cast());{return_values}
+        common::UObject::process_event((self as *mut Self).cast(), FUNCTION, (&mut parameters as *mut Parameters).cast());{return_values}
     }}
