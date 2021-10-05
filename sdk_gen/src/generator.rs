@@ -258,6 +258,7 @@ struct StructGenerator<W: Write> {
     bitfields: List<List<*const FBoolProperty, 64>, 64>,
     last_bitfield_offset: Option<i32>,
     is_blueprint_generated: bool,
+    inherited_type: List<u8, 128>,
 }
 
 impl<W: Write> StructGenerator<W> {
@@ -275,6 +276,7 @@ impl<W: Write> StructGenerator<W> {
             bitfields: List::new(),
             last_bitfield_offset: None,
             is_blueprint_generated,
+            inherited_type: List::new(),
         }
     }
 
@@ -290,6 +292,8 @@ impl<W: Write> StructGenerator<W> {
         if !self.bitfields.is_empty() {
             self.add_bitfield_getters_and_setters()?;
         }
+
+        self.add_deref_impls()?;
 
         self.add_functions()?;
 
@@ -337,17 +341,23 @@ impl<W: Write> StructGenerator<W> {
             && (*base.cast::<UClass>()).is_blueprint_generated();
 
         if is_base_blueprint_generated || base_package == self.package {
+            write!(self.inherited_type, "{}", base_name)?;
+            
             writeln!(
                 self.out,
                 "    // offset: 0, size: {}\n    base: {},\n",
                 self.offset, base_name
             )?;
         } else {
+            let short_name = (*base_package).short_name();
+
+            write!(self.inherited_type, "crate::{}::{}", short_name, base_name)?;
+
             writeln!(
                 self.out,
                 "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
                 self.offset,
-                (*base_package).short_name(),
+                short_name,
                 base_name
             )?;
         }
@@ -575,6 +585,19 @@ impl<W: Write> StructGenerator<W> {
         }
 
         writeln!(self.out, "}}\n")?;
+
+        Ok(())
+    }
+
+    unsafe fn add_deref_impls(&mut self) -> Result<(), Error> {
+        if !self.inherited_type.is_empty() {
+            writeln!(
+                self.out,
+                include_str!("deref.fmt"),
+                child = (*self.structure).name(),
+                parent = str::from_utf8_unchecked(self.inherited_type.as_slice()),
+            )?;
+        }
 
         Ok(())
     }

@@ -1,0 +1,13 @@
+impl core::ops::Deref for {child} {{
+    type Target = {parent};
+
+    fn deref(&self) -> &Self::Target {{
+        &self.base
+    }}
+}}
+
+impl core::ops::DerefMut for {child} {{
+    fn deref_mut(&mut self) -> &mut Self::Target {{
+        &mut self.base
+    }}
+}}
