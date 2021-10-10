@@ -37,13 +37,7 @@ pub unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewp
     original(game_viewport_client, canvas);
 }
 
-pub unsafe extern "C" fn my_locally_controlled(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    (*super::IS_LOCALLY_CONTROLLED.as_ptr())(context, stack, result);
-}
-
 pub unsafe extern "C" fn my_on_item_amount_changed(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    (*super::ON_ITEM_AMOUNT_CHANGED.as_ptr())(context, stack, result);
-
     let widget = context.cast::<AmmoCountWidget>();
 
     {
@@ -54,11 +48,21 @@ pub unsafe extern "C" fn my_on_item_amount_changed(context: *mut UObject, stack:
     
     let item = (*widget).Item;
 
-    if weapon::is_ammo_driven_weapon(item) {
+    if weapon::is_ammo_driven_weapon(item.cast()) {
         let weapon = item.cast();
         weapon::replenish_ammo(weapon);
+    }
+
+    (*super::ON_ITEM_AMOUNT_CHANGED.as_ptr())(context, stack, result);
+}
+
+pub unsafe extern "C" fn my_get_item_name(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
+    if weapon::is_ammo_driven_weapon(context) {
+        let weapon = context.cast();
         weapon::no_recoil(weapon);
     }
+
+    (*super::GET_ITEM_NAME.as_ptr())(context, stack, result);
 }
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();

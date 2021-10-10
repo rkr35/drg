@@ -1,5 +1,5 @@
-use common::UFunction;
-use sdk::FSD::{AmmoDrivenWeapon, HitscanBaseComponent, Item, RandRange};
+use common::{UFunction, UObject};
+use sdk::FSD::{AmmoDrivenWeapon, HitscanBaseComponent, RandRange};
 
 pub unsafe fn no_spread(hitscan: *mut HitscanBaseComponent) {
     (*hitscan).SpreadPerShot = 0.0;
@@ -36,9 +36,9 @@ pub unsafe fn is_pickaxe_damage_target(function: *mut UFunction) -> bool {
     function == SERVER_DAMAGE_TARGET
 }
 
-pub unsafe fn is_ammo_driven_weapon(item: *mut Item) -> bool {
+pub unsafe fn is_ammo_driven_weapon(object: *mut UObject) -> bool {
     use crate::hooks::*;
-    (*item.cast::<UObject>()).is(AMMO_DRIVEN_WEAPON)
+    (*object).is(AMMO_DRIVEN_WEAPON)
 }
 
 pub unsafe fn replenish_ammo(weapon: *mut AmmoDrivenWeapon) {

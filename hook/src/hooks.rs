@@ -12,8 +12,8 @@ use patch::Patch;
 mod user;
 
 static mut DRAW_TRANSITION: *const c_void = ptr::null();
-static mut IS_LOCALLY_CONTROLLED: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 static mut ON_ITEM_AMOUNT_CHANGED: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
+static mut GET_ITEM_NAME: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 
 static mut AMMO_DRIVEN_WEAPON: *const UClass = ptr::null();
 
@@ -33,11 +33,11 @@ pub enum Error {
 }
 
 pub struct Hooks {
-    _draw_transition: Patch<*const c_void>,
-    _function_invoke: Detour<5>,
     _process_remote_function_for_channel: Detour<7>,
-    _is_locally_controlled: UFunctionHook,
+    _function_invoke: Detour<5>,
+    _draw_transition: Patch<*const c_void>,
     _on_item_amount_changed: UFunctionHook,
+    _get_item_name: UFunctionHook,
 }
 
 impl Hooks {
@@ -45,16 +45,16 @@ impl Hooks {
         Self::find_statics()?;
 
         Ok(Self {
+            _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
+            _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
             _draw_transition: {
                 const VTABLE_INDEX: usize = 0x310 / 8;
                 let address = (*(*crate::GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
                 DRAW_TRANSITION = *address;
                 Patch::new(address, user::my_draw_transition as *const c_void)
             },
-            _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
-            _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
-            _is_locally_controlled: UFunctionHook::new("Function /Script/Engine.Controller.IsLocalController", IS_LOCALLY_CONTROLLED.as_mut_ptr(), user::my_locally_controlled)?,
             _on_item_amount_changed: UFunctionHook::new("Function /Script/FSD.AmmoCountWidget.OnItemAmountChanged", ON_ITEM_AMOUNT_CHANGED.as_mut_ptr(), user::my_on_item_amount_changed)?,
+            _get_item_name: UFunctionHook::new("Function /Script/FSD.Item.GetItemName", GET_ITEM_NAME.as_mut_ptr(), user::my_get_item_name)?,
         })
     }
 
