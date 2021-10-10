@@ -2,7 +2,6 @@ use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-use sdk::FSD::{AmmoCountWidget};
 
 mod weapon;
 
@@ -13,10 +12,10 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
     if weapon::is_server_register_hit(function) {
         weapon::no_spread(object.cast());
 
-        for _ in 0..4 {
-            original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
-        }
-    } else if weapon::is_pickaxe_damage_target(function) {
+        // for _ in 0..4 {
+        //     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
+        // }
+    } else if function == super::SERVER_DAMAGE_TARGET {
         for _ in 0..4 {
             original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
         }
@@ -38,30 +37,12 @@ pub unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewp
 }
 
 pub unsafe extern "C" fn my_on_item_amount_changed(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    let widget = context.cast::<AmmoCountWidget>();
-
-    {
-        let character = (*widget).Character;
-        let inventory = (*character).InventoryComponent;
-        (*inventory).Flares = 4;
-    }
-    
-    let item = (*widget).Item;
-
-    if weapon::is_ammo_driven_weapon(item.cast()) {
-        let weapon = item.cast();
-        weapon::replenish_ammo(weapon);
-    }
-
+    weapon::on_item_amount_changed(context.cast());
     (*super::ON_ITEM_AMOUNT_CHANGED.as_ptr())(context, stack, result);
 }
 
 pub unsafe extern "C" fn my_get_item_name(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    if weapon::is_ammo_driven_weapon(context) {
-        let weapon = context.cast();
-        weapon::no_recoil(weapon);
-    }
-
+    weapon::on_item_equipped(context.cast());
     (*super::GET_ITEM_NAME.as_ptr())(context, stack, result);
 }
 

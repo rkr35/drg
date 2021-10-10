@@ -1,5 +1,27 @@
-use common::{UFunction, UObject};
-use sdk::FSD::{AmmoDrivenWeapon, HitscanBaseComponent, RandRange};
+use common::UFunction;
+use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, HitscanBaseComponent, Item, RandRange};
+
+pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
+    use crate::hooks::*;
+
+    let character = (*widget).Character;
+    let inventory = (*character).InventoryComponent;
+    (*inventory).Flares = 4;
+    
+    let item = (*widget).Item;
+
+    if (*item.cast::<UObject>()).is(AMMO_DRIVEN_WEAPON) {
+        replenish_ammo(item.cast());
+    }
+}
+
+pub unsafe fn on_item_equipped(item: *mut Item) {
+    use crate::hooks::*;
+
+    if (*item.cast::<UObject>()).is(AMMO_DRIVEN_WEAPON) {
+        no_recoil(item.cast());
+    }
+}
 
 pub unsafe fn no_spread(hitscan: *mut HitscanBaseComponent) {
     (*hitscan).SpreadPerShot = 0.0;
@@ -29,16 +51,6 @@ pub unsafe fn is_server_register_hit(function: *mut UFunction) -> bool {
     function == SERVER_REGISTER_RICOCHET_HIT ||
     function == SERVER_REGISTER_RICOCHET_HIT_TERRAIN ||
     function == SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE
-}
-
-pub unsafe fn is_pickaxe_damage_target(function: *mut UFunction) -> bool {
-    use crate::hooks::*;
-    function == SERVER_DAMAGE_TARGET
-}
-
-pub unsafe fn is_ammo_driven_weapon(object: *mut UObject) -> bool {
-    use crate::hooks::*;
-    (*object).is(AMMO_DRIVEN_WEAPON)
 }
 
 pub unsafe fn replenish_ammo(weapon: *mut AmmoDrivenWeapon) {
