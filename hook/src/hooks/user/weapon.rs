@@ -1,5 +1,5 @@
 use common::UFunction;
-use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, HitscanBaseComponent, Item, RandRange};
+use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem};
 
 pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     use crate::hooks::*;
@@ -18,8 +18,13 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
 pub unsafe fn on_item_equipped(item: *mut Item) {
     use crate::hooks::*;
 
-    if (*item.cast::<UObject>()).is(AMMO_DRIVEN_WEAPON) {
+    let item = item.cast::<UObject>();
+
+    if (*item).is(AMMO_DRIVEN_WEAPON) {
         no_recoil(item.cast());
+    } else if (*item).is(THROWN_GRENADE_ITEM) {
+        let item = item.cast::<ThrownGrenadeItem>();
+        (*item).Server_Resupply(1.0);
     }
 }
 
