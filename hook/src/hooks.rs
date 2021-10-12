@@ -25,6 +25,7 @@ static mut SERVER_REGISTER_HIT_DESTRUCTABLE: *mut UFunction = ptr::null_mut();
 static mut SERVER_REGISTER_RICOCHET_HIT: *mut UFunction = ptr::null_mut();
 static mut SERVER_REGISTER_RICOCHET_HIT_TERRAIN: *mut UFunction = ptr::null_mut();
 static mut SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE: *mut UFunction = ptr::null_mut();
+static mut SERVER_SET_FALL_VELOCITY: *mut UFunction = ptr::null_mut();
 
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
@@ -69,6 +70,7 @@ impl Hooks {
         SERVER_REGISTER_RICOCHET_HIT_TERRAIN = find("Function /Script/FSD.HitscanComponent.Server_RegisterRicochetHit_Terrain")?.cast();
         SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE = find("Function /Script/FSD.HitscanComponent.Server_RegisterRicochetHit_Destructable")?.cast();
         SERVER_DAMAGE_TARGET = find("Function /Script/FSD.PickaxeItem.Server_DamageTarget")?.cast();
+        SERVER_SET_FALL_VELOCITY = find("Function /Script/FSD.FallingStateComponent.Server_SetFallVelocity")?.cast();
         Ok(())
     }
 }

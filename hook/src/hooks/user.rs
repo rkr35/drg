@@ -19,6 +19,15 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
         for _ in 0..4 {
             original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
         }
+    } else if function == super::SERVER_SET_FALL_VELOCITY {
+        #[allow(non_snake_case)]
+        #[repr(C)]
+        struct Parameters {
+            Velocity: f32, 
+        }
+
+        let p = parms.cast::<Parameters>();
+        (*p).Velocity = 0.0;
     }
 
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
