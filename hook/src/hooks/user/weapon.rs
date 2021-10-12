@@ -8,9 +8,9 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     let inventory = (*character).InventoryComponent;
     (*inventory).Flares = 4;
     
-    let item = (*widget).Item;
+    let item = (*widget).Item.cast::<UObject>();
 
-    if (*item.cast::<UObject>()).is(AMMO_DRIVEN_WEAPON) {
+    if (*item).is(AMMO_DRIVEN_WEAPON) {
         replenish_ammo(item.cast());
     }
 }
