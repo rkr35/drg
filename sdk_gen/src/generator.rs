@@ -259,10 +259,11 @@ struct StructGenerator<W: Write> {
     last_bitfield_offset: Option<i32>,
     is_blueprint_generated: bool,
     inherited_type: List<u8, 128>,
+    name: CleanedName,
 }
 
 impl<W: Write> StructGenerator<W> {
-    pub fn new(
+    pub unsafe fn new(
         structure: *mut UStruct,
         package: *const UPackage,
         out: W,
@@ -277,6 +278,7 @@ impl<W: Write> StructGenerator<W> {
             last_bitfield_offset: None,
             is_blueprint_generated,
             inherited_type: List::new(),
+            name: CleanedName::new((*structure).NamePrivate),
         }
     }
 
@@ -310,7 +312,7 @@ impl<W: Write> StructGenerator<W> {
                 *self.structure,
                 (*self.structure).PropertiesSize,
                 (*self.structure).MinAlignment,
-                (*self.structure).name()
+                self.name,
             )?;
         } else {
             self.write_header_inherited(base)?;
@@ -330,7 +332,7 @@ impl<W: Write> StructGenerator<W> {
             (*self.structure).PropertiesSize,
             self.offset,
             (*self.structure).MinAlignment,
-            (*self.structure).name()
+            self.name,
         )?;
 
         let base_name = (*base).name();
@@ -567,7 +569,7 @@ impl<W: Write> StructGenerator<W> {
     }
 
     unsafe fn add_bitfield_getters_and_setters(&mut self) -> Result<(), Error> {
-        writeln!(self.out, "impl {} {{", (*self.structure).name())?;
+        writeln!(self.out, "impl {} {{", self.name)?;
 
         for bitfield in self.bitfields.iter() {
             for &property in bitfield.iter() {
@@ -594,7 +596,7 @@ impl<W: Write> StructGenerator<W> {
             writeln!(
                 self.out,
                 include_str!("deref.fmt"),
-                child = (*self.structure).name(),
+                child = self.name,
                 parent = str::from_utf8_unchecked(self.inherited_type.as_slice()),
             )?;
         }
@@ -610,7 +612,7 @@ impl<W: Write> StructGenerator<W> {
             if (*property).fast_is(EClassCastFlags::CASTCLASS_UFunction) {
                 if !has_at_least_one_function {
                     has_at_least_one_function = true;
-                    writeln!(self.out, "impl {} {{", (*self.structure).name())?;
+                    writeln!(self.out, "impl {} {{", self.name)?;
                 }
 
                 self.process_function(property.cast())?;
