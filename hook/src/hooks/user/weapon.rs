@@ -7,11 +7,15 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     let character = (*widget).Character;
     let inventory = (*character).InventoryComponent;
     (*inventory).Flares = 4;
-    
+
     let item = (*widget).Item.cast::<UObject>();
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
-        replenish_ammo(item.cast());
+        let weapon = item.cast::<AmmoDrivenWeapon>();
+        
+        if (*weapon).AmmoCount == 0 {
+            (*weapon).ClipCount = (*weapon).ClipSize;
+        }
     }
 }
 
@@ -56,9 +60,4 @@ pub unsafe fn is_server_register_hit(function: *mut UFunction) -> bool {
     function == SERVER_REGISTER_RICOCHET_HIT ||
     function == SERVER_REGISTER_RICOCHET_HIT_TERRAIN ||
     function == SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE
-}
-
-pub unsafe fn replenish_ammo(weapon: *mut AmmoDrivenWeapon) {
-    (*weapon).ClipCount = (*weapon).ClipSize;
-    (*weapon).AmmoCount = 2 * (*weapon).ClipSize;
 }
