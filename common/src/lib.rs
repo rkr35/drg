@@ -94,10 +94,32 @@ pub struct FWeakObjectPtr {
     ObjectSerialNumber: i32,
 }
 
+impl FWeakObjectPtr {
+    pub unsafe fn get(&self) -> *mut UObject {
+        if self.ObjectSerialNumber == 0 || self.ObjectIndex < 0 {
+            ptr::null_mut()
+        } else {
+            let object_item = (*GUObjectArray).index_to_object(self.ObjectIndex);
+    
+            if object_item.is_null() || (*object_item).SerialNumber != self.ObjectSerialNumber || !(*object_item).is_valid() {
+                ptr::null_mut()
+            } else {
+                (*object_item).Object
+            }
+        }
+    } 
+}
+
 #[repr(C)]
 pub struct TWeakObjectPtr<T> {
     base: FWeakObjectPtr,
-    _marker: PhantomData<*const T>,
+    _marker: PhantomData<*mut T>,
+}
+
+impl<T> TWeakObjectPtr<T> {
+    pub unsafe fn get(&self) -> *mut T {
+        self.base.get().cast()
+    }
 }
 
 #[repr(C)]

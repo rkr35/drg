@@ -156,6 +156,16 @@ impl FUObjectArray {
         Err(Error::UnableToFind(name))
     }
 
+    pub unsafe fn index_to_object(&self, index: i32) -> *const FUObjectItem {
+        if index < self.ObjObjects.NumElements {
+            let index = index as usize;
+            let chunk = *self.ObjObjects.Objects.add(index / NumElementsPerChunk);
+            chunk.add(index % NumElementsPerChunk)
+        } else {
+            ptr::null()
+        }
+    }
+
     pub fn iter(&self) -> ObjectIterator {
         ObjectIterator {
             chunks: self.ObjObjects.Objects,
@@ -201,10 +211,26 @@ pub struct TUObjectArray {
 
 #[repr(C)]
 pub struct FUObjectItem {
-    Object: *mut UObject,
+    pub Object: *mut UObject,
     Flags: i32,
     ClusterRootIndex: i32,
-    SerialNumber: i32,
+    pub SerialNumber: i32,
+}
+
+impl FUObjectItem {
+    pub fn is_unreachable(&self) -> bool {
+        const UNREACHABLE: i32 = 1 << 28;
+        self.Flags & UNREACHABLE == UNREACHABLE
+    }
+
+    pub fn is_pending_kill(&self) -> bool {
+        const PENDING_KILL: i32 = 1 << 29;
+        self.Flags & PENDING_KILL == PENDING_KILL
+    }
+
+    pub fn is_valid(&self) -> bool {
+        !self.is_unreachable() && !self.is_pending_kill()
+    }
 }
 
 #[macro_export]
