@@ -839,6 +839,7 @@ impl<W: Write> StructGenerator<W> {
             declare_struct_fields = DeclareStructFields(&parameters),
             init_struct_fields = InitStructFields(&parameters),
             return_values = ReturnValues(&parameters),
+            flags = (*function).FunctionFlags,
         )?;
 
         Ok(())

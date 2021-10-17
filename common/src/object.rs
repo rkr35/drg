@@ -442,7 +442,7 @@ pub type FNativeFuncPtr =
 #[repr(C)]
 pub struct UFunction {
     base: UStruct,
-    FunctionFlags: u32,
+    pub FunctionFlags: EFunctionFlags,
     NumParms: u8,
     ParmsSize: u16,
     ReturnValueOffset: u16,
@@ -453,6 +453,170 @@ pub struct UFunction {
     EventGraphCallOffset: i32,
     pub seen_count: u32,
     pub Func: FNativeFuncPtr,
+}
+
+#[repr(transparent)]
+pub struct EFunctionFlags(u32);
+
+impl EFunctionFlags {
+    pub const FUNC_Final: Self = Self(0x1);
+    pub const FUNC_RequiredAPI: Self = Self(0x2);
+    pub const FUNC_BlueprintAuthorityOnly: Self = Self(0x4);
+    pub const FUNC_BlueprintCosmetic: Self = Self(0x8);
+    pub const FUNC_Net: Self = Self(0x40);
+    pub const FUNC_NetReliable: Self = Self(0x80);
+    pub const FUNC_NetRequest: Self = Self(0x100);
+    pub const FUNC_Exec: Self = Self(0x200);
+    pub const FUNC_Native: Self = Self(0x400);
+    pub const FUNC_Event: Self = Self(0x800);
+    pub const FUNC_NetResponse: Self = Self(0x1000);
+    pub const FUNC_Static: Self = Self(0x2000);
+    pub const FUNC_NetMulticast: Self = Self(0x4000);
+    pub const FUNC_UbergraphFunction: Self = Self(0x8000);
+    pub const FUNC_MulticastDelegate: Self = Self(0x10000);
+    pub const FUNC_Public: Self = Self(0x20000);
+    pub const FUNC_Private: Self = Self(0x40000);
+    pub const FUNC_Protected: Self = Self(0x80000);
+    pub const FUNC_Delegate: Self = Self(0x100000);
+    pub const FUNC_NetServer: Self = Self(0x200000);
+    pub const FUNC_HasOutParms: Self = Self(0x400000);
+    pub const FUNC_HasDefaults: Self = Self(0x800000);
+    pub const FUNC_NetClient: Self = Self(0x1000000);
+    pub const FUNC_DLLImport: Self = Self(0x2000000);
+    pub const FUNC_BlueprintCallable: Self = Self(0x4000000);
+    pub const FUNC_BlueprintEvent: Self = Self(0x8000000);
+    pub const FUNC_BlueprintPure: Self = Self(0x10000000);
+    pub const FUNC_EditorOnly: Self = Self(0x20000000);
+    pub const FUNC_Const: Self = Self(0x40000000);
+    pub const FUNC_NetValidate: Self = Self(0x80000000);
+}
+
+impl Display for EFunctionFlags {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        let flags = self.0;
+
+        if flags & Self::FUNC_Final.0 == Self::FUNC_Final.0 {
+            write!(f, "FUNC_Final, ")?;
+        }
+        
+        if flags & Self::FUNC_RequiredAPI.0 == Self::FUNC_RequiredAPI.0 {
+            write!(f, "FUNC_RequiredAPI, ")?;
+        }
+        
+        if flags & Self::FUNC_BlueprintAuthorityOnly.0 == Self::FUNC_BlueprintAuthorityOnly.0 {
+            write!(f, "FUNC_BlueprintAuthorityOnly, ")?;
+        }
+        
+        if flags & Self::FUNC_BlueprintCosmetic.0 == Self::FUNC_BlueprintCosmetic.0 {
+            write!(f, "FUNC_BlueprintCosmetic, ")?;
+        }
+        
+        if flags & Self::FUNC_Net.0 == Self::FUNC_Net.0 {
+            write!(f, "FUNC_Net, ")?;
+        }
+        
+        if flags & Self::FUNC_NetReliable.0 == Self::FUNC_NetReliable.0 {
+            write!(f, "FUNC_NetReliable, ")?;
+        }
+        
+        if flags & Self::FUNC_NetRequest.0 == Self::FUNC_NetRequest.0 {
+            write!(f, "FUNC_NetRequest, ")?;
+        }
+        
+        if flags & Self::FUNC_Exec.0 == Self::FUNC_Exec.0 {
+            write!(f, "FUNC_Exec, ")?;
+        }
+        
+        if flags & Self::FUNC_Native.0 == Self::FUNC_Native.0 {
+            write!(f, "FUNC_Native, ")?;
+        }
+        
+        if flags & Self::FUNC_Event.0 == Self::FUNC_Event.0 {
+            write!(f, "FUNC_Event, ")?;
+        }
+        
+        if flags & Self::FUNC_NetResponse.0 == Self::FUNC_NetResponse.0 {
+            write!(f, "FUNC_NetResponse, ")?;
+        }
+        
+        if flags & Self::FUNC_Static.0 == Self::FUNC_Static.0 {
+            write!(f, "FUNC_Static, ")?;
+        }
+        
+        if flags & Self::FUNC_NetMulticast.0 == Self::FUNC_NetMulticast.0 {
+            write!(f, "FUNC_NetMulticast, ")?;
+        }
+        
+        if flags & Self::FUNC_UbergraphFunction.0 == Self::FUNC_UbergraphFunction.0 {
+            write!(f, "FUNC_UbergraphFunction, ")?;
+        }
+        
+        if flags & Self::FUNC_MulticastDelegate.0 == Self::FUNC_MulticastDelegate.0 {
+            write!(f, "FUNC_MulticastDelegate, ")?;
+        }
+        
+        if flags & Self::FUNC_Public.0 == Self::FUNC_Public.0 {
+            write!(f, "FUNC_Public, ")?;
+        }
+        
+        if flags & Self::FUNC_Private.0 == Self::FUNC_Private.0 {
+            write!(f, "FUNC_Private, ")?;
+        }
+        
+        if flags & Self::FUNC_Protected.0 == Self::FUNC_Protected.0 {
+            write!(f, "FUNC_Protected, ")?;
+        }
+        
+        if flags & Self::FUNC_Delegate.0 == Self::FUNC_Delegate.0 {
+            write!(f, "FUNC_Delegate, ")?;
+        }
+        
+        if flags & Self::FUNC_NetServer.0 == Self::FUNC_NetServer.0 {
+            write!(f, "FUNC_NetServer, ")?;
+        }
+        
+        if flags & Self::FUNC_HasOutParms.0 == Self::FUNC_HasOutParms.0 {
+            write!(f, "FUNC_HasOutParms, ")?;
+        }
+        
+        if flags & Self::FUNC_HasDefaults.0 == Self::FUNC_HasDefaults.0 {
+            write!(f, "FUNC_HasDefaults, ")?;
+        }
+        
+        if flags & Self::FUNC_NetClient.0 == Self::FUNC_NetClient.0 {
+            write!(f, "FUNC_NetClient, ")?;
+        }
+        
+        if flags & Self::FUNC_DLLImport.0 == Self::FUNC_DLLImport.0 {
+            write!(f, "FUNC_DLLImport, ")?;
+        }
+        
+        if flags & Self::FUNC_BlueprintCallable.0 == Self::FUNC_BlueprintCallable.0 {
+            write!(f, "FUNC_BlueprintCallable, ")?;
+        }
+        
+        if flags & Self::FUNC_BlueprintEvent.0 == Self::FUNC_BlueprintEvent.0 {
+            write!(f, "FUNC_BlueprintEvent, ")?;
+        }
+        
+        if flags & Self::FUNC_BlueprintPure.0 == Self::FUNC_BlueprintPure.0 {
+            write!(f, "FUNC_BlueprintPure, ")?;
+        }
+        
+        if flags & Self::FUNC_EditorOnly.0 == Self::FUNC_EditorOnly.0 {
+            write!(f, "FUNC_EditorOnly, ")?;
+        }
+        
+        if flags & Self::FUNC_Const.0 == Self::FUNC_Const.0 {
+            write!(f, "FUNC_Const, ")?;
+        }
+        
+        if flags & Self::FUNC_NetValidate.0 == Self::FUNC_NetValidate.0 {
+            write!(f, "FUNC_NetValidate, ")?;
+        }
+        
+        Ok(())
+    }
 }
 
 impl_deref! { UFunction as UStruct }

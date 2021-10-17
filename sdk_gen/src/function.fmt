@@ -1,3 +1,4 @@
+    // {flags}
     pub unsafe fn {name}(&mut self, {inputs}) {outputs}{{
         #[repr(C)]
         struct Parameters {{{declare_struct_fields}
