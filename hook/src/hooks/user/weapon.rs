@@ -4,15 +4,11 @@ use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, HitscanBaseComponent, Item, Ra
 pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     use crate::hooks::*;
 
-    let character = (*widget).Character;
-    let inventory = (*character).InventoryComponent;
-    (*inventory).Flares = 4;
-
     let item = (*widget).Item.cast::<UObject>();
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
         let weapon = item.cast::<AmmoDrivenWeapon>();
-        
+
         if (*weapon).AmmoCount == 0 {
             (*weapon).ClipCount = (*weapon).ClipSize;
         }
