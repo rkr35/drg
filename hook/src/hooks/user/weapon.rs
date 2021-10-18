@@ -8,9 +8,11 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
         let weapon = item.cast::<AmmoDrivenWeapon>();
-
-        if (*weapon).AmmoCount == 0 {
-            (*weapon).ClipCount = (*weapon).ClipSize;
+        
+        (*weapon).ClipCount = (*weapon).ClipSize;
+        
+        if (*weapon).AmmoCount > 0 {
+            (*weapon).AmmoCount -= 1;
         }
     }
 }
