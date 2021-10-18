@@ -509,7 +509,7 @@ impl<W: Write> StructGenerator<W> {
     unsafe fn add_pad_field(&mut self, from_offset: i32, to_offset: i32) -> Result<(), Error> {
         writeln!(
             self.out,
-            "    // offset: {offset}, size: {size}\n    pad_at_{offset}: [u8; {size}],\n",
+            "    // offset: {offset}, size: {size}\n    pub pad_at_{offset}: [u8; {size}],\n",
             offset = from_offset,
             size = to_offset - from_offset,
         )?;
