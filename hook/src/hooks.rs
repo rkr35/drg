@@ -15,6 +15,7 @@ static mut DRAW_TRANSITION: *const c_void = ptr::null();
 static mut ON_ITEM_AMOUNT_CHANGED: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 static mut GET_ITEM_NAME: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 static mut ON_FLARE: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
+static mut ON_KEYPRESS_INSERT: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 
 static mut AMMO_DRIVEN_WEAPON: *const UClass = ptr::null();
 static mut THROWN_GRENADE_ITEM: *const UClass = ptr::null();
@@ -42,6 +43,7 @@ pub struct Hooks {
     _on_item_amount_changed: UFunctionHook,
     _get_item_name: UFunctionHook,
     _on_flare: UFunctionHook,
+    _on_keypress_insert: UFunctionHook,
 }
 
 impl Hooks {
@@ -60,6 +62,7 @@ impl Hooks {
             _on_item_amount_changed: UFunctionHook::new("Function /Script/FSD.AmmoCountWidget.OnItemAmountChanged", ON_ITEM_AMOUNT_CHANGED.as_mut_ptr(), user::my_on_item_amount_changed)?,
             _get_item_name: UFunctionHook::new("Function /Script/FSD.Item.GetItemName", GET_ITEM_NAME.as_mut_ptr(), user::my_get_item_name)?,
             _on_flare: UFunctionHook::new("Function /Game/Character/Tutorials/Tutorial_Hint_Flares.Tutorial_Hint_Flares_C.OnFlareThrown", ON_FLARE.as_mut_ptr(), user::my_on_flare)?,
+            _on_keypress_insert: UFunctionHook::new("Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpActEvt_Insert_K2Node_InputKeyEvent", ON_KEYPRESS_INSERT.as_mut_ptr(), user::my_on_keypress_insert)?,
         })
     }
 

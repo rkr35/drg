@@ -2,7 +2,7 @@ use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-use sdk::FSD::TutorialComponent;
+use sdk::FSD::{PlayerCharacter, TutorialComponent};
 
 mod weapon;
 
@@ -62,6 +62,13 @@ pub unsafe extern "C" fn my_on_flare(context: *mut UObject, stack: *mut FFrame, 
     let inv = (*character).InventoryComponent;
     (*inv).FlareProductionTime = 0.0;
     (*super::ON_FLARE.as_ptr())(context, stack, result);
+}
+
+pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {    
+    let character = context.cast::<PlayerCharacter>();
+    let health = (*character).HealthComponent;
+    (*health).ToggleCanTakeDamage();
+    (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
