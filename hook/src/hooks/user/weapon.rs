@@ -1,5 +1,5 @@
 use common::UFunction;
-use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem};
+use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, DoubleDrillItem, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem};
 
 pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     use crate::hooks::*;
@@ -8,11 +8,17 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
         let weapon = item.cast::<AmmoDrivenWeapon>();
-        
+
         (*weapon).ClipCount = (*weapon).ClipSize;
         
         if (*weapon).AmmoCount > 0 {
             (*weapon).AmmoCount -= 1;
+        }
+    } else if (*item).is(DOUBLE_DRILL_ITEM) {
+        let drill = item.cast::<DoubleDrillItem>();
+
+        if (*drill).Fuel < 2.0 {
+            (*drill).Fuel = 2.0;
         }
     }
 }
