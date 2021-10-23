@@ -29,7 +29,16 @@ pub unsafe fn on_item_equipped(item: *mut Item) {
     let item = item.cast::<UObject>();
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
-        no_recoil(item.cast());
+        let weapon = item.cast();
+
+        no_recoil(weapon);
+
+        let fire = (*weapon).WeaponFire.cast::<UObject>();
+        
+        if (*fire).is(HITSCAN_BASE_COMPONENT) {
+            no_spread(fire.cast());
+        }
+
     } else if (*item).is(THROWN_GRENADE_ITEM) {
         let item = item.cast::<ThrownGrenadeItem>();
         (*item).Server_Resupply(1.0);
@@ -63,5 +72,6 @@ pub unsafe fn is_server_register_hit(function: *mut UFunction) -> bool {
     function == SERVER_REGISTER_HIT_DESTRUCTABLE ||
     function == SERVER_REGISTER_RICOCHET_HIT ||
     function == SERVER_REGISTER_RICOCHET_HIT_TERRAIN ||
-    function == SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE
+    function == SERVER_REGISTER_RICOCHET_HIT_DESTRUCTABLE ||
+    function == SERVER_DAMAGE_TARGET
 }
