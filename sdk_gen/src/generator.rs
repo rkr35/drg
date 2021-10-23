@@ -47,7 +47,7 @@ impl Drop for Package {
 
 pub struct Generator {
     lib_rs: File,
-    packages: List<Package, 160>,
+    packages: List<Package, 256>,
     blueprint_generated_package_file: BufWriter<File>,
 }
 
