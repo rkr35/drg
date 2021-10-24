@@ -62,6 +62,23 @@ pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mu
     let character = context.cast::<PlayerCharacter>();
     let health = (*character).HealthComponent;
     (*health).ToggleCanTakeDamage();
+
+    let controller = (*character).Controller.cast::<sdk::Engine::PlayerController>();
+    (*controller).EnableCheats();
+
+    let cheat = (*controller).CheatManager.cast::<sdk::FSD::FSDCheatManager>();
+
+    let viewport = (*crate::GEngine).GameViewport;
+    let world = (*viewport).World;
+    let state = (*world).GameState;
+    let players = (*state).PlayerArray;
+
+    for &player in players.as_slice().iter() {
+        let pawn = (*player).PawnPrivate.cast::<sdk::FSD::PlayerCharacter>();
+        common::log!("{}", pawn as usize);
+        (*cheat).Cheat_SetHealth(100.0, pawn);
+    }
+
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
@@ -78,3 +95,17 @@ unsafe fn print_if_unseen(object: *mut UObject, function: *mut UFunction) {
         }
     }
 }
+
+/*
+        auto world = viewport->World;
+        auto state = world->GameState;
+        auto players = state->PlayerArray;
+        for (auto i = 0; i < players.Count; i++)
+        {
+            auto player = players.Data[i];
+            auto pawn = player->PawnPrivate;
+            if (!pawn || pawn == localPawn) continue;
+            auto location = pawn->K2_GetActorLocation();
+            FVector2D screen;
+
+            */
