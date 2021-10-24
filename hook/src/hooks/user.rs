@@ -95,17 +95,3 @@ unsafe fn print_if_unseen(object: *mut UObject, function: *mut UFunction) {
         }
     }
 }
-
-/*
-        auto world = viewport->World;
-        auto state = world->GameState;
-        auto players = state->PlayerArray;
-        for (auto i = 0; i < players.Count; i++)
-        {
-            auto player = players.Data[i];
-            auto pawn = player->PawnPrivate;
-            if (!pawn || pawn == localPawn) continue;
-            auto location = pawn->K2_GetActorLocation();
-            FVector2D screen;
-
-            */
