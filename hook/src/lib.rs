@@ -26,6 +26,7 @@ enum Error {
     FindGlobalEngine,
     FindFunctionInvoke,
     FindProcessRemoteFunctionForChannel,
+    FindAddCheats,
 }
 
 #[allow(non_upper_case_globals)]
@@ -33,6 +34,7 @@ static mut GEngine: *const Engine = ptr::null();
 
 static mut FUNCTION_INVOKE: *mut c_void = ptr::null_mut();
 static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
+static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -72,6 +74,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_global_engine(module)?;
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
+    find_add_cheats(module)?;
     Ok(())
 }
 
@@ -99,5 +102,12 @@ unsafe fn find_process_remote_function_for_channel(module: &win::Module) -> Resu
     const PATTERN: [Option<u8>; 29] = [Some(0x48), Some(0x8B), Some(0xC4), Some(0x4C), Some(0x89), Some(0x48), Some(0x20), Some(0x4C), Some(0x89), Some(0x40), Some(0x18), Some(0x48), Some(0x89), Some(0x50), Some(0x10), Some(0x48), Some(0x89), Some(0x48), Some(0x08), Some(0x55), Some(0x53), Some(0x56), Some(0x48), Some(0x8D), Some(0xA8), Some(0xF8), Some(0xFC), Some(0xFF), Some(0xFF)];
     PROCESS_REMOTE_FUNCTION_FOR_CHANNEL = module.find_mut(&PATTERN).ok_or(Error::FindProcessRemoteFunctionForChannel)?;
     common::log!("PROCESS_REMOTE_FUNCTION_FOR_CHANNEL = {}", PROCESS_REMOTE_FUNCTION_FOR_CHANNEL as usize);
+    Ok(())
+}
+
+unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
+    const PATTERN: [Option<u8>; 18] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), Some(0x50), Some(0x48), Some(0x8B), Some(0x01)];
+    ADD_CHEATS = module.find_mut(&PATTERN).ok_or(Error::FindAddCheats)?;
+    common::log!("ADD_CHEATS = {}", ADD_CHEATS as usize);
     Ok(())
 }

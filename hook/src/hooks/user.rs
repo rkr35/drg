@@ -2,7 +2,7 @@ use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-use sdk::FSD::{PlayerCharacter, TutorialComponent};
+use sdk::FSD::{FSDPlayerController, PlayerCharacter, TutorialComponent};
 
 mod weapon;
 
@@ -32,6 +32,12 @@ pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *m
     type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
     let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
     original(function, object, stack, result);
+}
+
+pub unsafe extern "C" fn my_add_cheats(controller: *mut FSDPlayerController, _: bool) {
+    type AddCheats = unsafe extern "C" fn(*mut FSDPlayerController, bool);
+    let original = mem::transmute::<*const c_void, AddCheats>(crate::ADD_CHEATS);
+    original(controller, true);
 }
 
 pub unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewportClient, canvas: *mut Canvas) {
