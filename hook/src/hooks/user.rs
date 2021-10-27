@@ -66,6 +66,7 @@ pub unsafe extern "C" fn my_on_flare(context: *mut UObject, stack: *mut FFrame, 
 
 pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {    
     let character = context.cast::<PlayerCharacter>();
+    (*character).Server_EscapeFromGrabber();
     let health = (*character).HealthComponent;
     (*health).ToggleCanTakeDamage();
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
