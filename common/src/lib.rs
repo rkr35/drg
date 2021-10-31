@@ -24,6 +24,9 @@ use core::marker::PhantomData;
 use core::ptr;
 use core::slice;
 
+mod fmt;
+pub use fmt::*;
+
 mod name;
 pub use name::*;
 
