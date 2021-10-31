@@ -578,7 +578,7 @@ impl<W: Write> StructGenerator<W> {
                     self.out,
                     include_str!("bitfield_getter_setter.fmt"),
                     property_name = (*property).base.base.NamePrivate,
-                    offset = (*property).base.Offset,
+                    offset = Hex((*property).base.Offset),
                     mask = mask,
                 )?;
             }
