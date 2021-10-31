@@ -87,27 +87,23 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
     let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
     let relative_offset = mov_rcx_global_engine.add(3).cast::<u32>().read_unaligned();
     GEngine = *mov_rcx_global_engine.add(7 + relative_offset as usize).cast::<*const Engine>();
-    common::log!("GEngine = {}", GEngine as usize);
     Ok(())
 }
 
 unsafe fn find_function_invoke(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 30] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x08), Some(0x48), Some(0x89), Some(0x6C), Some(0x24), Some(0x10), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x7C), Some(0x24), Some(0x20), Some(0x41), Some(0x56), Some(0x48), Some(0x83), Some(0xEC), Some(0x20), Some(0x48), Some(0x8B), Some(0x59), Some(0x20)];
     FUNCTION_INVOKE = module.find_mut(&PATTERN).ok_or(Error::FindFunctionInvoke)?;
-    common::log!("FUNCTION_INVOKE = {}", FUNCTION_INVOKE as usize);
     Ok(())
 }
 
 unsafe fn find_process_remote_function_for_channel(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 29] = [Some(0x48), Some(0x8B), Some(0xC4), Some(0x4C), Some(0x89), Some(0x48), Some(0x20), Some(0x4C), Some(0x89), Some(0x40), Some(0x18), Some(0x48), Some(0x89), Some(0x50), Some(0x10), Some(0x48), Some(0x89), Some(0x48), Some(0x08), Some(0x55), Some(0x53), Some(0x56), Some(0x48), Some(0x8D), Some(0xA8), Some(0xF8), Some(0xFC), Some(0xFF), Some(0xFF)];
     PROCESS_REMOTE_FUNCTION_FOR_CHANNEL = module.find_mut(&PATTERN).ok_or(Error::FindProcessRemoteFunctionForChannel)?;
-    common::log!("PROCESS_REMOTE_FUNCTION_FOR_CHANNEL = {}", PROCESS_REMOTE_FUNCTION_FOR_CHANNEL as usize);
     Ok(())
 }
 
 unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 18] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), Some(0x50), Some(0x48), Some(0x8B), Some(0x01)];
     ADD_CHEATS = module.find_mut(&PATTERN).ok_or(Error::FindAddCheats)?;
-    common::log!("ADD_CHEATS = {}", ADD_CHEATS as usize);
     Ok(())
 }
