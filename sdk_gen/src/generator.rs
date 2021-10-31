@@ -5,8 +5,7 @@ use crate::game::{
 use crate::{sdk_file, sdk_path};
 
 use common::win::file::{self, File};
-use common::List;
-use common::SplitIterator;
+use common::{Hex, List, SplitIterator};
 use common::{
     EClassCastFlags, FName, GUObjectArray, UClass, UFunction, UObject, UPackage, UStruct,
 };
@@ -310,7 +309,7 @@ impl<W: Write> StructGenerator<W> {
                 self.out,
                 "// {} is {} bytes.\n#[repr(C, align({}))]\npub struct {} {{",
                 *self.structure,
-                (*self.structure).PropertiesSize,
+                Hex((*self.structure).PropertiesSize),
                 (*self.structure).MinAlignment,
                 self.name,
             )?;
@@ -327,10 +326,10 @@ impl<W: Write> StructGenerator<W> {
         writeln!(
             self.out,
             "// {}: {} is {} bytes ({} inherited).\n#[repr(C, align({}))]\npub struct {} {{",
-            self.structure as usize,
+            Hex(self.structure as usize),
             *self.structure,
-            (*self.structure).PropertiesSize,
-            self.offset,
+            Hex((*self.structure).PropertiesSize),
+            Hex(self.offset),
             (*self.structure).MinAlignment,
             self.name,
         )?;
@@ -348,7 +347,7 @@ impl<W: Write> StructGenerator<W> {
             writeln!(
                 self.out,
                 "    // offset: 0, size: {}\n    base: {},\n",
-                self.offset, base_name
+                Hex(self.offset), base_name
             )?;
         } else {
             let short_name = (*base_package).short_name();
@@ -358,7 +357,7 @@ impl<W: Write> StructGenerator<W> {
             writeln!(
                 self.out,
                 "    // offset: 0, size: {}\n    base: crate::{}::{},\n",
-                self.offset,
+                Hex(self.offset),
                 short_name,
                 base_name
             )?;
@@ -398,8 +397,8 @@ impl<W: Write> StructGenerator<W> {
                 writeln!(
                     self.out,
                     "    // offset: {offset}, size: {size}\n    pub {name}: {typ},\n",
-                    offset = self.offset,
-                    size = size,
+                    offset = Hex(self.offset),
+                    size = Hex(size),
                     name = (*property).base.NamePrivate,
                     typ = PropertyDisplayable::new(
                         property,
@@ -447,8 +446,8 @@ impl<W: Write> StructGenerator<W> {
             writeln!(
                 self.out,
                 "    // offset: {offset}, size: {size}\n    pub bitfield_at_{offset}: {representation},\n",
-                offset = offset,
-                size = size,
+                offset = Hex(offset),
+                size = Hex(size),
                 representation = representation,
             )?;
 
@@ -476,8 +475,8 @@ impl<W: Write> StructGenerator<W> {
         write!(
             self.out,
             "    // offset: {offset}, size: {size}\n    pub ",
-            offset = self.offset,
-            size = size,
+            offset = Hex(self.offset),
+            size = Hex(size),
         )?;
 
         let name = (*property).base.NamePrivate;
@@ -510,8 +509,8 @@ impl<W: Write> StructGenerator<W> {
         writeln!(
             self.out,
             "    // offset: {offset}, size: {size}\n    pub pad_at_{offset}: [u8; {size}],\n",
-            offset = from_offset,
-            size = to_offset - from_offset,
+            offset = Hex(from_offset),
+            size = Hex(to_offset - from_offset),
         )?;
 
         self.offset = to_offset;
