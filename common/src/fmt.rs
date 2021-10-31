@@ -1,14 +1,36 @@
 use core::fmt::{self, Display, Formatter};
-use core::mem;
+use core::ops::{DivAssign, Rem};
 use core::str;
 
-pub struct Hex(usize);
+pub trait Hexable: Copy + Rem<Output = Self> + DivAssign + From<u8> + PartialEq {
+    const BASE: Self;
+    const ZERO: Self;
+    fn to_u8(self) -> u8;
+}
 
-impl Display for Hex {
+macro_rules! impl_hexable {
+    ($($t:ty)*) => {
+        $(
+            impl Hexable for $t {
+                const BASE: Self = 16;
+                const ZERO: Self = 0;
+            
+                fn to_u8(self) -> u8 {
+                    self as u8
+                }
+            }
+        )*
+    }
+}
+
+impl_hexable! { i32 u8 usize }
+
+pub struct Hex<T>(pub T);
+
+impl<T: Hexable> Display for Hex<T> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        const BASE: usize = 16;
         const PREFIX_LEN: usize = 2;
-        const MAX_HEX_DIGITS: usize = 2 * mem::size_of::<usize>();
+        const MAX_HEX_DIGITS: usize = 16;
         const MAX_FORMATTED_LEN: usize = PREFIX_LEN + MAX_HEX_DIGITS;
 
         let mut buffer = [0; MAX_FORMATTED_LEN];
@@ -19,14 +41,14 @@ impl Display for Hex {
         for digit in (&mut buffer[PREFIX_LEN..]).iter_mut().rev() {
             cursor -= 1;
 
-            *digit = match (n % BASE) as u8 {
+            *digit = match (n % T::BASE).to_u8() {
                 d @ 0..=9 => b'0' + d,
                 d => b'a' + (d - 10),
             };
 
-            n /= BASE;
+            n /= T::BASE;
             
-            if n == 0 {
+            if n == T::ZERO {
                 break;
             }
         }
