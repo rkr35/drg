@@ -325,8 +325,7 @@ impl<W: Write> StructGenerator<W> {
 
         writeln!(
             self.out,
-            "// {}: {} is {} bytes ({} inherited).\n#[repr(C, align({}))]\npub struct {} {{",
-            Hex(self.structure as usize),
+            "// {} is {} bytes ({} inherited).\n#[repr(C, align({}))]\npub struct {} {{",
             *self.structure,
             Hex((*self.structure).PropertiesSize),
             Hex(self.offset),
