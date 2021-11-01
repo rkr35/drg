@@ -53,7 +53,7 @@ impl<T: Hexable> Display for Hex<T> {
             }
         }
 
-        cursor -= 2;
+        cursor -= PREFIX_LEN;
         buffer[cursor] = b'0';
         buffer[cursor + 1] = b'x';
 
