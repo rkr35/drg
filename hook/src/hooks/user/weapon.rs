@@ -1,5 +1,5 @@
 use common::UFunction;
-use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, DoubleDrillItem, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem};
+use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, DoubleDrillItem, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem, ZipLineItem};
 
 pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     use crate::hooks::*;
@@ -37,6 +37,13 @@ pub unsafe fn on_item_equipped(item: *mut Item) {
         
         if (*fire).is(HITSCAN_BASE_COMPONENT) {
             no_spread(fire.cast());
+        }
+
+        if (*item).is(ZIP_LINE_ITEM) {
+            let zl = item.cast::<ZipLineItem>();
+            (*zl).MinAngle = -90.0;
+            (*zl).MaxAngle = 90.0;
+            (*zl).MaxDistance = 40000.0;
         }
 
     } else if (*item).is(THROWN_GRENADE_ITEM) {
