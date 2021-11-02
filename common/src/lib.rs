@@ -74,6 +74,17 @@ impl<T> TArray<T> {
 
 pub type FString = TArray<u16>;
 
+
+impl<'a> From<&'a [u16]> for FString {
+    fn from(s: &[u16]) -> FString {
+        FString {
+            data: s.as_ptr(),
+            len: s.len() as i32,
+            capacity: s.len() as i32,
+        }
+    }
+}
+
 #[repr(C)]
 struct TSharedRef<T> {
     Object: *const T,

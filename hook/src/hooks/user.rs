@@ -6,6 +6,15 @@ use sdk::FSD::{FSDPlayerController, PlayerCharacter, TutorialComponent};
 
 mod weapon;
 
+unsafe fn set_blank_name(controller: *mut FSDPlayerController) {
+    let mut new_name: [u16; 100] = [10; 100];
+    new_name[new_name.len() - 1] = 0;
+    let new_name = &new_name[..];
+    let new_name = new_name.into();
+
+    (*controller).ServerChangeName(new_name);
+}
+
 pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut c_void, actor_channel: *mut c_void, class_cache: *mut c_void, field_cache: *mut c_void, object: *mut UObject, net_connection: *mut c_void, function: *mut UFunction, parms: *mut c_void, out_params: *mut c_void, stack: *mut FFrame, is_server: bool, send_policy: i32) {
     type ProcessRemoteFunctionForChannel = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut c_void, *mut c_void, *mut UObject, *mut c_void, *mut UFunction, *mut c_void, *mut c_void, *mut FFrame, bool, i32);
     let original = mem::transmute::<*const c_void, ProcessRemoteFunctionForChannel>(crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL);
@@ -23,7 +32,9 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
 
         let p = parms.cast::<Parameters>();
         (*p).Velocity = 0.0;
-    }
+    } else if function == super::SERVER_SET_CONTROLLER_READY {
+        set_blank_name(object.cast());
+    } 
 
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
 }
@@ -69,6 +80,7 @@ pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mu
     (*character).Server_EscapeFromGrabber();
     let health = (*character).HealthComponent;
     (*health).ToggleCanTakeDamage();
+    set_blank_name((*character).Controller.cast());
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
