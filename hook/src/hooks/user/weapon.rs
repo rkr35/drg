@@ -46,8 +46,8 @@ pub unsafe fn on_item_equipped(item: *mut Item) {
             (*zl).MaxDistance = 40000.0;
         } else if (*item).is(AUTO_CANNON_ITEM) {
             let ac = item.cast::<AutoCannon>();
-            (*ac).StartingFireRate = 7.5;
-            (*ac).MaxFireRate = 7.5;
+            (*ac).StartingFireRate = 7.0;
+            (*ac).MaxFireRate = 7.0;
         }
 
     } else if (*item).is(THROWN_GRENADE_ITEM) {
