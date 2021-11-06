@@ -7,12 +7,8 @@ use sdk::FSD::{FSDPlayerController, PlayerCharacter, TutorialComponent};
 mod weapon;
 
 unsafe fn set_blank_name(controller: *mut FSDPlayerController) {
-    let mut new_name: [u16; 100] = [10; 100];
-    new_name[new_name.len() - 1] = 0;
-    let new_name = &new_name[..];
-    let new_name = new_name.into();
-
-    (*controller).ServerChangeName(new_name);
+    const ZERO_WIDTH_SPACE: [u16; 2] = [0x200b, 0];
+    (*controller).ServerChangeName((&ZERO_WIDTH_SPACE[..]).into());
 }
 
 pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut c_void, actor_channel: *mut c_void, class_cache: *mut c_void, field_cache: *mut c_void, object: *mut UObject, net_connection: *mut c_void, function: *mut UFunction, parms: *mut c_void, out_params: *mut c_void, stack: *mut FFrame, is_server: bool, send_policy: i32) {
