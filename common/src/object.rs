@@ -42,45 +42,23 @@ pub struct FUObjectArray {
 
 impl FUObjectArray {
     pub unsafe fn init(module: &win::Module) -> Result<(), Error> {
-        // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
-        // 00007FF773FACC9F | 48:8D0D 3A7E5503         | lea rcx,qword ptr ds:[7FF777504AE0]                     |
-        // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
+        // https://github.com/rkr35/drg/issues/3
+        
+        // 00007FF75CAF6D32 | 48:8B05 F7845C04         | mov rax,qword ptr ds:[7FF7610BF230]     |
+        // 00007FF75CAF6D39 | 48:8B0CC8                | mov rcx,qword ptr ds:[rax+rcx*8]        |
+        // 00007FF75CAF6D3D | 4C:8D04D1                | lea r8,qword ptr ds:[rcx+rdx*8]         |
 
-        const GU_OBJECT_ARRAY_PATTERN: [Option<u8>; 16] = [
-            Some(0x44),
-            Some(0x0F),
-            Some(0xB6),
-            Some(0x8C),
-            Some(0x24),
-            Some(0x80),
-            Some(0x00),
-            Some(0x00),
-            Some(0x00),
-            Some(0x48),
-            Some(0x8D),
-            Some(0x0D),
-            None,
-            None,
-            None,
-            None,
-        ];
+        const GU_OBJECT_ARRAY_PATTERN: [Option<u8>; 15] = [Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x8B), Some(0x0C), Some(0xC8), Some(0x4C), Some(0x8D), Some(0x04), Some(0xD1)];
 
-        // 00007FF773FACC96 | 44:0FB68C24 80000000     | movzx r9d,byte ptr ss:[rsp+80]                          |
-        let movzx: *const u8 = module
+        let mov_rax: *const u8 = module
             .find(&GU_OBJECT_ARRAY_PATTERN)
             .ok_or(Error::FindGUObjectArray)?;
 
-        // 00007FF773FACCA6 | 44:8B8424 90000000       | mov r8d,dword ptr ss:[rsp+90]                           |
-        let instruction_after_movsx = movzx.add(GU_OBJECT_ARRAY_PATTERN.len());
+        let mov_immediate = mov_rax.add(3);
+        let instruction_after_mov = mov_immediate.add(4);
+        let mov_immediate = mov_immediate.cast::<u32>().read_unaligned();
 
-        // Silence clippy lint because we do an unaligned read.
-        #[allow(clippy::cast_ptr_alignment)]
-        let lea_immediate = instruction_after_movsx
-            .sub(4)
-            .cast::<u32>()
-            .read_unaligned();
-
-        GUObjectArray = instruction_after_movsx.add(lea_immediate as usize).cast();
+        GUObjectArray = instruction_after_mov.add(mov_immediate as usize).sub(0x10).cast();
 
         Ok(())
     }
