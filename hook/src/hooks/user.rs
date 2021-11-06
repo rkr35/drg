@@ -30,7 +30,10 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
         (*p).Velocity = 0.0;
     } else if function == super::SERVER_SET_CONTROLLER_READY {
         set_blank_name(object.cast());
-    } 
+    } else if function == super::SEND_END_MISSION_RESULT {
+        common::log!("Blocked PlayerStatsComponent::SendEndMissionResult()");
+        return;
+    }
 
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
 }
