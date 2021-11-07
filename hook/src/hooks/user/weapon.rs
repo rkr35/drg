@@ -26,6 +26,10 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
 pub unsafe fn on_item_equipped(item: *mut Item) {
     use crate::hooks::*;
 
+    if item.is_null() {
+        return;
+    }
+    
     let item = item.cast::<UObject>();
 
     if (*item).is(AMMO_DRIVEN_WEAPON) {
@@ -35,7 +39,7 @@ pub unsafe fn on_item_equipped(item: *mut Item) {
 
         let fire = (*weapon).WeaponFire.cast::<UObject>();
         
-        if (*fire).is(HITSCAN_BASE_COMPONENT) {
+        if !fire.is_null() && (*fire).is(HITSCAN_BASE_COMPONENT) {
             no_spread(fire.cast());
         }
 
