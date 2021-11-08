@@ -2,7 +2,7 @@ use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-use sdk::FSD::{FSDPlayerController, PlayerCharacter, TutorialComponent};
+use sdk::FSD::{FSDCheatManager, FSDPlayerController, PlayerCharacter, TutorialComponent};
 
 mod weapon;
 
@@ -92,4 +92,14 @@ unsafe fn print_if_unseen(object: *mut UObject, function: *mut UFunction) {
             common::log!("SEEN_FUNCTIONS is full. Increase its capacity.");
         }
     }
+}
+
+#[allow(dead_code)]
+unsafe fn run_cheat_manager(character: *mut PlayerCharacter) {
+    let controller = (*character).Controller.cast::<FSDPlayerController>();
+    (*controller).EnableCheats();
+
+    #[allow(unused_variables)]
+    let cheat_manager = (*controller).CheatManager.cast::<FSDCheatManager>();
+
 }
