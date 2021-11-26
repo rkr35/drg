@@ -2,7 +2,7 @@ use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Canvas, GameViewportClient};
-use sdk::FSD::{FSDCheatManager, FSDPlayerController, PlayerCharacter, TutorialComponent};
+use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
 
@@ -64,8 +64,8 @@ pub unsafe extern "C" fn my_get_item_name(context: *mut UObject, stack: *mut FFr
 }
 
 pub unsafe extern "C" fn my_on_flare(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    let tc = context.cast::<TutorialComponent>();
-    let character = (*tc).PlayerCharacter.get();
+    let widget = context.cast::<FSDUserWidget>();
+    let character = (*widget).Character;
     let inv = (*character).InventoryComponent;
     (*inv).FlareProductionTime = 0.0;
     (*super::ON_FLARE.as_ptr())(context, stack, result);
