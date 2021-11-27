@@ -1,5 +1,5 @@
 use common::UFunction;
-use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, DoubleDrillItem, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem, ZipLineItem};
+use sdk::FSD::{AmmoCountWidget, AmmoDrivenWeapon, DoubleDrillItem, GrapplingHookGun, HitscanBaseComponent, Item, RandRange, ThrownGrenadeItem, ZipLineItem};
 
 pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     use crate::hooks::*;
@@ -53,6 +53,11 @@ pub unsafe fn on_item_equipped(item: *mut Item) {
     } else if (*item).is(THROWN_GRENADE_ITEM) {
         let item = item.cast::<ThrownGrenadeItem>();
         (*item).Server_Resupply(1.0);
+    } else if (*item).is(GRAPPLING_HOOK_GUN) {
+        let gun = item.cast::<GrapplingHookGun>();
+        let cda = (*gun).CoolDownAggregator;
+        (*cda).CooldownDuration = 0.0;
+        (*gun).MaxDistance = 25000.0;
     }
 }
 
