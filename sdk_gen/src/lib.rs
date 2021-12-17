@@ -58,7 +58,11 @@ unsafe fn on_detach() {}
 unsafe fn run() -> Result<(), Error> {
     common::init_globals(&win::Module::current()?)?;
     dump_globals()?;
-    generate_sdk()?;
+
+    if cfg!(feature = "gen_sdk") {
+        generate_sdk()?;
+    }
+
     common::idle();
     Ok(())
 }

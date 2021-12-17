@@ -7,6 +7,10 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = ["gen_sdk"]
+gen_sdk = []
+
 [dependencies]
 common = { path = "../common" }
 macros = { path = "../macros" }
