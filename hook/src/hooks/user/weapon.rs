@@ -9,10 +9,8 @@ pub unsafe fn on_item_amount_changed(widget: *mut AmmoCountWidget) {
     if (*item).is(AMMO_DRIVEN_WEAPON) {
         let weapon = item.cast::<AmmoDrivenWeapon>();
 
-        (*weapon).ClipCount = (*weapon).ClipSize;
-        
-        if (*weapon).AmmoCount > 0 {
-            (*weapon).AmmoCount -= 1;
+        if (*weapon).AmmoCount < (*weapon).ClipSize {
+            (*weapon).AmmoCount = (*weapon).ClipSize;
         }
     } else if (*item).is(DOUBLE_DRILL_ITEM) {
         let drill = item.cast::<DoubleDrillItem>();
