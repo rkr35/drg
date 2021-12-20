@@ -1,7 +1,7 @@
 use common::{self, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
-use sdk::Engine::{Canvas, GameViewportClient};
+use sdk::Engine::{Actor, Canvas, GameViewportClient};
 use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
@@ -78,6 +78,13 @@ pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mu
     (*health).ToggleCanTakeDamage();
     set_blank_name((*character).Controller.cast());
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
+}
+
+pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
+    type PostActorConstruction = unsafe extern "C" fn(*mut Actor);
+    let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
+    original(actor);
+    common::log!("{}", *actor.cast::<UObject>());
 }
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
