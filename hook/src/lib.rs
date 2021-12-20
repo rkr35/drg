@@ -27,6 +27,7 @@ enum Error {
     FindFunctionInvoke,
     FindProcessRemoteFunctionForChannel,
     FindAddCheats,
+    FindPostActorConstruction,
 }
 
 #[allow(non_upper_case_globals)]
@@ -35,6 +36,7 @@ static mut GEngine: *const Engine = ptr::null();
 static mut FUNCTION_INVOKE: *mut c_void = ptr::null_mut();
 static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
 static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
+static mut POST_ACTOR_CONSTRUCTION: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -75,6 +77,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
     find_add_cheats(module)?;
+    find_post_actor_construction(module)?;
     Ok(())
 }
 
@@ -105,5 +108,18 @@ unsafe fn find_process_remote_function_for_channel(module: &win::Module) -> Resu
 unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 18] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), Some(0x50), Some(0x48), Some(0x8B), Some(0x01)];
     ADD_CHEATS = module.find_mut(&PATTERN).ok_or(Error::FindAddCheats)?;
+    Ok(())
+}
+
+unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error> {
+    // 00007FF66B98E688 | 48:8BCF                  | mov rcx,rdi                             |
+    // 00007FF66B98E68B | E8 20D40000              | call fsd-win64-shipping.7FF66B99BAB0    | void AActor::PostActorConstruction()
+    // 00007FF66B98E690 | 48:8B4D C0               | mov rcx,qword ptr ss:[rbp-40]           |
+    // 00007FF66B98E694 | 48:33CC                  | xor rcx,rsp                             |
+    // 00007FF66B98E697 | E8 C4510401              | call fsd-win64-shipping.7FF66C9D3860    |
+    const PATTERN: [Option<u8>; 20] = [Some(0x48), Some(0x8B), Some(0xCF), Some(0xE8), None, None, None, None, Some(0x48), Some(0x8B), Some(0x4D), Some(0xC0), Some(0x48), Some(0x33), Some(0xCC), Some(0xE8), None, None, None, None];
+    let mov_rcx_rdi: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindPostActorConstruction)?;
+    let call_immediate = mov_rcx_rdi.add(4).cast::<u32>().read_unaligned();
+    POST_ACTOR_CONSTRUCTION = mov_rcx_rdi.add(8 + call_immediate as usize).cast();
     Ok(())
 }
