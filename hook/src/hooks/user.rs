@@ -85,6 +85,8 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
     original(actor);
 
+    common::log!("{}", *actor.cast::<UObject>());
+
     // if !(*actor.cast::<UObject>()).fast_is(EClassCastFlags::CASTCLASS_APawn) {
     //     return;
     // }
@@ -95,7 +97,6 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
             if (*c).DefaultOutline != EOutline::OL_NEUTRAL {
                 (*c).ToggleDefaultOutline(true);
                 (*c).LockOutline();
-                common::log!("{} has an OutlineComponent!", *actor.cast::<UObject>());
             }
             break;
         }
