@@ -7,6 +7,7 @@ use core::slice;
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     NoCodeCave,
+    JmpLenIsSmallerThanFiveBytes,
     CaveIsTooSmall(usize, usize),
 }
 
@@ -17,6 +18,10 @@ pub struct Detour<const JMP_LEN: usize> {
 
 impl<const JMP_LEN: usize> Detour<JMP_LEN> {
     pub unsafe fn new(module: &win::Module, original: *mut *mut c_void, hook: *const c_void) -> Result<Detour<JMP_LEN>, Error> {
+        if JMP_LEN < 5 {
+            return Err(Error::JmpLenIsSmallerThanFiveBytes);
+        }
+
         let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
 
         let code_cave_patch = ManuallyDrop::new(CodeCave::new(
