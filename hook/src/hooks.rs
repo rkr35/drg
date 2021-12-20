@@ -23,6 +23,7 @@ static mut DOUBLE_DRILL_ITEM: *const UClass = ptr::null();
 static mut HITSCAN_BASE_COMPONENT: *const UClass = ptr::null();
 static mut ZIP_LINE_ITEM: *const UClass = ptr::null();
 static mut GRAPPLING_HOOK_GUN: *const UClass = ptr::null();
+static mut OUTLINE_COMPONENT: *const UClass = ptr::null();
 
 static mut SERVER_REGISTER_HIT: *mut UFunction = ptr::null_mut();
 static mut SERVER_REGISTER_HIT_MULTI: *mut UFunction = ptr::null_mut();
@@ -82,6 +83,7 @@ impl Hooks {
         HITSCAN_BASE_COMPONENT = find("Class /Script/FSD.HitscanBaseComponent")?.cast();
         ZIP_LINE_ITEM = find("Class /Script/FSD.ZipLineItem")?.cast();
         GRAPPLING_HOOK_GUN = find("Class /Script/FSD.GrapplingHookGun")?.cast();
+        OUTLINE_COMPONENT = find("Class /Script/FSD.OutlineComponent")?.cast();
 
         SERVER_REGISTER_HIT = find("Function /Script/FSD.HitscanComponent.Server_RegisterHit")?.cast();
         SERVER_REGISTER_HIT_MULTI = find("Function /Script/FSD.MultiHitscanComponent.Server_RegisterHit")?.cast();

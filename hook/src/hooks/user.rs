@@ -1,8 +1,8 @@
-use common::{self, FFrame, List, UFunction, UObject};
+use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Actor, Canvas, GameViewportClient};
-use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
+use sdk::FSD::{EOutline, FSDCheatManager, FSDPlayerController, FSDUserWidget, OutlineComponent, PlayerCharacter};
 
 mod weapon;
 
@@ -84,7 +84,22 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     type PostActorConstruction = unsafe extern "C" fn(*mut Actor);
     let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
     original(actor);
-    common::log!("{}", *actor.cast::<UObject>());
+
+    // if !(*actor.cast::<UObject>()).fast_is(EClassCastFlags::CASTCLASS_APawn) {
+    //     return;
+    // }
+    
+    for &c in (*actor).BlueprintCreatedComponents.as_slice().iter() {
+        if (*c.cast::<UObject>()).is(super::OUTLINE_COMPONENT) {
+            let c = c.cast::<OutlineComponent>();
+            if (*c).DefaultOutline != EOutline::OL_NEUTRAL {
+                (*c).ToggleDefaultOutline(true);
+                (*c).LockOutline();
+                common::log!("{} has an OutlineComponent!", *actor.cast::<UObject>());
+            }
+            break;
+        }
+    }
 }
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
