@@ -1,7 +1,7 @@
 use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
-use sdk::Engine::{Actor, Canvas, GameViewportClient};
+use sdk::Engine::{Actor, Canvas, GameViewportClient, World};
 use sdk::FSD::{EOutline, FSDCheatManager, FSDPlayerController, FSDUserWidget, OutlineComponent, PlayerCharacter};
 
 mod weapon;
@@ -85,7 +85,7 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
     original(actor);
 
-    common::log!("{}", *actor.cast::<UObject>());
+    common::log!("[CREATE] {}", *actor.cast::<UObject>());
 
     // if !(*actor.cast::<UObject>()).fast_is(EClassCastFlags::CASTCLASS_APawn) {
     //     return;
@@ -101,6 +101,14 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
             break;
         }
     }
+}
+
+pub unsafe extern "C" fn my_destroy_actor(world: *mut World, actor: *mut Actor, net_force: bool, should_modify_level: bool) -> bool {
+    common::log!("[DESTROY] {}", *actor.cast::<UObject>());
+
+    type DestroyActor = unsafe extern "C" fn (*mut World, *mut Actor, bool, bool) -> bool;
+    let original = mem::transmute::<*const c_void, DestroyActor>(crate::DESTROY_ACTOR);
+    original(world, actor, net_force, should_modify_level)
 }
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
