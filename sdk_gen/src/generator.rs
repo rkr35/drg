@@ -155,7 +155,7 @@ impl Generator {
 
         writeln!(
             file,
-            "// {}\n#[repr(transparent)]\n#[derive(Copy, Clone)]\npub struct {name}({});\n\nimpl {name} {{",
+            "// {}\n#[repr(transparent)]\n#[derive(Copy, Clone, PartialEq, Eq)]\npub struct {name}({});\n\nimpl {name} {{",
             *enumeration,
             representation,
             name = (*enumeration).name(),
