@@ -2,9 +2,14 @@ use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Actor, Canvas, GameViewportClient, World};
-use sdk::FSD::{EOutline, FSDCheatManager, FSDPlayerController, FSDUserWidget, OutlineComponent, PlayerCharacter};
+use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
+mod pawn;
+use pawn::Pawns;
+
+pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
+pub static mut PAWNS: Pawns = Pawns::new();
 
 unsafe fn set_blank_name(controller: *mut FSDPlayerController) {
     const ZERO_WIDTH_SPACE: [u16; 2] = [0x200b, 0];
@@ -85,33 +90,42 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
     original(actor);
 
-    common::log!("[CREATE] {}", *actor.cast::<UObject>());
+    let obj = actor.cast::<UObject>();
 
-    // if !(*actor.cast::<UObject>()).fast_is(EClassCastFlags::CASTCLASS_APawn) {
-    //     return;
-    // }
-    
-    for &c in (*actor).BlueprintCreatedComponents.as_slice().iter() {
-        if (*c.cast::<UObject>()).is(super::OUTLINE_COMPONENT) {
-            let c = c.cast::<OutlineComponent>();
-            if (*c).DefaultOutline != EOutline::OL_NEUTRAL {
-                (*c).ToggleDefaultOutline(true);
-                (*c).LockOutline();
-            }
-            break;
+    if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
+        if let Err(e) = PAWNS.add(obj.cast()) {
+            common::log!("failed to add pawn {}: {:?}", *obj, e);
         }
     }
 }
 
 pub unsafe extern "C" fn my_destroy_actor(world: *mut World, actor: *mut Actor, net_force: bool, should_modify_level: bool) -> bool {
-    common::log!("[DESTROY] {}", *actor.cast::<UObject>());
+    let obj = actor.cast::<UObject>();
+
+    if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
+        if let Err(e) = PAWNS.remove(obj.cast()) {
+            common::log!("failed to remove pawn {}: {:?}", *obj, e)
+        }
+    }
 
     type DestroyActor = unsafe extern "C" fn (*mut World, *mut Actor, bool, bool) -> bool;
     let original = mem::transmute::<*const c_void, DestroyActor>(crate::DESTROY_ACTOR);
     original(world, actor, net_force, should_modify_level)
 }
 
-pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
+pub unsafe extern "C" fn my_route_end_play(actor: *mut Actor, end_play_reason: u32) {
+    let obj = actor.cast::<UObject>();
+
+    if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
+        if let Err(e) = PAWNS.remove(obj.cast()) {
+            common::log!("failed to remove pawn {}: {:?}", *obj, e)
+        }
+    }
+
+    type RouteEndPlay = unsafe extern "C" fn (*mut Actor, u32);
+    let original = mem::transmute::<*const c_void, RouteEndPlay>(crate::ROUTE_END_PLAY);
+    original(actor, end_play_reason);
+}
 
 #[allow(dead_code)]
 unsafe fn print_if_unseen(object: *mut UObject, function: *mut UFunction) {

@@ -48,6 +48,7 @@ pub struct Hooks {
     _add_cheats: Detour<5>,
     _post_actor_construction: Detour<6>,
     _destroy_actor: Detour<5>,
+    _route_end_play: Detour<5>,
     _draw_transition: Patch<*const c_void>,
     _on_item_amount_changed: UFunctionHook,
     _get_item_name: UFunctionHook,
@@ -65,6 +66,7 @@ impl Hooks {
             _add_cheats: Detour::new(module, &mut crate::ADD_CHEATS, user::my_add_cheats as *const c_void)?,
             _post_actor_construction: Detour::new(module, &mut crate::POST_ACTOR_CONSTRUCTION, user::my_post_actor_construction as *const c_void)?,
             _destroy_actor: Detour::new(module, &mut crate::DESTROY_ACTOR, user::my_destroy_actor as *const c_void)?,
+            _route_end_play: Detour::new(module, &mut crate::ROUTE_END_PLAY, user::my_route_end_play as *const c_void)?,
             _draw_transition: {
                 const VTABLE_INDEX: usize = 0x310 / 8;
                 let address = (*(*crate::GEngine).GameViewport.cast::<UObject>()).vtable.add(VTABLE_INDEX);
@@ -107,6 +109,8 @@ impl Drop for Hooks {
             for &function in user::SEEN_FUNCTIONS.iter() {
                 (*function).seen_count = 0;
             }
+
+            user::PAWNS.clear();
         }
     }
 }

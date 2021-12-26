@@ -29,6 +29,7 @@ enum Error {
     FindAddCheats,
     FindPostActorConstruction,
     FindDestroyActor,
+    FindRouteEndPlay,
 }
 
 #[allow(non_upper_case_globals)]
@@ -39,6 +40,7 @@ static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
 static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
 static mut POST_ACTOR_CONSTRUCTION: *mut c_void = ptr::null_mut();
 static mut DESTROY_ACTOR: *mut c_void = ptr::null_mut();
+static mut ROUTE_END_PLAY: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -81,6 +83,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_add_cheats(module)?;
     find_post_actor_construction(module)?;
     find_destroy_actor(module)?;
+    find_route_end_play(module)?;
     Ok(())
 }
 
@@ -130,5 +133,11 @@ unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error
 unsafe fn find_destroy_actor(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 30] = [Some(0x40), Some(0x55), Some(0x53), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x8D), Some(0x6C), Some(0x24), Some(0x90), Some(0x48), Some(0x81), Some(0xEC), Some(0x70), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), Some(0xAA), Some(0x36), Some(0x30), Some(0x02)];
     DESTROY_ACTOR = module.find_mut(&PATTERN).ok_or(Error::FindDestroyActor)?;
+    Ok(())
+}
+
+unsafe fn find_route_end_play(module: &win::Module) -> Result<(), Error> {
+    const PATTERN: [Option<u8>; 40] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0x00), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x33), Some(0xC4), Some(0x48), Some(0x89), Some(0x84), Some(0x24), Some(0xF0), Some(0x00), Some(0x00), Some(0x00), Some(0xF6), Some(0x41), Some(0x5B), Some(0x20)];
+    ROUTE_END_PLAY = module.find_mut(&PATTERN).ok_or(Error::FindRouteEndPlay)?;
     Ok(())
 }

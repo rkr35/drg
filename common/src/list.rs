@@ -7,6 +7,8 @@ use core::str;
 #[derive(macros::NoPanicErrorDebug)]
 pub enum Error {
     CapacityReached,
+    BadSwapRemoveIndex(usize, usize),
+    BadGetIndex(usize, usize),
 }
 
 pub struct List<T, const N: usize> {
@@ -59,8 +61,32 @@ impl<T, const N: usize> List<T, N> {
         }
     }
 
+    pub fn get_mut(&mut self, index: usize) -> Result<&mut T, Error> {
+        if index < self.len {
+            unsafe {
+                Ok(self.get_unchecked_mut(index))
+            }
+        } else {
+            Err(Error::BadGetIndex(index, self.len))
+        }
+    } 
+
+    pub fn get(&self, index: usize) -> Result<&T, Error> {
+        if index < self.len {
+            unsafe {
+                Ok(self.get_unchecked(index))
+            }
+        } else {
+            Err(Error::BadGetIndex(index, self.len))
+        }
+    } 
+
     pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut T {
         self.data.get_unchecked_mut(index).assume_init_mut()
+    }
+
+    pub unsafe fn get_unchecked(&self, index: usize) -> &T {
+        self.data.get_unchecked(index).assume_init_ref()
     }
 
     pub fn as_slice(&self) -> &[T] {
@@ -82,6 +108,21 @@ impl<T, const N: usize> List<T, N> {
             Some(unsafe { self.get_unchecked_mut(self.len - 1) })
         } else {
             None
+        }
+    }
+
+    pub fn swap_remove(&mut self, index: usize) -> Result<T, Error> {
+        let len = self.len;
+
+        if index < len {
+            unsafe {
+                let last = ptr::read(self.data.as_ptr().add(len - 1));
+                let hole = self.data.as_mut_ptr().add(index);
+                self.len -= 1;
+                Ok(ptr::replace(hole, last).assume_init())
+            }
+        } else {
+            Err(Error::BadSwapRemoveIndex(index, len))
         }
     }
 }
