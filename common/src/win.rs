@@ -9,6 +9,8 @@ pub use file::File;
 pub mod module;
 pub use module::Module;
 
+pub mod random;
+
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
 pub const STD_OUTPUT_HANDLE: u32 = 0xFFFF_FFF5;
@@ -79,6 +81,11 @@ extern "system" {
         number_of_bytes_written: *mut u32,
         overlapped: *mut c_void,
     ) -> i32;
+}
+
+#[link(name = "Bcrypt")]
+extern "system" {
+    fn BCryptGenRandom(hAlgorithm: *mut c_void, pbBuffer: *mut u8, cbBuffer: u32, dwFlags: u32) -> i32;
 }
 
 pub unsafe fn dll_main(
