@@ -57,7 +57,7 @@ impl Pawns {
             common::log!("Tracking no pawns.");
         } else {
             for (i, pawn) in self.pawns.iter().enumerate() {
-                common::log!("[{}] {} {}", i, common::Hex(pawn.pointer as usize), (*pawn.pointer.cast::<common::UObject>()).name());
+                common::log!("[{}] {} {}", i, common::Hex(pawn.pointer), (*pawn.pointer.cast::<common::UObject>()).name());
             }
         }
     }

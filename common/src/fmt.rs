@@ -62,3 +62,15 @@ impl<T: Hexable> Display for Hex<T> {
         f.write_str(unsafe { str::from_utf8_unchecked(&buffer[cursor..]) })
     }
 }
+
+impl<T> Display for Hex<*mut T> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        Hex(self.0 as usize).fmt(f)
+    }
+}
+
+impl<T> Display for Hex<*const T> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        Hex(self.0 as usize).fmt(f)
+    }
+}

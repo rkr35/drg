@@ -95,7 +95,7 @@ unsafe fn dump_objects() -> Result<(), Error> {
             "[{}] {} {}",
             (*object).InternalIndex,
             *object,
-            Hex(object as usize)
+            Hex(object)
         )?;
     }
 
