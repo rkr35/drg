@@ -21,7 +21,8 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 
 use core::ffi::c_void;
 use core::marker::PhantomData;
-use core::ptr;
+use core::ops::{Deref, DerefMut};
+use core::ptr::{self, NonNull};
 use core::slice;
 
 mod fmt;
@@ -55,16 +56,18 @@ pub enum Error {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct TArray<T> {
-    data: *const T,
+    data: *mut T,
     pub len: i32,
     pub capacity: i32,
 }
 
-impl<T> TArray<T> {
-    pub fn as_slice(&self) -> &[T] {
+impl<T> Deref for TArray<T> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
         unsafe {
             if self.data.is_null() || self.len == 0 {
-                slice::from_raw_parts(ptr::NonNull::dangling().as_ptr(), 0)
+                slice::from_raw_parts(NonNull::dangling().as_ptr(), 0)
             } else {
                 slice::from_raw_parts(self.data, self.len as usize)
             }
@@ -72,8 +75,25 @@ impl<T> TArray<T> {
     }
 }
 
-pub type FString = TArray<u16>;
+impl<T> DerefMut for TArray<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe {
+            if self.data.is_null() || self.len == 0 {
+                slice::from_raw_parts_mut(NonNull::dangling().as_ptr(), 0)
+            } else {
+                slice::from_raw_parts_mut(self.data, self.len as usize)
+            }
+        }
+    }
+}
 
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct FString {
+    data: *const u16,
+    pub len: i32,
+    pub capacity: i32,
+}
 
 impl<'a> From<&'a [u16]> for FString {
     fn from(s: &[u16]) -> FString {
