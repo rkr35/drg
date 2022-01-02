@@ -2,16 +2,34 @@ use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use common::win::random;
 use core::ffi::c_void;
 use core::mem;
-use sdk::Engine::{Actor, GameViewportClient, LocalPlayer, World};
+use sdk::Engine::{Actor, LocalPlayer, World};
 use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
 mod pawn;
 use pawn::Pawns;
 
+mod render;
+
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
 pub static mut PAWNS: Pawns = Pawns::new();
 
+pub struct OneTimeModifications;
+
+impl OneTimeModifications {
+    pub unsafe fn new() -> Self {
+        render::remove_lighting();
+        Self
+    }
+}
+
+impl Drop for OneTimeModifications {
+    fn drop(&mut self) {
+        unsafe {
+            render::restore_lighting();
+        }
+    }
+}
 unsafe fn set_blank_name(controller: *mut FSDPlayerController) {
     const ZERO_WIDTH_SPACE: [u16; 2] = [0x200b, 0];
     (*controller).ServerChangeName(ZERO_WIDTH_SPACE.as_slice().into());
@@ -51,12 +69,6 @@ pub unsafe extern "C" fn my_add_cheats(controller: *mut FSDPlayerController, _: 
     type AddCheats = unsafe extern "C" fn(*mut FSDPlayerController, bool);
     let original = mem::transmute::<*const c_void, AddCheats>(crate::ADD_CHEATS);
     original(controller, true);
-}
-
-pub unsafe extern "C" fn my_draw_transition(game_viewport_client: *mut GameViewportClient, canvas: *mut Canvas) {
-    type DrawTransition = unsafe extern "C" fn(*mut GameViewportClient, *mut Canvas);
-    let original = mem::transmute::<*const c_void, DrawTransition>(super::DRAW_TRANSITION);
-    original(game_viewport_client, canvas);
 }
 
 pub unsafe extern "C" fn my_on_item_amount_changed(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
