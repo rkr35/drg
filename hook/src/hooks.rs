@@ -49,7 +49,7 @@ pub struct Hooks {
     _post_actor_construction: Detour<6>,
     _destroy_actor: Detour<5>,
     _route_end_play: Detour<5>,
-    _draw_transition: Patch<*const c_void>,
+    _get_preferred_unique_net_id: Detour<5>,
     _on_item_amount_changed: UFunctionHook,
     _get_item_name: UFunctionHook,
     _on_flare: UFunctionHook,
@@ -73,6 +73,7 @@ impl Hooks {
                 DRAW_TRANSITION = *address;
                 Patch::new(address, user::my_draw_transition as *const c_void)
             },
+            _get_preferred_unique_net_id: Detour::new(module, &mut crate::GET_PREFERRED_UNIQUE_NET_ID, user::my_get_preferred_unique_net_id as *const c_void)?,
             _on_item_amount_changed: UFunctionHook::new("Function /Script/FSD.AmmoCountWidget.OnItemAmountChanged", ON_ITEM_AMOUNT_CHANGED.as_mut_ptr(), user::my_on_item_amount_changed)?,
             _get_item_name: UFunctionHook::new("Function /Script/FSD.Item.GetItemName", GET_ITEM_NAME.as_mut_ptr(), user::my_get_item_name)?,
             _on_flare: UFunctionHook::new("Function /Game/UI/MainOnscreenHUD/HUD_Flares.HUD_Flares_C.OnFlareCountChanged", ON_FLARE.as_mut_ptr(), user::my_on_flare)?,

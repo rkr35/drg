@@ -30,6 +30,7 @@ enum Error {
     FindPostActorConstruction,
     FindDestroyActor,
     FindRouteEndPlay,
+    FindGetPreferredUniqueNetId,
 }
 
 #[allow(non_upper_case_globals)]
@@ -41,6 +42,7 @@ static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
 static mut POST_ACTOR_CONSTRUCTION: *mut c_void = ptr::null_mut();
 static mut DESTROY_ACTOR: *mut c_void = ptr::null_mut();
 static mut ROUTE_END_PLAY: *mut c_void = ptr::null_mut();
+static mut GET_PREFERRED_UNIQUE_NET_ID: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
 unsafe extern "system" fn _DllMainCRTStartup(dll: *mut c_void, reason: u32, _: *mut c_void) -> i32 {
@@ -84,6 +86,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_post_actor_construction(module)?;
     find_destroy_actor(module)?;
     find_route_end_play(module)?;
+    find_get_preferred_unique_net_id(module)?;
     Ok(())
 }
 
@@ -139,5 +142,11 @@ unsafe fn find_destroy_actor(module: &win::Module) -> Result<(), Error> {
 unsafe fn find_route_end_play(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 40] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0x00), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x33), Some(0xC4), Some(0x48), Some(0x89), Some(0x84), Some(0x24), Some(0xF0), Some(0x00), Some(0x00), Some(0x00), Some(0xF6), Some(0x41), Some(0x5B), Some(0x20)];
     ROUTE_END_PLAY = module.find_mut(&PATTERN).ok_or(Error::FindRouteEndPlay)?;
+    Ok(())
+}
+
+unsafe fn find_get_preferred_unique_net_id(module: &win::Module) -> Result<(), Error> {
+    const PATTERN: [Option<u8>; 30] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x08), Some(0x48), Some(0x89), Some(0x6C), Some(0x24), Some(0x10), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x18), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), Some(0x20), Some(0x48), Some(0x8B), Some(0xF1), Some(0x48), Some(0x8B), Some(0xDA), Some(0x48), Some(0x8B), Some(0x49), Some(0x50)];
+    GET_PREFERRED_UNIQUE_NET_ID = module.find_mut(&PATTERN).ok_or(Error::FindGetPreferredUniqueNetId)?;
     Ok(())
 }

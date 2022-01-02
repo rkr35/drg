@@ -1,7 +1,8 @@
 use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
+use common::win::random;
 use core::ffi::c_void;
 use core::mem;
-use sdk::Engine::{Actor, Canvas, GameViewportClient, World};
+use sdk::Engine::{Actor, GameViewportClient, LocalPlayer, World};
 use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
@@ -125,6 +126,42 @@ pub unsafe extern "C" fn my_route_end_play(actor: *mut Actor, end_play_reason: u
     type RouteEndPlay = unsafe extern "C" fn (*mut Actor, u32);
     let original = mem::transmute::<*const c_void, RouteEndPlay>(crate::ROUTE_END_PLAY);
     original(actor, end_play_reason);
+}
+
+#[repr(C)]
+pub struct Id {
+    vtable: usize,
+    this: *mut Id,
+    magic: usize,
+    value: u64,
+}
+
+#[repr(C)]
+pub struct IdWrapper {
+    vtable: usize,
+    id: *mut Id,
+    magic: usize,
+    pad: [u8; 16],
+}
+
+pub unsafe extern "C" fn my_get_preferred_unique_net_id(local_player: *mut LocalPlayer, out_id: *mut IdWrapper) -> *mut IdWrapper {
+    type GetPreferredUniqueNetId = unsafe extern "C" fn (*mut LocalPlayer, *mut IdWrapper) -> *mut IdWrapper;
+    let original = mem::transmute::<*const c_void, GetPreferredUniqueNetId>(crate::GET_PREFERRED_UNIQUE_NET_ID);
+    original(local_player, out_id);
+
+    let old_id = (*(*out_id).id).value;
+
+    let new_id = {
+        const ID_WITHOUT_ACCOUNT: u64 = 76561197960265728;
+        let random_account = random::u32();
+        ID_WITHOUT_ACCOUNT | u64::from(random_account)
+    };
+
+    (*(*out_id).id).value = new_id;
+
+    common::log!("ID: {} -> {}", old_id, new_id);
+
+    out_id
 }
 
 #[allow(dead_code)]
