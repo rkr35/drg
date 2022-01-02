@@ -40,7 +40,7 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
     let original = mem::transmute::<*const c_void, ProcessRemoteFunctionForChannel>(crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL);
 
     if weapon::is_server_register_hit(function) {
-        for _ in 0..4 {
+        for _ in 0..2 {
             original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
         }
     } else if function == super::SERVER_SET_FALL_VELOCITY {
