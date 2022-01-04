@@ -16,6 +16,7 @@ static mut ON_ITEM_AMOUNT_CHANGED: MaybeUninit<FNativeFuncPtr> = MaybeUninit::un
 static mut GET_ITEM_NAME: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 static mut ON_FLARE: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 static mut ON_KEYPRESS_INSERT: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
+static mut ON_KEYPRESS_DELETE: MaybeUninit<FNativeFuncPtr> = MaybeUninit::uninit();
 
 static mut AMMO_DRIVEN_WEAPON: *const UClass = ptr::null();
 static mut THROWN_GRENADE_ITEM: *const UClass = ptr::null();
@@ -44,6 +45,7 @@ pub enum Error {
 
 pub struct Hooks {
     _one_time_modifications: OneTimeModifications,
+
     _process_remote_function_for_channel: Detour<7>,
     _function_invoke: Detour<5>,
     _add_cheats: Detour<5>,
@@ -51,10 +53,12 @@ pub struct Hooks {
     _destroy_actor: Detour<5>,
     _route_end_play: Detour<5>,
     _get_preferred_unique_net_id: Detour<5>,
+
     _on_item_amount_changed: UFunctionHook,
     _get_item_name: UFunctionHook,
     _on_flare: UFunctionHook,
     _on_keypress_insert: UFunctionHook,
+    _on_keypress_delete: UFunctionHook,
 }
 
 impl Hooks {
@@ -63,6 +67,7 @@ impl Hooks {
 
         Ok(Self {
             _one_time_modifications: OneTimeModifications::new(),
+
             _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
             _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
             _add_cheats: Detour::new(module, &mut crate::ADD_CHEATS, user::my_add_cheats as *const c_void)?,
@@ -70,10 +75,12 @@ impl Hooks {
             _destroy_actor: Detour::new(module, &mut crate::DESTROY_ACTOR, user::my_destroy_actor as *const c_void)?,
             _route_end_play: Detour::new(module, &mut crate::ROUTE_END_PLAY, user::my_route_end_play as *const c_void)?,
             _get_preferred_unique_net_id: Detour::new(module, &mut crate::GET_PREFERRED_UNIQUE_NET_ID, user::my_get_preferred_unique_net_id as *const c_void)?,
+            
             _on_item_amount_changed: UFunctionHook::new("Function /Script/FSD.AmmoCountWidget.OnItemAmountChanged", ON_ITEM_AMOUNT_CHANGED.as_mut_ptr(), user::my_on_item_amount_changed)?,
             _get_item_name: UFunctionHook::new("Function /Script/FSD.Item.GetItemName", GET_ITEM_NAME.as_mut_ptr(), user::my_get_item_name)?,
             _on_flare: UFunctionHook::new("Function /Game/UI/MainOnscreenHUD/HUD_Flares.HUD_Flares_C.OnFlareCountChanged", ON_FLARE.as_mut_ptr(), user::my_on_flare)?,
             _on_keypress_insert: UFunctionHook::new("Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpActEvt_Insert_K2Node_InputKeyEvent", ON_KEYPRESS_INSERT.as_mut_ptr(), user::my_on_keypress_insert)?,
+            _on_keypress_delete: UFunctionHook::new("Function /Game/Character/BP_PlayerCharacter.BP_PlayerCharacter_C.InpActEvt_Delete_K2Node_InputKeyEvent", ON_KEYPRESS_DELETE.as_mut_ptr(), user::my_on_keypress_delete)?,
         })
     }
 

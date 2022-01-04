@@ -98,6 +98,11 @@ pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mu
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
+pub unsafe extern "C" fn my_on_keypress_delete(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {    
+    render::toggle_lighting();
+    (*super::ON_KEYPRESS_DELETE.as_ptr())(context, stack, result);
+}
+
 pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     type PostActorConstruction = unsafe extern "C" fn(*mut Actor);
     let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
