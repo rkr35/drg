@@ -117,29 +117,25 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     }
 }
 
-pub unsafe extern "C" fn my_destroy_actor(world: *mut World, actor: *mut Actor, net_force: bool, should_modify_level: bool) -> bool {
+unsafe fn on_actor_destroyed(actor: *mut Actor) {
     let obj = actor.cast::<UObject>();
 
     if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
         if let Err(e) = PAWNS.remove(obj.cast()) {
             common::log!("failed to remove pawn {}: {:?}", *obj, e)
         }
-    }
+    } 
+}
 
+pub unsafe extern "C" fn my_destroy_actor(world: *mut World, actor: *mut Actor, net_force: bool, should_modify_level: bool) -> bool {
+    on_actor_destroyed(actor);
     type DestroyActor = unsafe extern "C" fn (*mut World, *mut Actor, bool, bool) -> bool;
     let original = mem::transmute::<*const c_void, DestroyActor>(crate::DESTROY_ACTOR);
     original(world, actor, net_force, should_modify_level)
 }
 
 pub unsafe extern "C" fn my_route_end_play(actor: *mut Actor, end_play_reason: u32) {
-    let obj = actor.cast::<UObject>();
-
-    if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
-        if let Err(e) = PAWNS.remove(obj.cast()) {
-            common::log!("failed to remove pawn {}: {:?}", *obj, e)
-        }
-    }
-
+    on_actor_destroyed(actor);
     type RouteEndPlay = unsafe extern "C" fn (*mut Actor, u32);
     let original = mem::transmute::<*const c_void, RouteEndPlay>(crate::ROUTE_END_PLAY);
     original(actor, end_play_reason);
