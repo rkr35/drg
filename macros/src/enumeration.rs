@@ -13,9 +13,7 @@ impl From<TokenStream> for Enum {
     fn from(stream: TokenStream) -> Self {
         let mut stream = stream.into_iter();
 
-        if !is_enum(&mut stream) {
-            panic!("not an enum");
-        }
+        assert!(is_enum(&mut stream), "not an enum");
 
         let name = if let Some(TokenTree::Ident(ident)) = stream.next() {
             ident

@@ -89,7 +89,7 @@ impl Variant {
     }
 
     fn parse_inner_error(name: &Ident, mut tokens: impl Iterator<Item = TokenTree>) -> Fields {
-        let is_missing_from_attribute = tokens
+        let has_from_attribute = tokens
             .next()
             .and_then(|token| if let TokenTree::Group(attribute) = token {
                 Some(attribute)
@@ -98,11 +98,9 @@ impl Variant {
             })
             .filter(|attribute| attribute.delimiter() == Delimiter::Bracket)
             .filter(|attribute| matches!(attribute.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "from"))
-            .is_none();
+            .is_some();
 
-        if is_missing_from_attribute {
-            panic!("expected #[from] attribute for variant {}", name);
-        }
+        assert!(has_from_attribute, "expected #[from] attribute for variant {}", name);
 
         let mut tokens = tokens.peekable();
 
