@@ -97,8 +97,8 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
     // 00007FF63919DE7B   FF90 80020000      call qword ptr ds:[rax+280]
     const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0x0D), None, None, None, None, Some(0x49), Some(0x8B), Some(0xD7), Some(0x48), Some(0x8B), Some(0x01), Some(0xFF), Some(0x90), Some(0x80), Some(0x02), Some(0x00), Some(0x00)];
     let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
-    let relative_offset = mov_rcx_global_engine.add(3).cast::<u32>().read_unaligned();
-    GEngine = *mov_rcx_global_engine.add(7 + relative_offset as usize).cast::<*const Engine>();
+    let relative_offset = mov_rcx_global_engine.add(3).cast::<i32>().read_unaligned();
+    GEngine = *mov_rcx_global_engine.offset(7 + relative_offset as isize).cast::<*const Engine>();
     Ok(())
 }
 
@@ -131,8 +131,8 @@ unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error
     // 00007FF66B98E697 | E8 C4510401              | call fsd-win64-shipping.7FF66C9D3860    |
     const PATTERN: [Option<u8>; 20] = [Some(0x48), Some(0x8B), Some(0xCF), Some(0xE8), None, None, None, None, Some(0x48), Some(0x8B), Some(0x4D), Some(0xC0), Some(0x48), Some(0x33), Some(0xCC), Some(0xE8), None, None, None, None];
     let mov_rcx_rdi: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindPostActorConstruction)?;
-    let call_immediate = mov_rcx_rdi.add(4).cast::<u32>().read_unaligned();
-    POST_ACTOR_CONSTRUCTION = mov_rcx_rdi.add(8 + call_immediate as usize).cast();
+    let call_immediate = mov_rcx_rdi.add(4).cast::<i32>().read_unaligned();
+    POST_ACTOR_CONSTRUCTION = mov_rcx_rdi.offset(8 + call_immediate as isize).cast();
     Ok(())
 }
 
