@@ -14,310 +14,73 @@ void UFunction::Invoke(UObject* Obj, FFrame& Stack, RESULT_DECL)
 	return (*Func)(Obj, Stack, RESULT_PARAM);
 }
 
-48 89 5C 24 20 55 56 57 41 55 41 57 48 8D 6C 24 C9 48 81 EC C0 00 00 00
+Finding through ProcessEvent:
 
-00007FF7A370E580 | 48:895C24 20             | mov qword ptr ss:[rsp+20],rbx                                                                                 | Class.cpp:5532
-00007FF7A370E585 | 55                       | push rbp                                                                                                      |
-00007FF7A370E586 | 56                       | push rsi                                                                                                      |
-00007FF7A370E587 | 57                       | push rdi                                                                                                      |
-00007FF7A370E588 | 41:55                    | push r13                                                                                                      |
-00007FF7A370E58A | 41:57                    | push r15                                                                                                      |
-00007FF7A370E58C | 48:8D6C24 C9             | lea rbp,qword ptr ss:[rsp-37]                                                                                 |
-00007FF7A370E591 | 48:81EC C0000000         | sub rsp,C0                                                                                                    |
-00007FF7A370E598 | 4C:89B424 00010000       | mov qword ptr ss:[rsp+100],r14                                                                                |
-00007FF7A370E5A0 | 4D:8BE9                  | mov r13,r9                                                                                                    |
-00007FF7A370E5A3 | 45:33F6                  | xor r14d,r14d                                                                                                 |
-00007FF7A370E5A6 | 4D:8BF8                  | mov r15,r8                                                                                                    |
-00007FF7A370E5A9 | 44:8975 67               | mov dword ptr ss:[rbp+67],r14d                                                                                |
-00007FF7A370E5AD | 48:8BFA                  | mov rdi,rdx                                                                                                   |
-00007FF7A370E5B0 | 48:8BF1                  | mov rsi,rcx                                                                                                   |
-00007FF7A370E5B3 | 48:85D2                  | test rdx,rdx                                                                                                  | Class.cpp:5536
-00007FF7A370E5B6 | 75 30                    | jne fsd-win64-shipping.7FF7A370E5E8                                                                           |
-00007FF7A370E5B8 | 803D E9209703 05         | cmp byte ptr ds:[<struct FLogCategoryFSDLog_EngineShippingDebugging FSDLog_EngineShippingDebugging>],5        | Class.cpp:5538
-00007FF7A370E5BF | 0F82 F9030000            | jb fsd-win64-shipping.7FF7A370E9BE                                                                            |
-00007FF7A370E5C5 | 48:8D05 84D08902         | lea rax,qword ptr ds:[7FF7A5FAB650]                                                                           | 00007FF7A5FAB650:L"UFunction::Invoke Obj == nullptr"
-00007FF7A370E5CC | 33C9                     | xor ecx,ecx                                                                                                   |
-00007FF7A370E5CE | 44:8D4A 05               | lea r9d,qword ptr ds:[rdx+5]                                                                                  |
-00007FF7A370E5D2 | 48:894424 20             | mov qword ptr ss:[rsp+20],rax                                                                                 |
-00007FF7A370E5D7 | 4C:8D05 CE209703         | lea r8,qword ptr ds:[7FF7A70806AC]                                                                            |
-00007FF7A370E5DE | E8 9D96EDFF              | call <fsd-win64-shipping.private: static void __cdecl FMsg::Logf_InternalImpl(char const * __ptr64,int,class  |
-00007FF7A370E5E3 | E9 D6030000              | jmp fsd-win64-shipping.7FF7A370E9BE                                                                           | Class.cpp:5539
-00007FF7A370E5E8 | 4C:89A424 F8000000       | mov qword ptr ss:[rsp+F8],r12                                                                                 | r12:UE4Function_Private::TFunctionRefCaller<<lambda_9dd9a69bcbdbcaca27d8a74331b4e54f>,void __cdecl(int)>::Call
-00007FF7A370E5F0 | 4C:8D25 E96B3602         | lea r12,qword ptr ds:[7FF7A5A751E0]                                                                           | Class.cpp:5542
-00007FF7A370E5F7 | 4C:39B1 D8000000         | cmp qword ptr ds:[rcx+D8],r14                                                                                 | r14:GAudioAsyncBatcher
-00007FF7A370E5FE | 75 5F                    | jne fsd-win64-shipping.7FF7A370E65F                                                                           |
-00007FF7A370E600 | 803D A1209703 05         | cmp byte ptr ds:[<struct FLogCategoryFSDLog_EngineShippingDebugging FSDLog_EngineShippingDebugging>],5        | Class.cpp:5544
-00007FF7A370E607 | 72 56                    | jb fsd-win64-shipping.7FF7A370E65F                                                                            |
-00007FF7A370E609 | 48:8B42 18               | mov rax,qword ptr ds:[rdx+18]                                                                                 |
-00007FF7A370E60D | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E611 | 48:8D55 E7               | lea rdx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E615 | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E619 | E8 7215F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E61E | 44:3975 EF               | cmp dword ptr ss:[rbp-11],r14d                                                                                |
-00007FF7A370E622 | 4C:8D05 83209703         | lea r8,qword ptr ds:[7FF7A70806AC]                                                                            |
-00007FF7A370E629 | 49:8BC4                  | mov rax,r12                                                                                                   |
-00007FF7A370E62C | 41:B9 05000000           | mov r9d,5                                                                                                     |
-00007FF7A370E632 | 48:0F4545 E7             | cmovne rax,qword ptr ss:[rbp-19]                                                                              |
-00007FF7A370E637 | 33D2                     | xor edx,edx                                                                                                   |
-00007FF7A370E639 | 48:894424 28             | mov qword ptr ss:[rsp+28],rax                                                                                 |
-00007FF7A370E63E | 33C9                     | xor ecx,ecx                                                                                                   |
-00007FF7A370E640 | 48:8D05 59D08902         | lea rax,qword ptr ds:[7FF7A5FAB6A0]                                                                           | 00007FF7A5FAB6A0:L"%s::UFunction::Invoke Func == nullptr"
-00007FF7A370E647 | 48:894424 20             | mov qword ptr ss:[rsp+20],rax                                                                                 |
-00007FF7A370E64C | E8 2F96EDFF              | call <fsd-win64-shipping.private: static void __cdecl FMsg::Logf_InternalImpl(char const * __ptr64,int,class  |
-00007FF7A370E651 | 48:8B4D E7               | mov rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E655 | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E658 | 74 05                    | je fsd-win64-shipping.7FF7A370E65F                                                                            |
-00007FF7A370E65A | E8 318EE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E65F | BA 17000000              | mov edx,17                                                                                                    | Class.cpp:5547
-00007FF7A370E664 | 4C:8975 E7               | mov qword ptr ss:[rbp-19],r14                                                                                 |
-00007FF7A370E668 | 48:8D4D E7               | lea rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E66C | 4C:8975 EF               | mov qword ptr ss:[rbp-11],r14                                                                                 |
-00007FF7A370E670 | E8 8B861BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeTo(in |
-00007FF7A370E675 | 8B55 EF                  | mov edx,dword ptr ss:[rbp-11]                                                                                 |
-00007FF7A370E678 | 8D42 17                  | lea eax,qword ptr ds:[rdx+17]                                                                                 |
-00007FF7A370E67B | 8945 EF                  | mov dword ptr ss:[rbp-11],eax                                                                                 |
-00007FF7A370E67E | 3B45 F3                  | cmp eax,dword ptr ss:[rbp-D]                                                                                  |
-00007FF7A370E681 | 7E 09                    | jle fsd-win64-shipping.7FF7A370E68C                                                                           |
-00007FF7A370E683 | 48:8D4D E7               | lea rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E687 | E8 F4851BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeGrow( |
-00007FF7A370E68C | 48:8B4D E7               | mov rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E690 | 4C:8D05 59D08902         | lea r8,qword ptr ds:[7FF7A5FAB6F0]                                                                            | 00007FF7A5FAB6F0:"AIC_Spider_AcidSpitter"
-00007FF7A370E697 | 41:B9 17000000           | mov r9d,17                                                                                                    |
-00007FF7A370E69D | B8 3F000000              | mov eax,3F                                                                                                    | 3F:'?'
-00007FF7A370E6A2 | 41:8BD1                  | mov edx,r9d                                                                                                   |
-00007FF7A370E6A5 | 66:894424 20             | mov word ptr ss:[rsp+20],ax                                                                                   |
-00007FF7A370E6AA | E8 21F11CFF              | call <fsd-win64-shipping.public: static wchar_t * __ptr64 __cdecl FGenericPlatformString::Convert<char,wchar_ |
-00007FF7A370E6AF | 48:8B47 18               | mov rax,qword ptr ds:[rdi+18]                                                                                 |
-00007FF7A370E6B3 | 48:8D55 27               | lea rdx,qword ptr ss:[rbp+27]                                                                                 |
-00007FF7A370E6B7 | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E6BB | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E6BF | BB 03000000              | mov ebx,3                                                                                                     |
-00007FF7A370E6C4 | E8 C714F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E6C9 | 44:8D43 FE               | lea r8d,qword ptr ds:[rbx-2]                                                                                  |
-00007FF7A370E6CD | 48:8D55 E7               | lea rdx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E6D1 | 48:8D4D 27               | lea rcx,qword ptr ss:[rbp+27]                                                                                 |
-00007FF7A370E6D5 | E8 368CE2FF              | call <fsd-win64-shipping.public: bool __cdecl FString::StartsWith(class FString const & __ptr64,enum ESearchC |
-00007FF7A370E6DA | 84C0                     | test al,al                                                                                                    |
-00007FF7A370E6DC | 0F85 73010000            | jne fsd-win64-shipping.7FF7A370E855                                                                           |
-00007FF7A370E6E2 | 8D53 17                  | lea edx,qword ptr ds:[rbx+17]                                                                                 |
-00007FF7A370E6E5 | 4C:8975 D7               | mov qword ptr ss:[rbp-29],r14                                                                                 |
-00007FF7A370E6E9 | 48:8D4D D7               | lea rcx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E6ED | 4C:8975 DF               | mov qword ptr ss:[rbp-21],r14                                                                                 |
-00007FF7A370E6F1 | E8 0A861BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeTo(in |
-00007FF7A370E6F6 | 8B55 DF                  | mov edx,dword ptr ss:[rbp-21]                                                                                 |
-00007FF7A370E6F9 | 8D42 1A                  | lea eax,qword ptr ds:[rdx+1A]                                                                                 |
-00007FF7A370E6FC | 8945 DF                  | mov dword ptr ss:[rbp-21],eax                                                                                 |
-00007FF7A370E6FF | 3B45 E3                  | cmp eax,dword ptr ss:[rbp-1D]                                                                                 |
-00007FF7A370E702 | 7E 09                    | jle fsd-win64-shipping.7FF7A370E70D                                                                           |
-00007FF7A370E704 | 48:8D4D D7               | lea rcx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E708 | E8 73851BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeGrow( |
-00007FF7A370E70D | 48:8B4D D7               | mov rcx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E711 | 4C:8D05 F0CF8902         | lea r8,qword ptr ds:[7FF7A5FAB708]                                                                            | 00007FF7A5FAB708:"ENE_Spider_Shooter_Normal"
-00007FF7A370E718 | 41:B9 1A000000           | mov r9d,1A                                                                                                    |
-00007FF7A370E71E | B8 3F000000              | mov eax,3F                                                                                                    | 3F:'?'
-00007FF7A370E723 | 41:8BD1                  | mov edx,r9d                                                                                                   |
-00007FF7A370E726 | 66:894424 20             | mov word ptr ss:[rsp+20],ax                                                                                   |
-00007FF7A370E72B | E8 A0F01CFF              | call <fsd-win64-shipping.public: static wchar_t * __ptr64 __cdecl FGenericPlatformString::Convert<char,wchar_ |
-00007FF7A370E730 | 48:8B47 18               | mov rax,qword ptr ds:[rdi+18]                                                                                 |
-00007FF7A370E734 | 48:8D55 17               | lea rdx,qword ptr ss:[rbp+17]                                                                                 |
-00007FF7A370E738 | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E73C | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E740 | BB 0F000000              | mov ebx,F                                                                                                     |
-00007FF7A370E745 | E8 4614F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E74A | 44:8D43 F2               | lea r8d,qword ptr ds:[rbx-E]                                                                                  |
-00007FF7A370E74E | 48:8D55 D7               | lea rdx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E752 | 48:8D4D 17               | lea rcx,qword ptr ss:[rbp+17]                                                                                 |
-00007FF7A370E756 | E8 B58BE2FF              | call <fsd-win64-shipping.public: bool __cdecl FString::StartsWith(class FString const & __ptr64,enum ESearchC |
-00007FF7A370E75B | 84C0                     | test al,al                                                                                                    |
-00007FF7A370E75D | 0F85 F2000000            | jne fsd-win64-shipping.7FF7A370E855                                                                           |
-00007FF7A370E763 | 8D53 09                  | lea edx,qword ptr ds:[rbx+9]                                                                                  |
-00007FF7A370E766 | 4C:8975 C7               | mov qword ptr ss:[rbp-39],r14                                                                                 |
-00007FF7A370E76A | 48:8D4D C7               | lea rcx,qword ptr ss:[rbp-39]                                                                                 |
-00007FF7A370E76E | 4C:8975 CF               | mov qword ptr ss:[rbp-31],r14                                                                                 |
-00007FF7A370E772 | E8 89851BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeTo(in |
-00007FF7A370E777 | 8B55 CF                  | mov edx,dword ptr ss:[rbp-31]                                                                                 |
-00007FF7A370E77A | 8D42 18                  | lea eax,qword ptr ds:[rdx+18]                                                                                 |
-00007FF7A370E77D | 8945 CF                  | mov dword ptr ss:[rbp-31],eax                                                                                 |
-00007FF7A370E780 | 3B45 D3                  | cmp eax,dword ptr ss:[rbp-2D]                                                                                 |
-00007FF7A370E783 | 7E 09                    | jle fsd-win64-shipping.7FF7A370E78E                                                                           |
-00007FF7A370E785 | 48:8D4D C7               | lea rcx,qword ptr ss:[rbp-39]                                                                                 |
-00007FF7A370E789 | E8 F2841BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeGrow( |
-00007FF7A370E78E | 48:8B4D C7               | mov rcx,qword ptr ss:[rbp-39]                                                                                 |
-00007FF7A370E792 | 4C:8D05 8FCF8902         | lea r8,qword ptr ds:[7FF7A5FAB728]                                                                            | 00007FF7A5FAB728:"ENE_Spider_RapidShooter"
-00007FF7A370E799 | 41:B9 18000000           | mov r9d,18                                                                                                    |
-00007FF7A370E79F | BB 3F000000              | mov ebx,3F                                                                                                    | 3F:'?'
-00007FF7A370E7A4 | 41:8BD1                  | mov edx,r9d                                                                                                   |
-00007FF7A370E7A7 | 66:895C24 20             | mov word ptr ss:[rsp+20],bx                                                                                   |
-00007FF7A370E7AC | E8 1FF01CFF              | call <fsd-win64-shipping.public: static wchar_t * __ptr64 __cdecl FGenericPlatformString::Convert<char,wchar_ |
-00007FF7A370E7B1 | 48:8B47 18               | mov rax,qword ptr ds:[rdi+18]                                                                                 |
-00007FF7A370E7B5 | 48:8D55 07               | lea rdx,qword ptr ss:[rbp+7]                                                                                  |
-00007FF7A370E7B9 | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E7BD | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E7C1 | E8 CA13F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E7C6 | 44:8D43 C2               | lea r8d,qword ptr ds:[rbx-3E]                                                                                 |
-00007FF7A370E7CA | 48:8D55 C7               | lea rdx,qword ptr ss:[rbp-39]                                                                                 |
-00007FF7A370E7CE | 48:8D4D 07               | lea rcx,qword ptr ss:[rbp+7]                                                                                  |
-00007FF7A370E7D2 | E8 398BE2FF              | call <fsd-win64-shipping.public: bool __cdecl FString::StartsWith(class FString const & __ptr64,enum ESearchC |
-00007FF7A370E7D7 | 84C0                     | test al,al                                                                                                    |
-00007FF7A370E7D9 | 75 7A                    | jne fsd-win64-shipping.7FF7A370E855                                                                           |
-00007FF7A370E7DB | 8D53 D3                  | lea edx,qword ptr ds:[rbx-2D]                                                                                 |
-00007FF7A370E7DE | 4C:8975 B7               | mov qword ptr ss:[rbp-49],r14                                                                                 |
-00007FF7A370E7E2 | 48:8D4D B7               | lea rcx,qword ptr ss:[rbp-49]                                                                                 |
-00007FF7A370E7E6 | 4C:8975 BF               | mov qword ptr ss:[rbp-41],r14                                                                                 |
-00007FF7A370E7EA | E8 11851BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeTo(in |
-00007FF7A370E7EF | 8B55 BF                  | mov edx,dword ptr ss:[rbp-41]                                                                                 |
-00007FF7A370E7F2 | 8D42 12                  | lea eax,qword ptr ds:[rdx+12]                                                                                 |
-00007FF7A370E7F5 | 8945 BF                  | mov dword ptr ss:[rbp-41],eax                                                                                 |
-00007FF7A370E7F8 | 3B45 C3                  | cmp eax,dword ptr ss:[rbp-3D]                                                                                 |
-00007FF7A370E7FB | 7E 09                    | jle fsd-win64-shipping.7FF7A370E806                                                                           |
-00007FF7A370E7FD | 48:8D4D B7               | lea rcx,qword ptr ss:[rbp-49]                                                                                 |
-00007FF7A370E801 | E8 7A841BFF              | call <fsd-win64-shipping.private: void __cdecl TArray<wchar_t,class TSizedDefaultAllocator<32> >::ResizeGrow( |
-00007FF7A370E806 | 48:8B4D B7               | mov rcx,qword ptr ss:[rbp-49]                                                                                 |
-00007FF7A370E80A | 4C:8D05 2FCF8902         | lea r8,qword ptr ds:[7FF7A5FAB740]                                                                            | 00007FF7A5FAB740:"AIC_Spider_Menace"
-00007FF7A370E811 | 41:B9 12000000           | mov r9d,12                                                                                                    |
-00007FF7A370E817 | 66:895C24 20             | mov word ptr ss:[rsp+20],bx                                                                                   |
-00007FF7A370E81C | 41:8BD1                  | mov edx,r9d                                                                                                   |
-00007FF7A370E81F | E8 ACEF1CFF              | call <fsd-win64-shipping.public: static wchar_t * __ptr64 __cdecl FGenericPlatformString::Convert<char,wchar_ |
-00007FF7A370E824 | 48:8B47 18               | mov rax,qword ptr ds:[rdi+18]                                                                                 |
-00007FF7A370E828 | 48:8D55 F7               | lea rdx,qword ptr ss:[rbp-9]                                                                                  |
-00007FF7A370E82C | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E830 | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E834 | BB FF000000              | mov ebx,FF                                                                                                    |
-00007FF7A370E839 | E8 5213F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E83E | 41:B8 01000000           | mov r8d,1                                                                                                     |
-00007FF7A370E844 | 48:8D55 B7               | lea rdx,qword ptr ss:[rbp-49]                                                                                 |
-00007FF7A370E848 | 48:8D4D F7               | lea rcx,qword ptr ss:[rbp-9]                                                                                  |
-00007FF7A370E84C | E8 BF8AE2FF              | call <fsd-win64-shipping.public: bool __cdecl FString::StartsWith(class FString const & __ptr64,enum ESearchC |
-00007FF7A370E851 | 84C0                     | test al,al                                                                                                    |
-00007FF7A370E853 | 74 07                    | je fsd-win64-shipping.7FF7A370E85C                                                                            |
-00007FF7A370E855 | 41:B6 01                 | mov r14b,1                                                                                                    |
-00007FF7A370E858 | 84DB                     | test bl,bl                                                                                                    |
-00007FF7A370E85A | 79 12                    | jns fsd-win64-shipping.7FF7A370E86E                                                                           |
-00007FF7A370E85C | 48:8B4D F7               | mov rcx,qword ptr ss:[rbp-9]                                                                                  |
-00007FF7A370E860 | 0FBAF3 07                | btr ebx,7                                                                                                     |
-00007FF7A370E864 | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E867 | 74 05                    | je fsd-win64-shipping.7FF7A370E86E                                                                            |
-00007FF7A370E869 | E8 228CE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E86E | F6C3 40                  | test bl,40                                                                                                    |
-00007FF7A370E871 | 74 11                    | je fsd-win64-shipping.7FF7A370E884                                                                            |
-00007FF7A370E873 | 48:8B4D B7               | mov rcx,qword ptr ss:[rbp-49]                                                                                 |
-00007FF7A370E877 | 83E3 BF                  | and ebx,FFFFFFBF                                                                                              |
-00007FF7A370E87A | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E87D | 74 05                    | je fsd-win64-shipping.7FF7A370E884                                                                            |
-00007FF7A370E87F | E8 0C8CE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E884 | F6C3 20                  | test bl,20                                                                                                    |
-00007FF7A370E887 | 74 11                    | je fsd-win64-shipping.7FF7A370E89A                                                                            |
-00007FF7A370E889 | 48:8B4D 07               | mov rcx,qword ptr ss:[rbp+7]                                                                                  |
-00007FF7A370E88D | 83E3 DF                  | and ebx,FFFFFFDF                                                                                              |
-00007FF7A370E890 | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E893 | 74 05                    | je fsd-win64-shipping.7FF7A370E89A                                                                            |
-00007FF7A370E895 | E8 F68BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E89A | F6C3 10                  | test bl,10                                                                                                    |
-00007FF7A370E89D | 74 11                    | je fsd-win64-shipping.7FF7A370E8B0                                                                            |
-00007FF7A370E89F | 48:8B4D C7               | mov rcx,qword ptr ss:[rbp-39]                                                                                 |
-00007FF7A370E8A3 | 83E3 EF                  | and ebx,FFFFFFEF                                                                                              |
-00007FF7A370E8A6 | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E8A9 | 74 05                    | je fsd-win64-shipping.7FF7A370E8B0                                                                            |
-00007FF7A370E8AB | E8 E08BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E8B0 | F6C3 08                  | test bl,8                                                                                                     |
-00007FF7A370E8B3 | 74 11                    | je fsd-win64-shipping.7FF7A370E8C6                                                                            |
-00007FF7A370E8B5 | 48:8B4D 17               | mov rcx,qword ptr ss:[rbp+17]                                                                                 |
-00007FF7A370E8B9 | 83E3 F7                  | and ebx,FFFFFFF7                                                                                              |
-00007FF7A370E8BC | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E8BF | 74 05                    | je fsd-win64-shipping.7FF7A370E8C6                                                                            |
-00007FF7A370E8C1 | E8 CA8BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E8C6 | F6C3 04                  | test bl,4                                                                                                     |
-00007FF7A370E8C9 | 74 0E                    | je fsd-win64-shipping.7FF7A370E8D9                                                                            |
-00007FF7A370E8CB | 48:8B4D D7               | mov rcx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E8CF | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E8D2 | 74 05                    | je fsd-win64-shipping.7FF7A370E8D9                                                                            |
-00007FF7A370E8D4 | E8 B78BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E8D9 | 48:8B4D 27               | mov rcx,qword ptr ss:[rbp+27]                                                                                 |
-00007FF7A370E8DD | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E8E0 | 74 05                    | je fsd-win64-shipping.7FF7A370E8E7                                                                            |
-00007FF7A370E8E2 | E8 A98BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E8E7 | 48:8B4D E7               | mov rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E8EB | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E8EE | 74 05                    | je fsd-win64-shipping.7FF7A370E8F5                                                                            |
-00007FF7A370E8F0 | E8 9B8BE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E8F5 | 45:84F6                  | test r14b,r14b                                                                                                | Class.cpp:5552
-00007FF7A370E8F8 | 0F84 B8000000            | je fsd-win64-shipping.7FF7A370E9B6                                                                            |
-00007FF7A370E8FE | 803D A31D9703 05         | cmp byte ptr ds:[<struct FLogCategoryFSDLog_EngineShippingDebugging FSDLog_EngineShippingDebugging>],5        | Class.cpp:5554
-00007FF7A370E905 | 0F82 AB000000            | jb fsd-win64-shipping.7FF7A370E9B6                                                                            |
-00007FF7A370E90B | 48:8BDE                  | mov rbx,rsi                                                                                                   |
-00007FF7A370E90E | 48:85DB                  | test rbx,rbx                                                                                                  |
-00007FF7A370E911 | 74 27                    | je fsd-win64-shipping.7FF7A370E93A                                                                            |
-00007FF7A370E913 | E8 98DCFFFF              | call <fsd-win64-shipping.private: static class UClass * __ptr64 __cdecl UStruct::GetPrivateStaticClass(void)> |
-00007FF7A370E918 | 48:8B53 10               | mov rdx,qword ptr ds:[rbx+10]                                                                                 |
-00007FF7A370E91C | 4C:8D40 30               | lea r8,qword ptr ds:[rax+30]                                                                                  |
-00007FF7A370E920 | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]                                                                              |
-00007FF7A370E924 | 3B42 38                  | cmp eax,dword ptr ds:[rdx+38]                                                                                 |
-00007FF7A370E927 | 7F 11                    | jg fsd-win64-shipping.7FF7A370E93A                                                                            |
-00007FF7A370E929 | 48:8BC8                  | mov rcx,rax                                                                                                   |
-00007FF7A370E92C | 48:8B42 30               | mov rax,qword ptr ds:[rdx+30]                                                                                 |
-00007FF7A370E930 | 4C:3904C8                | cmp qword ptr ds:[rax+rcx*8],r8                                                                               |
-00007FF7A370E934 | 0F84 FD000000            | je fsd-win64-shipping.7FF7A370EA37                                                                            |
-00007FF7A370E93A | 48:8B5B 20               | mov rbx,qword ptr ds:[rbx+20]                                                                                 |
-00007FF7A370E93E | 48:85DB                  | test rbx,rbx                                                                                                  |
-00007FF7A370E941 | 75 D0                    | jne fsd-win64-shipping.7FF7A370E913                                                                           |
-00007FF7A370E943 | 33C0                     | xor eax,eax                                                                                                   |
-00007FF7A370E945 | 48:8945 E7               | mov qword ptr ss:[rbp-19],rax                                                                                 |
-00007FF7A370E949 | 48:8945 EF               | mov qword ptr ss:[rbp-11],rax                                                                                 |
-00007FF7A370E94D | 49:8BDC                  | mov rbx,r12                                                                                                   |
-00007FF7A370E950 | 48:8B47 18               | mov rax,qword ptr ds:[rdi+18]                                                                                 |
-00007FF7A370E954 | 48:8D55 D7               | lea rdx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E958 | 48:8D4D 67               | lea rcx,qword ptr ss:[rbp+67]                                                                                 |
-00007FF7A370E95C | 48:8945 67               | mov qword ptr ss:[rbp+67],rax                                                                                 |
-00007FF7A370E960 | E8 2B12F7FF              | call <fsd-win64-shipping.public: class FString __cdecl FName::ToString(void)const __ptr64>                    |
-00007FF7A370E965 | 837D DF 00               | cmp dword ptr ss:[rbp-21],0                                                                                   |
-00007FF7A370E969 | 48:8D05 E8CD8902         | lea rax,qword ptr ds:[7FF7A5FAB758]                                                                           | 00007FF7A5FAB758:L"%s::UFunction::Invoke %s"
-00007FF7A370E970 | 48:895C24 30             | mov qword ptr ss:[rsp+30],rbx                                                                                 |
-00007FF7A370E975 | 4C:8D05 301D9703         | lea r8,qword ptr ds:[7FF7A70806AC]                                                                            |
-00007FF7A370E97C | 4C:0F4565 D7             | cmovne r12,qword ptr ss:[rbp-29]                                                                              |
-00007FF7A370E981 | 41:B9 05000000           | mov r9d,5                                                                                                     |
-00007FF7A370E987 | 4C:896424 28             | mov qword ptr ss:[rsp+28],r12                                                                                 |
-00007FF7A370E98C | 33D2                     | xor edx,edx                                                                                                   |
-00007FF7A370E98E | 33C9                     | xor ecx,ecx                                                                                                   |
-00007FF7A370E990 | 48:894424 20             | mov qword ptr ss:[rsp+20],rax                                                                                 |
-00007FF7A370E995 | E8 E692EDFF              | call <fsd-win64-shipping.private: static void __cdecl FMsg::Logf_InternalImpl(char const * __ptr64,int,class  |
-00007FF7A370E99A | 48:8B4D D7               | mov rcx,qword ptr ss:[rbp-29]                                                                                 |
-00007FF7A370E99E | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E9A1 | 74 05                    | je fsd-win64-shipping.7FF7A370E9A8                                                                            |
-00007FF7A370E9A3 | E8 E88AE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E9A8 | 48:8B4D E7               | mov rcx,qword ptr ss:[rbp-19]                                                                                 |
-00007FF7A370E9AC | 48:85C9                  | test rcx,rcx                                                                                                  |
-00007FF7A370E9AF | 74 05                    | je fsd-win64-shipping.7FF7A370E9B6                                                                            |
-00007FF7A370E9B1 | E8 DA8AE6FF              | call <fsd-win64-shipping.public: static void __cdecl FMemory::Free(void * __ptr64)>                           |
-00007FF7A370E9B6 | 4C:8BA424 F8000000       | mov r12,qword ptr ss:[rsp+F8]                                                                                 |
-00007FF7A370E9BE | 48:8B5E 20               | mov rbx,qword ptr ds:[rsi+20]                                                                                 | Class.cpp:5559
-00007FF7A370E9C2 | E8 49120E00              | call <fsd-win64-shipping.private: static class UClass * __ptr64 __cdecl UInterface::GetPrivateStaticClass(voi | Class.cpp:5560
-00007FF7A370E9C7 | 4C:8BB424 00010000       | mov r14,qword ptr ss:[rsp+100]                                                                                |
-00007FF7A370E9CF | 48:85C0                  | test rax,rax                                                                                                  |
-00007FF7A370E9D2 | 74 28                    | je fsd-win64-shipping.7FF7A370E9FC                                                                            |
-00007FF7A370E9D4 | 48:8D50 30               | lea rdx,qword ptr ds:[rax+30]                                                                                 |
-00007FF7A370E9D8 | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]                                                                              |
-00007FF7A370E9DC | 3B43 38                  | cmp eax,dword ptr ds:[rbx+38]                                                                                 |
-00007FF7A370E9DF | 7F 1B                    | jg fsd-win64-shipping.7FF7A370E9FC                                                                            |
-00007FF7A370E9E1 | 48:8BC8                  | mov rcx,rax                                                                                                   |
-00007FF7A370E9E4 | 48:8B43 30               | mov rax,qword ptr ds:[rbx+30]                                                                                 |
-00007FF7A370E9E8 | 48:3914C8                | cmp qword ptr ds:[rax+rcx*8],rdx                                                                              |
-00007FF7A370E9EC | 75 0E                    | jne fsd-win64-shipping.7FF7A370E9FC                                                                           |
-00007FF7A370E9EE | 48:8BD3                  | mov rdx,rbx                                                                                                   | Class.cpp:5562
-00007FF7A370E9F1 | 48:8BCF                  | mov rcx,rdi                                                                                                   |
-00007FF7A370E9F4 | E8 47631500              | call <fsd-win64-shipping.public: void * __ptr64 __cdecl UObjectBaseUtility::GetInterfaceAddress(class UClass  |
-00007FF7A370E9F9 | 48:8BF8                  | mov rdi,rax                                                                                                   |
-00007FF7A370E9FC | 49:8B9F 88000000         | mov rbx,qword ptr ds:[r15+88]                                                                                 | Class.cpp:5565
-00007FF7A370EA03 | 4D:8BC5                  | mov r8,r13                                                                                                    | Class.cpp:5566
-00007FF7A370EA06 | 49:8BD7                  | mov rdx,r15                                                                                                   |
-00007FF7A370EA09 | 49:89B7 88000000         | mov qword ptr ds:[r15+88],rsi                                                                                 | Class.cpp:5565
-00007FF7A370EA10 | 48:8BCF                  | mov rcx,rdi                                                                                                   | Class.cpp:5566
-00007FF7A370EA13 | FF96 D8000000            | call qword ptr ds:[rsi+D8]                                                                                    |
-00007FF7A370EA19 | 49:899F 88000000         | mov qword ptr ds:[r15+88],rbx                                                                                 |
-00007FF7A370EA20 | 48:8B9C24 08010000       | mov rbx,qword ptr ss:[rsp+108]                                                                                | Class.cpp:5567
-00007FF7A370EA28 | 48:81C4 C0000000         | add rsp,C0                                                                                                    |
-00007FF7A370EA2F | 41:5F                    | pop r15                                                                                                       |
-00007FF7A370EA31 | 41:5D                    | pop r13                                                                                                       |
-00007FF7A370EA33 | 5F                       | pop rdi                                                                                                       |
-00007FF7A370EA34 | 5E                       | pop rsi                                                                                                       |
-00007FF7A370EA35 | 5D                       | pop rbp                                                                                                       |
-00007FF7A370EA36 | C3                       | ret                                                                                                           |
+4D 8B CE 4C 8D 45 10 49 8B D4 48 8B CE E8
+
+00007FF7B5DCCDA0 | 4D:8BCE                  | mov r9,r14                                                                                                    |
+00007FF7B5DCCDA3 | 4C:8D45 10               | lea r8,qword ptr ss:[rbp+10]                                                                                  |
+00007FF7B5DCCDA7 | 49:8BD4                  | mov rdx,r12                                                                                                   |
+00007FF7B5DCCDAA | 48:8BCE                  | mov rcx,rsi                                                                                                   |
+00007FF7B5DCCDAD | E8 AE37EAFF              | call fsd-win64-shipping.7FF7B5C70560                                                                          |
+
+...beginning of ProcessEvent...
+00007FF7AB53D40B | 0FB786 B8000000                       | movzx eax,word ptr ds:[rsi+B8]                                         | ReturnValueOffset
+00007FF7AB53D412 | B9 FFFF0000                           | mov ecx,FFFF                                                           | MAX_uint16
+00007FF7AB53D417 | 66:3BC1                               | cmp ax,cx                                                              |
+00007FF7AB53D41A | 74 07                                 | je fsd-win64-shipping.7FF7AB53D423                                     |
+00007FF7AB53D41C | 44:0FB7F0                             | movzx r14d,ax                                                          |
+00007FF7AB53D420 | 4D:03F7                               | add r14,r15                                                            | (uint8*)Parms + Function->ReturnValueOffset
+00007FF7AB53D423 | 4D:8BCE                               | mov r9,r14                                                             | uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)Parms + Function->ReturnValueOffset) : nullptr;
+00007FF7AB53D426 | 4C:8D45 10                            | lea r8,qword ptr ss:[rbp+10]                                           |
+00007FF7AB53D42A | 49:8BD4                               | mov rdx,r12                                                            |
+00007FF7AB53D42D | 48:8BCE                               | mov rcx,rsi                                                            |
+00007FF7AB53D430 | E8 6B7DEBFF                           | call fsd-win64-shipping.7FF7AB3F51A0                                   | Function->Invoke(this, NewStack, ReturnValueAddress);
+00007FF7AB53D435 | 4D:85ED                               | test r13,r13                                                           |
+00007FF7AB53D438 | 75 7D                                 | jne fsd-win64-shipping.7FF7AB53D4B7                                    |
+00007FF7AB53D43A | 48:8B9E 80000000                      | mov rbx,qword ptr ds:[rsi+80]                                          |
+00007FF7AB53D441 | 48:85DB                               | test rbx,rbx                                                           |
+...end of process ProcessEvent
+
+
+UFunction::Invoke:
+00007FF7B5C70560 | 48:895C24 08             | mov qword ptr ss:[rsp+8],rbx                                                                                  |
+00007FF7B5C70565 | 48:896C24 10             | mov qword ptr ss:[rsp+10],rbp                                                                                 |
+00007FF7B5C7056A | 48:897424 18             | mov qword ptr ss:[rsp+18],rsi                                                                                 |
+00007FF7B5C7056F | 48:897C24 20             | mov qword ptr ss:[rsp+20],rdi                                                                                 |
+00007FF7B5C70574 | 41:56                    | push r14                                                                                                      |
+00007FF7B5C70576 | 48:83EC 20               | sub rsp,20                                                                                                    |
+00007FF7B5C7057A | 48:8B59 20               | mov rbx,qword ptr ds:[rcx+20]                                                                                 |
+00007FF7B5C7057E | 4D:8BF1                  | mov r14,r9                                                                                                    |
+00007FF7B5C70581 | 49:8BF8                  | mov rdi,r8                                                                                                    |
+00007FF7B5C70584 | 48:8BF2                  | mov rsi,rdx                                                                                                   |
+00007FF7B5C70587 | 48:8BE9                  | mov rbp,rcx                                                                                                   |
+00007FF7B5C7058A | E8 21120E00              | call fsd-win64-shipping.7FF7B5D517B0                                                                          |
+00007FF7B5C7058F | 48:85C0                  | test rax,rax                                                                                                  |
+00007FF7B5C70592 | 74 28                    | je fsd-win64-shipping.7FF7B5C705BC                                                                            |
+00007FF7B5C70594 | 48:8D50 30               | lea rdx,qword ptr ds:[rax+30]                                                                                 |
+00007FF7B5C70598 | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]                                                                              |
+00007FF7B5C7059C | 3B43 38                  | cmp eax,dword ptr ds:[rbx+38]                                                                                 |
+00007FF7B5C7059F | 7F 1B                    | jg fsd-win64-shipping.7FF7B5C705BC                                                                            |
+00007FF7B5C705A1 | 4C:8BC0                  | mov r8,rax                                                                                                    |
+00007FF7B5C705A4 | 48:8B43 30               | mov rax,qword ptr ds:[rbx+30]                                                                                 |
+00007FF7B5C705A8 | 4A:3914C0                | cmp qword ptr ds:[rax+r8*8],rdx                                                                               |
+00007FF7B5C705AC | 75 0E                    | jne fsd-win64-shipping.7FF7B5C705BC                                                                           |
+00007FF7B5C705AE | 48:8BD3                  | mov rdx,rbx                                                                                                   |
+00007FF7B5C705B1 | 48:8BCE                  | mov rcx,rsi                                                                                                   |
+00007FF7B5C705B4 | E8 27631500              | call fsd-win64-shipping.7FF7B5DC68E0                                                                          |
+00007FF7B5C705B9 | 48:8BF0                  | mov rsi,rax                                                                                                   |
+00007FF7B5C705BC | 48:8B9F 88000000         | mov rbx,qword ptr ds:[rdi+88]                                                                                 |
+00007FF7B5C705C3 | 4D:8BC6                  | mov r8,r14                                                                                                    |
+00007FF7B5C705C6 | 48:8BD7                  | mov rdx,rdi                                                                                                   |
+00007FF7B5C705C9 | 48:89AF 88000000         | mov qword ptr ds:[rdi+88],rbp                                                                                 |
+00007FF7B5C705D0 | 48:8BCE                  | mov rcx,rsi                                                                                                   |
+00007FF7B5C705D3 | FF95 D8000000            | call qword ptr ss:[rbp+D8]                                                                                    |
+00007FF7B5C705D9 | 48:8B6C24 38             | mov rbp,qword ptr ss:[rsp+38]                                                                                 |
+00007FF7B5C705DE | 48:8B7424 40             | mov rsi,qword ptr ss:[rsp+40]                                                                                 |
+00007FF7B5C705E3 | 48:899F 88000000         | mov qword ptr ds:[rdi+88],rbx                                                                                 |
+00007FF7B5C705EA | 48:8B5C24 30             | mov rbx,qword ptr ss:[rsp+30]                                                                                 |
+00007FF7B5C705EF | 48:8B7C24 48             | mov rdi,qword ptr ss:[rsp+48]                                                                                 |
+00007FF7B5C705F4 | 48:83C4 20               | add rsp,20                                                                                                    |
+00007FF7B5C705F8 | 41:5E                    | pop r14                                                                                                       |
+00007FF7B5C705FA | C3                       | ret                                                                                                           |

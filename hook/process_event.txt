@@ -189,6 +189,8 @@ void UObject::ProcessEvent( UFunction* Function, void* Parms )
 #endif
 }
 
+40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC F0 00 00 00
+
 00007FF7AB53D150 | 40:55                                 | push rbp                                                               | ProcessEvent
 00007FF7AB53D152 | 56                                    | push rsi                                                               |
 00007FF7AB53D153 | 57                                    | push rdi                                                               |

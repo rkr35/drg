@@ -103,8 +103,11 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
 }
 
 unsafe fn find_function_invoke(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 24] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x20), Some(0x55), Some(0x56), Some(0x57), Some(0x41), Some(0x55), Some(0x41), Some(0x57), Some(0x48), Some(0x8D), Some(0x6C), Some(0x24), Some(0xC9), Some(0x48), Some(0x81), Some(0xEC), Some(0xC0), Some(0x00), Some(0x00), Some(0x00)];
-    FUNCTION_INVOKE = module.find_mut(&PATTERN).ok_or(Error::FindFunctionInvoke)?;
+    const PATTERN: [Option<u8>; 14] = [Some(0x4D), Some(0x8B), Some(0xCE), Some(0x4C), Some(0x8D), Some(0x45), Some(0x10), Some(0x49), Some(0x8B), Some(0xD4), Some(0x48), Some(0x8B), Some(0xCE), Some(0xE8)];
+    let mov_r9_r14: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindFunctionInvoke)?;
+    let base = mov_r9_r14.add(PATTERN.len() + 4);
+    let relative_offset = base.sub(4).cast::<i32>().read_unaligned();
+    FUNCTION_INVOKE = base.offset(relative_offset as isize).cast();
     Ok(())
 }
 
