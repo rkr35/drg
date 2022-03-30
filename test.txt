@@ -1,2 +1,0 @@
-Test signed commit.
-Take 2.
