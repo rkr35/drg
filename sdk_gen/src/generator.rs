@@ -890,6 +890,10 @@ impl Display for CleanedName {
         self.num_invalid_characters_replaced
             .set(num_pieces_added - 1);
 
+        if self.num_invalid_characters_replaced.get() > 0 {
+            write!(f, "_replaced")?;
+        }
+
         Ok(())
     }
 }
