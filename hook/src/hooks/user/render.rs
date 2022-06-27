@@ -23,7 +23,7 @@ impl TryFrom<i32> for ViewModeIndex {
 }
 
 unsafe fn view_mode_ptr() -> *mut i32 {
-    const OFFSET_VIEW_MODE_INDEX: usize = 0xA8;
+    const OFFSET_VIEW_MODE_INDEX: usize = 0xB0;
     (*crate::GEngine).GameViewport.cast::<u8>().add(OFFSET_VIEW_MODE_INDEX).cast::<i32>()
 }
 
