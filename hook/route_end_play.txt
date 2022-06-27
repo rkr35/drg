@@ -1,4 +1,4 @@
-48 89 5C 24 18 48 89 74 24 20 57 48 81 EC 00 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 F0 00 00 00 F6 41 5B 20
+48 89 5C 24 18 48 89 74 24 20 57 48 81 EC 00 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 F0 00 00 00 F6 41 5B
 
 void AActor::RouteEndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -31,99 +31,98 @@ void AActor::RouteEndPlay(const EEndPlayReason::Type EndPlayReason)
 	UninitializeComponents();
 }
 
-
-00007FF6A7EA1560 | 48:895C24 18             | mov qword ptr ss:[rsp+18],rbx                                                         | void AActor::RouteEndPlay(const EEndPlayReason::Type EndPlayReason)
-00007FF6A7EA1565 | 48:897424 20             | mov qword ptr ss:[rsp+20],rsi                                                         |
-00007FF6A7EA156A | 57                       | push rdi                                                                              |
-00007FF6A7EA156B | 48:81EC 00010000         | sub rsp,100                                                                           |
-00007FF6A7EA1572 | 48:8B05 2F376402         | mov rax,qword ptr ds:[7FF6AA4E4CA8]                                                   |
-00007FF6A7EA1579 | 48:33C4                  | xor rax,rsp                                                                           |
-00007FF6A7EA157C | 48:898424 F0000000       | mov qword ptr ss:[rsp+F0],rax                                                         |
-00007FF6A7EA1584 | F641 5B 20               | test byte ptr ds:[rcx+5B],20                                                          |
-00007FF6A7EA1588 | 8BDA                     | mov ebx,edx                                                                           |
-00007FF6A7EA158A | 48:8BF9                  | mov rdi,rcx                                                                           |
-00007FF6A7EA158D | 74 59                    | je fsd-win64-shipping.7FF6A7EA15E8                                                    |
-00007FF6A7EA158F | 0FB641 5C                | movzx eax,byte ptr ds:[rcx+5C]                                                        |
-00007FF6A7EA1593 | 24 60                    | and al,60                                                                             |
-00007FF6A7EA1595 | 3C 40                    | cmp al,40                                                                             | 40:'@'
-00007FF6A7EA1597 | 75 09                    | jne fsd-win64-shipping.7FF6A7EA15A2                                                   |
-00007FF6A7EA1599 | 48:8B01                  | mov rax,qword ptr ds:[rcx]                                                            |
-00007FF6A7EA159C | FF90 30030000            | call qword ptr ds:[rax+330]                                                           |
-00007FF6A7EA15A2 | 83FB 03                  | cmp ebx,3                                                                             |
-00007FF6A7EA15A5 | 75 28                    | jne fsd-win64-shipping.7FF6A7EA15CF                                                   |
-00007FF6A7EA15A7 | 48:8BCF                  | mov rcx,rdi                                                                           |
-00007FF6A7EA15AA | E8 2154FEFF              | call fsd-win64-shipping.7FF6A7E869D0                                                  |
-00007FF6A7EA15AF | 48:8B07                  | mov rax,qword ptr ds:[rdi]                                                            |
-00007FF6A7EA15B2 | 48:8BCF                  | mov rcx,rdi                                                                           |
-00007FF6A7EA15B5 | 8067 5B DF               | and byte ptr ds:[rdi+5B],DF                                                           |
-00007FF6A7EA15B9 | FF90 50010000            | call qword ptr ds:[rax+150]                                                           |
-00007FF6A7EA15BF | 48:85C0                  | test rax,rax                                                                          |
-00007FF6A7EA15C2 | 74 0B                    | je fsd-win64-shipping.7FF6A7EA15CF                                                    |
-00007FF6A7EA15C4 | 48:8BD7                  | mov rdx,rdi                                                                           |
-00007FF6A7EA15C7 | 48:8BC8                  | mov rcx,rax                                                                           |
-00007FF6A7EA15CA | E8 11056D00              | call fsd-win64-shipping.7FF6A8571AE0                                                  |
-00007FF6A7EA15CF | 48:83BF 48010000 00      | cmp qword ptr ds:[rdi+148],0                                                          |
-00007FF6A7EA15D7 | 74 0F                    | je fsd-win64-shipping.7FF6A7EA15E8                                                    |
-00007FF6A7EA15D9 | 48:8B07                  | mov rax,qword ptr ds:[rdi]                                                            |
-00007FF6A7EA15DC | 0F57C9                   | xorps xmm1,xmm1                                                                       |
-00007FF6A7EA15DF | 48:8BCF                  | mov rcx,rdi                                                                           |
-00007FF6A7EA15E2 | FF90 90030000            | call qword ptr ds:[rax+390]                                                           |
-00007FF6A7EA15E8 | 33F6                     | xor esi,esi                                                                           |
-00007FF6A7EA15EA | C78424 EC000000 18000000 | mov dword ptr ss:[rsp+EC],18                                                          |
-00007FF6A7EA15F5 | 48:89B424 E0000000       | mov qword ptr ss:[rsp+E0],rsi                                                         |
-00007FF6A7EA15FD | 89B424 E8000000          | mov dword ptr ss:[rsp+E8],esi                                                         |
-00007FF6A7EA1604 | E8 47956E00              | call fsd-win64-shipping.7FF6A858AB50                                                  |
-00007FF6A7EA1609 | 48:8BD8                  | mov rbx,rax                                                                           |
-00007FF6A7EA160C | 48:85C0                  | test rax,rax                                                                          |
-00007FF6A7EA160F | 74 27                    | je fsd-win64-shipping.7FF6A7EA1638                                                    |
-00007FF6A7EA1611 | E8 3A956E00              | call fsd-win64-shipping.7FF6A858AB50                                                  |
-00007FF6A7EA1616 | 48:85C0                  | test rax,rax                                                                          |
-00007FF6A7EA1619 | 74 1D                    | je fsd-win64-shipping.7FF6A7EA1638                                                    |
-00007FF6A7EA161B | 48:8D50 30               | lea rdx,qword ptr ds:[rax+30]                                                         |
-00007FF6A7EA161F | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]                                                      |
-00007FF6A7EA1623 | 3B43 38                  | cmp eax,dword ptr ds:[rbx+38]                                                         |
-00007FF6A7EA1626 | 7F 10                    | jg fsd-win64-shipping.7FF6A7EA1638                                                    |
-00007FF6A7EA1628 | 48:8BC8                  | mov rcx,rax                                                                           |
-00007FF6A7EA162B | 48:8B43 30               | mov rax,qword ptr ds:[rbx+30]                                                         |
-00007FF6A7EA162F | 48:3914C8                | cmp qword ptr ds:[rax+rcx*8],rdx                                                      |
-00007FF6A7EA1633 | 75 03                    | jne fsd-win64-shipping.7FF6A7EA1638                                                   |
-00007FF6A7EA1635 | 48:8BF3                  | mov rsi,rbx                                                                           |
-00007FF6A7EA1638 | E8 13956E00              | call fsd-win64-shipping.7FF6A858AB50                                                  |
-00007FF6A7EA163D | 4C:8D4424 20             | lea r8,qword ptr ss:[rsp+20]                                                          |
-00007FF6A7EA1642 | 48:8BD3                  | mov rdx,rbx                                                                           |
-00007FF6A7EA1645 | 48:8BCF                  | mov rcx,rdi                                                                           |
-00007FF6A7EA1648 | 48:3BF0                  | cmp rsi,rax                                                                           |
-00007FF6A7EA164B | 75 07                    | jne fsd-win64-shipping.7FF6A7EA1654                                                   |
-00007FF6A7EA164D | E8 AEFABEFF              | call fsd-win64-shipping.7FF6A7A91100                                                  |
-00007FF6A7EA1652 | EB 05                    | jmp fsd-win64-shipping.7FF6A7EA1659                                                   |
-00007FF6A7EA1654 | E8 B7FCBEFF              | call fsd-win64-shipping.7FF6A7A91310                                                  |
-00007FF6A7EA1659 | 48:8B8C24 E0000000       | mov rcx,qword ptr ss:[rsp+E0]                                                         |
-00007FF6A7EA1661 | 48:8D5C24 20             | lea rbx,qword ptr ss:[rsp+20]                                                         |
-00007FF6A7EA1666 | 48:638424 E8000000       | movsxd rax,dword ptr ss:[rsp+E8]                                                      |
-00007FF6A7EA166E | 48:85C9                  | test rcx,rcx                                                                          |
-00007FF6A7EA1671 | 48:0F45D9                | cmovne rbx,rcx                                                                        |
-00007FF6A7EA1675 | 48:8D3CC3                | lea rdi,qword ptr ds:[rbx+rax*8]                                                      |
-00007FF6A7EA1679 | 48:3BDF                  | cmp rbx,rdi                                                                           |
-00007FF6A7EA167C | 74 28                    | je fsd-win64-shipping.7FF6A7EA16A6                                                    |
-00007FF6A7EA167E | 66:90                    | nop                                                                                   |
-00007FF6A7EA1680 | 48:8B0B                  | mov rcx,qword ptr ds:[rbx]                                                            |
-00007FF6A7EA1683 | 80B9 8A000000 00         | cmp byte ptr ds:[rcx+8A],0                                                            |
-00007FF6A7EA168A | 7D 09                    | jge fsd-win64-shipping.7FF6A7EA1695                                                   |
-00007FF6A7EA168C | 48:8B01                  | mov rax,qword ptr ds:[rcx]                                                            |
-00007FF6A7EA168F | FF90 30030000            | call qword ptr ds:[rax+330]                                                           |
-00007FF6A7EA1695 | 48:83C3 08               | add rbx,8                                                                             |
-00007FF6A7EA1699 | 48:3BDF                  | cmp rbx,rdi                                                                           |
-00007FF6A7EA169C | 75 E2                    | jne fsd-win64-shipping.7FF6A7EA1680                                                   |
-00007FF6A7EA169E | 48:8B8C24 E0000000       | mov rcx,qword ptr ss:[rsp+E0]                                                         |
-00007FF6A7EA16A6 | 48:85C9                  | test rcx,rcx                                                                          |
-00007FF6A7EA16A9 | 74 05                    | je fsd-win64-shipping.7FF6A7EA16B0                                                    |
-00007FF6A7EA16AB | E8 0051BFFE              | call fsd-win64-shipping.7FF6A6A967B0                                                  |
-00007FF6A7EA16B0 | 48:8B8C24 F0000000       | mov rcx,qword ptr ss:[rsp+F0]                                                         |
-00007FF6A7EA16B8 | 48:33CC                  | xor rcx,rsp                                                                           |
-00007FF6A7EA16BB | E8 A0210301              | call fsd-win64-shipping.7FF6A8ED3860                                                  |
-00007FF6A7EA16C0 | 4C:8D9C24 00010000       | lea r11,qword ptr ss:[rsp+100]                                                        |
-00007FF6A7EA16C8 | 49:8B5B 20               | mov rbx,qword ptr ds:[r11+20]                                                         | r11+20:"PÚWöj"
-00007FF6A7EA16CC | 49:8B73 28               | mov rsi,qword ptr ds:[r11+28]                                                         |
-00007FF6A7EA16D0 | 49:8BE3                  | mov rsp,r11                                                                           |
-00007FF6A7EA16D3 | 5F                       | pop rdi                                                                               |
-00007FF6A7EA16D4 | C3                       | ret                                                                                   |
+00007FF638290F50 | 48:895C24 18             | mov qword ptr ss:[rsp+18],rbx           |
+00007FF638290F55 | 48:897424 20             | mov qword ptr ss:[rsp+20],rsi           |
+00007FF638290F5A | 57                       | push rdi                                |
+00007FF638290F5B | 48:81EC 00010000         | sub rsp,100                             |
+00007FF638290F62 | 48:8B05 9FB19802         | mov rax,qword ptr ds:[7FF63AC1C108]     |
+00007FF638290F69 | 48:33C4                  | xor rax,rsp                             |
+00007FF638290F6C | 48:898424 F0000000       | mov qword ptr ss:[rsp+F0],rax           |
+00007FF638290F74 | F641 5B 40               | test byte ptr ds:[rcx+5B],40            |
+00007FF638290F78 | 8BDA                     | mov ebx,edx                             |
+00007FF638290F7A | 48:8BF9                  | mov rdi,rcx                             |
+00007FF638290F7D | 74 59                    | je fsd-win64-shipping.7FF638290FD8      |
+00007FF638290F7F | 0FB641 5C                | movzx eax,byte ptr ds:[rcx+5C]          |
+00007FF638290F83 | 24 C0                    | and al,C0                               |
+00007FF638290F85 | 3C 80                    | cmp al,80                               |
+00007FF638290F87 | 75 09                    | jne fsd-win64-shipping.7FF638290F92     |
+00007FF638290F89 | 48:8B01                  | mov rax,qword ptr ds:[rcx]              |
+00007FF638290F8C | FF90 40030000            | call qword ptr ds:[rax+340]             |
+00007FF638290F92 | 83FB 03                  | cmp ebx,3                               |
+00007FF638290F95 | 75 28                    | jne fsd-win64-shipping.7FF638290FBF     |
+00007FF638290F97 | 48:8BCF                  | mov rcx,rdi                             |
+00007FF638290F9A | E8 B187FEFF              | call fsd-win64-shipping.7FF638279750    |
+00007FF638290F9F | 48:8B07                  | mov rax,qword ptr ds:[rdi]              |
+00007FF638290FA2 | 48:8BCF                  | mov rcx,rdi                             |
+00007FF638290FA5 | 8067 5B BF               | and byte ptr ds:[rdi+5B],BF             |
+00007FF638290FA9 | FF90 60010000            | call qword ptr ds:[rax+160]             |
+00007FF638290FAF | 48:85C0                  | test rax,rax                            |
+00007FF638290FB2 | 74 0B                    | je fsd-win64-shipping.7FF638290FBF      |
+00007FF638290FB4 | 48:8BD7                  | mov rdx,rdi                             |
+00007FF638290FB7 | 48:8BC8                  | mov rcx,rax                             |
+00007FF638290FBA | E8 C1CD7200              | call fsd-win64-shipping.7FF6389BDD80    |
+00007FF638290FBF | 48:83BF 48010000 00      | cmp qword ptr ds:[rdi+148],0            |
+00007FF638290FC7 | 74 0F                    | je fsd-win64-shipping.7FF638290FD8      |
+00007FF638290FC9 | 48:8B07                  | mov rax,qword ptr ds:[rdi]              |
+00007FF638290FCC | 0F57C9                   | xorps xmm1,xmm1                         |
+00007FF638290FCF | 48:8BCF                  | mov rcx,rdi                             |
+00007FF638290FD2 | FF90 A0030000            | call qword ptr ds:[rax+3A0]             |
+00007FF638290FD8 | 33F6                     | xor esi,esi                             |
+00007FF638290FDA | C78424 EC000000 18000000 | mov dword ptr ss:[rsp+EC],18            |
+00007FF638290FE5 | 48:89B424 E0000000       | mov qword ptr ss:[rsp+E0],rsi           |
+00007FF638290FED | 89B424 E8000000          | mov dword ptr ss:[rsp+E8],esi           |
+00007FF638290FF4 | E8 E77E7400              | call fsd-win64-shipping.7FF6389D8EE0    |
+00007FF638290FF9 | 48:8BD8                  | mov rbx,rax                             |
+00007FF638290FFC | 48:85C0                  | test rax,rax                            |
+00007FF638290FFF | 74 27                    | je fsd-win64-shipping.7FF638291028      |
+00007FF638291001 | E8 DA7E7400              | call fsd-win64-shipping.7FF6389D8EE0    |
+00007FF638291006 | 48:85C0                  | test rax,rax                            |
+00007FF638291009 | 74 1D                    | je fsd-win64-shipping.7FF638291028      |
+00007FF63829100B | 48:8D50 30               | lea rdx,qword ptr ds:[rax+30]           |
+00007FF63829100F | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]        |
+00007FF638291013 | 3B43 38                  | cmp eax,dword ptr ds:[rbx+38]           |
+00007FF638291016 | 7F 10                    | jg fsd-win64-shipping.7FF638291028      |
+00007FF638291018 | 48:8BC8                  | mov rcx,rax                             |
+00007FF63829101B | 48:8B43 30               | mov rax,qword ptr ds:[rbx+30]           |
+00007FF63829101F | 48:3914C8                | cmp qword ptr ds:[rax+rcx*8],rdx        |
+00007FF638291023 | 75 03                    | jne fsd-win64-shipping.7FF638291028     |
+00007FF638291025 | 48:8BF3                  | mov rsi,rbx                             |
+00007FF638291028 | E8 B37E7400              | call fsd-win64-shipping.7FF6389D8EE0    |
+00007FF63829102D | 4C:8D4424 20             | lea r8,qword ptr ss:[rsp+20]            |
+00007FF638291032 | 48:8BD3                  | mov rdx,rbx                             |
+00007FF638291035 | 48:8BCF                  | mov rcx,rdi                             |
+00007FF638291038 | 48:3BF0                  | cmp rsi,rax                             |
+00007FF63829103B | 75 07                    | jne fsd-win64-shipping.7FF638291044     |
+00007FF63829103D | E8 3EB3B1FF              | call fsd-win64-shipping.7FF637DAC380    |
+00007FF638291042 | EB 05                    | jmp fsd-win64-shipping.7FF638291049     |
+00007FF638291044 | E8 57B5B1FF              | call fsd-win64-shipping.7FF637DAC5A0    |
+00007FF638291049 | 48:8B8C24 E0000000       | mov rcx,qword ptr ss:[rsp+E0]           |
+00007FF638291051 | 48:8D5C24 20             | lea rbx,qword ptr ss:[rsp+20]           |
+00007FF638291056 | 48:638424 E8000000       | movsxd rax,dword ptr ss:[rsp+E8]        |
+00007FF63829105E | 48:85C9                  | test rcx,rcx                            |
+00007FF638291061 | 48:0F45D9                | cmovne rbx,rcx                          |
+00007FF638291065 | 48:8D3CC3                | lea rdi,qword ptr ds:[rbx+rax*8]        |
+00007FF638291069 | 48:3BDF                  | cmp rbx,rdi                             |
+00007FF63829106C | 74 28                    | je fsd-win64-shipping.7FF638291096      |
+00007FF63829106E | 66:90                    | nop                                     |
+00007FF638291070 | 48:8B0B                  | mov rcx,qword ptr ds:[rbx]              |
+00007FF638291073 | 80B9 8A000000 00         | cmp byte ptr ds:[rcx+8A],0              |
+00007FF63829107A | 7D 09                    | jge fsd-win64-shipping.7FF638291085     |
+00007FF63829107C | 48:8B01                  | mov rax,qword ptr ds:[rcx]              |
+00007FF63829107F | FF90 48030000            | call qword ptr ds:[rax+348]             |
+00007FF638291085 | 48:83C3 08               | add rbx,8                               |
+00007FF638291089 | 48:3BDF                  | cmp rbx,rdi                             |
+00007FF63829108C | 75 E2                    | jne fsd-win64-shipping.7FF638291070     |
+00007FF63829108E | 48:8B8C24 E0000000       | mov rcx,qword ptr ss:[rsp+E0]           |
+00007FF638291096 | 48:85C9                  | test rcx,rcx                            |
+00007FF638291099 | 74 05                    | je fsd-win64-shipping.7FF6382910A0      |
+00007FF63829109B | E8 00C67BFE              | call fsd-win64-shipping.7FF636A4D6A0    |
+00007FF6382910A0 | 48:8B8C24 F0000000       | mov rcx,qword ptr ss:[rsp+F0]           |
+00007FF6382910A8 | 48:33CC                  | xor rcx,rsp                             |
+00007FF6382910AB | E8 B0761901              | call fsd-win64-shipping.7FF639428760    |
+00007FF6382910B0 | 4C:8D9C24 00010000       | lea r11,qword ptr ss:[rsp+100]          |
+00007FF6382910B8 | 49:8B5B 20               | mov rbx,qword ptr ds:[r11+20]           |
+00007FF6382910BC | 49:8B73 28               | mov rsi,qword ptr ds:[r11+28]           |
+00007FF6382910C0 | 49:8BE3                  | mov rsp,r11                             |
+00007FF6382910C3 | 5F                       | pop rdi                                 |
+00007FF6382910C4 | C3                       | ret                                     |

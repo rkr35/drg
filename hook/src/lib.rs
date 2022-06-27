@@ -82,7 +82,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_global_engine(module)?;
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
-    find_add_cheats(module)?;
+    // find_add_cheats(module)?;
     find_post_actor_construction(module)?;
     find_destroy_actor(module)?;
     find_route_end_play(module)?;
@@ -91,11 +91,11 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
 }
 
 unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
-    // 00007FF63919DE6E   48:8B0D 137D3204   mov rcx,qword ptr ds:[7FF63D4C5B88]
-    // 00007FF63919DE75   49:8BD7            mov rdx,r15
-    // 00007FF63919DE78   48:8B01            mov rax,qword ptr ds:[rcx]
-    // 00007FF63919DE7B   FF90 80020000      call qword ptr ds:[rax+280]
-    const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0x0D), None, None, None, None, Some(0x49), Some(0x8B), Some(0xD7), Some(0x48), Some(0x8B), Some(0x01), Some(0xFF), Some(0x90), Some(0x80), Some(0x02), Some(0x00), Some(0x00)];
+    // 00007FF72626A8F5 | 48:8B0D 64353105         | mov rcx,qword ptr ds:[7FF72B57DE60]     |
+    // 00007FF72626A8FC | 49:8BD6                  | mov rdx,r14                             |
+    // 00007FF72626A8FF | 48:8B01                  | mov rax,qword ptr ds:[rcx]              |
+    // 00007FF72626A902 | FF90 90020000            | call qword ptr ds:[rax+290]             |
+    const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0x0D), None, None, None, None, Some(0x49), Some(0x8B), Some(0xD6), Some(0x48), Some(0x8B), Some(0x01), Some(0xFF), Some(0x90), Some(0x90), Some(0x02), Some(0x00), Some(0x00)];
     let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
     let relative_offset = mov_rcx_global_engine.add(3).cast::<i32>().read_unaligned();
     GEngine = *mov_rcx_global_engine.offset(7 + relative_offset as isize).cast::<*const Engine>();
@@ -112,7 +112,7 @@ unsafe fn find_function_invoke(module: &win::Module) -> Result<(), Error> {
 }
 
 unsafe fn find_process_remote_function_for_channel(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 43] = [Some(0x48), Some(0x8B), Some(0xC4), Some(0x4C), Some(0x89), Some(0x48), Some(0x20), Some(0x4C), Some(0x89), Some(0x40), Some(0x18), Some(0x48), Some(0x89), Some(0x50), Some(0x10), Some(0x48), Some(0x89), Some(0x48), Some(0x08), Some(0x55), Some(0x57), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x8D), Some(0xA8), None, None, None, None, Some(0x48), Some(0x81), Some(0xEC), None, None, None, None, Some(0xF6), Some(0x42), Some(0x30), Some(0x02)];
+    const PATTERN: [Option<u8>; 19] = [Some(0x48), Some(0x8B), Some(0xC4), Some(0x4C), Some(0x89), Some(0x48), Some(0x20), Some(0x4C), Some(0x89), Some(0x40), Some(0x18), Some(0x48), Some(0x89), Some(0x48), Some(0x08), Some(0x55), Some(0x53), Some(0x41), Some(0x56)];
     PROCESS_REMOTE_FUNCTION_FOR_CHANNEL = module.find_mut(&PATTERN).ok_or(Error::FindProcessRemoteFunctionForChannel)?;
     Ok(())
 }
@@ -124,12 +124,12 @@ unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
 }
 
 unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error> {
-    // 00007FF66B98E688 | 48:8BCF                  | mov rcx,rdi                             |
-    // 00007FF66B98E68B | E8 20D40000              | call fsd-win64-shipping.7FF66B99BAB0    | void AActor::PostActorConstruction()
-    // 00007FF66B98E690 | 48:8B4D C0               | mov rcx,qword ptr ss:[rbp-40]           |
-    // 00007FF66B98E694 | 48:33CC                  | xor rcx,rsp                             |
-    // 00007FF66B98E697 | E8 C4510401              | call fsd-win64-shipping.7FF66C9D3860    |
-    const PATTERN: [Option<u8>; 20] = [Some(0x48), Some(0x8B), Some(0xCF), Some(0xE8), None, None, None, None, Some(0x48), Some(0x8B), Some(0x4D), Some(0xC0), Some(0x48), Some(0x33), Some(0xCC), Some(0xE8), None, None, None, None];
+    // 00007FF63827FECD | 48:8BCF                  | mov rcx,rdi                             |
+    // 00007FF63827FED0 | E8 CBB80000              | call fsd-win64-shipping.7FF63828B7A0    |
+    // 00007FF63827FED5 | 48:8B4D D0               | mov rcx,qword ptr ss:[rbp-30]           |
+    // 00007FF63827FED9 | 48:33CC                  | xor rcx,rsp                             |
+    // 00007FF63827FEDC | E8 7F881A01              | call fsd-win64-shipping.7FF639428760    |
+    const PATTERN: [Option<u8>; 20] = [Some(0x48), Some(0x8B), Some(0xCF), Some(0xE8), None, None, None, None, Some(0x48), Some(0x8B), Some(0x4D), Some(0xD0), Some(0x48), Some(0x33), Some(0xCC), Some(0xE8), None, None, None, None];
     let mov_rcx_rdi: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindPostActorConstruction)?;
     let call_immediate = mov_rcx_rdi.add(4).cast::<i32>().read_unaligned();
     POST_ACTOR_CONSTRUCTION = mov_rcx_rdi.offset(8 + call_immediate as isize).cast();
@@ -143,7 +143,7 @@ unsafe fn find_destroy_actor(module: &win::Module) -> Result<(), Error> {
 }
 
 unsafe fn find_route_end_play(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 40] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0x00), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x33), Some(0xC4), Some(0x48), Some(0x89), Some(0x84), Some(0x24), Some(0xF0), Some(0x00), Some(0x00), Some(0x00), Some(0xF6), Some(0x41), Some(0x5B), Some(0x20)];
+    const PATTERN: [Option<u8>; 39] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0x00), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x33), Some(0xC4), Some(0x48), Some(0x89), Some(0x84), Some(0x24), Some(0xF0), Some(0x00), Some(0x00), Some(0x00), Some(0xF6), Some(0x41), Some(0x5B)];
     ROUTE_END_PLAY = module.find_mut(&PATTERN).ok_or(Error::FindRouteEndPlay)?;
     Ok(())
 }
