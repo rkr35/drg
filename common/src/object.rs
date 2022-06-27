@@ -285,7 +285,25 @@ impl UObject {
         function: *mut UFunction,
         parameters: *mut c_void,
     ) {
-        const PROCESS_EVENT_VTABLE_INDEX: usize = 66;
+        // 00007FF6389DDFA0 | 48:895C24 08             | mov qword ptr ss:[rsp+8],rbx            |
+        // 00007FF6389DDFA5 | 57                       | push rdi                                |
+        // 00007FF6389DDFA6 | 48:83EC 20               | sub rsp,20                              |
+        // 00007FF6389DDFAA | 48:8B15 97474B02         | mov rdx,qword ptr ds:[7FF63AE92748]     |
+        // 00007FF6389DDFB1 | 48:8BF9                  | mov rdi,rcx                             |
+        // 00007FF6389DDFB4 | 48:8B19                  | mov rbx,qword ptr ds:[rcx]              |
+        // 00007FF6389DDFB7 | F3:0F114C24 38           | movss dword ptr ss:[rsp+38],xmm1        |
+        // 00007FF6389DDFBD | E8 7E5C38FE              | call fsd-win64-shipping.7FF636D63C40    |
+        // 00007FF6389DDFC2 | 48:8BD0                  | mov rdx,rax                             |
+        // 00007FF6389DDFC5 | 4C:8D4424 38             | lea r8,qword ptr ss:[rsp+38]            |
+        // 00007FF6389DDFCA | 48:8BCF                  | mov rcx,rdi                             |
+        // 00007FF6389DDFCD | FF93 20020000            | call qword ptr ds:[rbx+220]             | <<<< 0x220 / 8 = 0x44 = 68
+        // 00007FF6389DDFD3 | 48:8B5C24 30             | mov rbx,qword ptr ss:[rsp+30]           |
+        // 00007FF6389DDFD8 | 48:83C4 20               | add rsp,20                              |
+        // 00007FF6389DDFDC | 5F                       | pop rdi                                 |
+        // 00007FF6389DDFDD | C3                       | ret                                     |
+        const PROCESS_EVENT_VTABLE_INDEX: usize = 68;
+
+
         type ProcessEvent = unsafe extern "C" fn(*mut UObject, *mut UFunction, *mut c_void);
         let process_event = mem::transmute::<*const c_void, ProcessEvent>(
             *(*this).vtable.add(PROCESS_EVENT_VTABLE_INDEX),
