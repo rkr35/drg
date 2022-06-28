@@ -1,0 +1,159 @@
+UnrealEngine\Engine\Source\Runtime\Engine\Private\PlayerController.cpp
+
+1. Use the SDK generator to find:
+    [5985] Function /Script/Engine.PlayerController.EnableCheats 0x1dcb6f437a0
+
+2. Use ReClass of UFunction to find the above's FunctionPtr Func.
+
+3. In x64dbg, breakpoint that function.
+
+4. Use user.rs hook to call EnableCheats() on a hotkey.
+
+    let character = context.cast::<PlayerCharacter>();
+    let controller = (*character).Controller.cast::<FSDPlayerController>();
+    (*controller).EnableCheats();
+
+5. The breakpoint should be hit. Trace the virtual function calls to AddCheats().
+
+Breakpoint first hit here:
+00007FF79151A2A0 | 48:8B42 20               | mov rax,qword ptr ds:[rdx+20]                          | (rcx, rdx, r8) = (object, frame, result)
+00007FF79151A2A4 | 45:33C0                  | xor r8d,r8d                                            |
+00007FF79151A2A7 | 48:85C0                  | test rax,rax                                           |
+00007FF79151A2AA | 41:0F95C0                | setne r8b                                              |
+00007FF79151A2AE | 4C:03C0                  | add r8,rax                                             |
+00007FF79151A2B1 | 4C:8942 20               | mov qword ptr ds:[rdx+20],r8                           |
+00007FF79151A2B5 | 48:8B01                  | mov rax,qword ptr ds:[rcx]                             |
+
+Follow this virtual call:
+00007FF79151A2B8 | 48:FFA0 400A0000         | jmp qword ptr ds:[rax+A40]                             |
+
+...to here:
+00007FF7911E9820 | 48:8B01                  | mov rax,qword ptr ds:[rcx]                             |
+00007FF7911E9823 | 33D2                     | xor edx,edx                                            |
+
+And follow this virtual call:
+00007FF7911E9825 | 48:FFA0 C00C0000         | jmp qword ptr ds:[rax+CC0]                             |
+
+Which should be AddCheats().
+
+void APlayerController::AddCheats(bool bForce)
+{
+	UWorld* World = GetWorld();
+	check(World);
+
+	// Abort if cheat manager exists or there is no cheat class
+	if (CheatManager || !CheatClass)
+	{
+		return;
+	}
+
+	// Spawn if game mode says we are allowed, or if bForce
+	if ( (World->GetAuthGameMode() && World->GetAuthGameMode()->AllowCheats(this)) || bForce)
+	{
+		CheatManager = NewObject<UCheatManager>(this, CheatClass);
+		CheatManager->InitCheatManager();
+	}
+}
+
+void APlayerController::EnableCheats()
+{
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	AddCheats(true);
+#else
+	AddCheats();
+#endif
+}
+
+48 89 5C 24 18 48 89 74 24 20 57 48 83 EC ?? 48 8B 01 0F B6 DA
+
+00007FF7911DA050 | 48:895C24 18             | mov qword ptr ss:[rsp+18],rbx           | void APlayerController::AddCheats(bool bForce)
+00007FF7911DA055 | 48:897424 20             | mov qword ptr ss:[rsp+20],rsi           |
+00007FF7911DA05A | 57                       | push rdi                                |
+00007FF7911DA05B | 48:83EC 60               | sub rsp,60                              |
+00007FF7911DA05F | 48:8B01                  | mov rax,qword ptr ds:[rcx]              |
+00007FF7911DA062 | 0FB6DA                   | movzx ebx,dl                            |
+00007FF7911DA065 | 48:8BF9                  | mov rdi,rcx                             |
+00007FF7911DA068 | FF90 60010000            | call qword ptr ds:[rax+160]             |
+00007FF7911DA06E | 48:83BF 38030000 00      | cmp qword ptr ds:[rdi+338],0            |
+00007FF7911DA076 | 48:8BF0                  | mov rsi,rax                             |
+00007FF7911DA079 | 0F85 32010000            | jne fsd-win64-shipping.7FF7911DA1B1     |
+00007FF7911DA07F | 48:83BF 40030000 00      | cmp qword ptr ds:[rdi+340],0            |
+00007FF7911DA087 | 0F84 24010000            | je fsd-win64-shipping.7FF7911DA1B1      |
+00007FF7911DA08D | E8 4EC82500              | call fsd-win64-shipping.7FF7914368E0    |
+00007FF7911DA092 | 48:85C0                  | test rax,rax                            |
+00007FF7911DA095 | 0F84 16010000            | je fsd-win64-shipping.7FF7911DA1B1      |
+00007FF7911DA09B | 48:8B97 40030000         | mov rdx,qword ptr ds:[rdi+340]          |
+00007FF7911DA0A2 | 4C:8D40 30               | lea r8,qword ptr ds:[rax+30]            |
+00007FF7911DA0A6 | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]        |
+00007FF7911DA0AA | 3B42 38                  | cmp eax,dword ptr ds:[rdx+38]           |
+00007FF7911DA0AD | 0F8F FE000000            | jg fsd-win64-shipping.7FF7911DA1B1      |
+00007FF7911DA0B3 | 48:8BC8                  | mov rcx,rax                             |
+00007FF7911DA0B6 | 48:8B42 30               | mov rax,qword ptr ds:[rdx+30]           |
+00007FF7911DA0BA | 4C:3904C8                | cmp qword ptr ds:[rax+rcx*8],r8         |
+00007FF7911DA0BE | 0F85 ED000000            | jne fsd-win64-shipping.7FF7911DA1B1     |
+00007FF7911DA0C4 | 48:85D2                  | test rdx,rdx                            |
+00007FF7911DA0C7 | 0F84 E4000000            | je fsd-win64-shipping.7FF7911DA1B1      |
+00007FF7911DA0CD | 48:8B8E 18010000         | mov rcx,qword ptr ds:[rsi+118]          | World->GetAuthGameMode()
+00007FF7911DA0D4 | 48:85C9                  | test rcx,rcx                            |
+00007FF7911DA0D7 | 74 10                    | je fsd-win64-shipping.7FF7911DA0E9      |
+00007FF7911DA0D9 | 48:8B01                  | mov rax,qword ptr ds:[rcx]              |
+00007FF7911DA0DC | 48:8BD7                  | mov rdx,rdi                             |
+00007FF7911DA0DF | FF90 B0070000            | call qword ptr ds:[rax+7B0]             | World->GetAuthGameMode()->AllowCheats(this)
+00007FF7911DA0E5 | 84C0                     | test al,al                              |
+00007FF7911DA0E7 | 75 08                    | jne fsd-win64-shipping.7FF7911DA0F1     |
+00007FF7911DA0E9 | 84DB                     | test bl,bl                              | bForce
+00007FF7911DA0EB | 0F84 C0000000            | je fsd-win64-shipping.7FF7911DA1B1      |
+00007FF7911DA0F1 | 48:896C24 78             | mov qword ptr ss:[rsp+78],rbp           |
+00007FF7911DA0F6 | 33ED                     | xor ebp,ebp                             |
+00007FF7911DA0F8 | 48:896C24 70             | mov qword ptr ss:[rsp+70],rbp           |
+00007FF7911DA0FD | 48:39AF 40030000         | cmp qword ptr ds:[rdi+340],rbp          |
+00007FF7911DA104 | 74 2B                    | je fsd-win64-shipping.7FF7911DA131      |
+00007FF7911DA106 | E8 D5C72500              | call fsd-win64-shipping.7FF7914368E0    |
+00007FF7911DA10B | 48:85C0                  | test rax,rax                            |
+00007FF7911DA10E | 74 21                    | je fsd-win64-shipping.7FF7911DA131      |
+00007FF7911DA110 | 48:8BB7 40030000         | mov rsi,qword ptr ds:[rdi+340]          |
+00007FF7911DA117 | 48:8D50 30               | lea rdx,qword ptr ds:[rax+30]           |
+00007FF7911DA11B | 48:6340 38               | movsxd rax,dword ptr ds:[rax+38]        |
+00007FF7911DA11F | 3B46 38                  | cmp eax,dword ptr ds:[rsi+38]           |
+00007FF7911DA122 | 7F 0D                    | jg fsd-win64-shipping.7FF7911DA131      |
+00007FF7911DA124 | 48:8BC8                  | mov rcx,rax                             |
+00007FF7911DA127 | 48:8B46 30               | mov rax,qword ptr ds:[rsi+30]           |
+00007FF7911DA12B | 48:3914C8                | cmp qword ptr ds:[rax+rcx*8],rdx        |
+00007FF7911DA12F | 74 03                    | je fsd-win64-shipping.7FF7911DA134      |
+00007FF7911DA131 | 48:8BF5                  | mov rsi,rbp                             |
+00007FF7911DA134 | 33D2                     | xor edx,edx                             |
+00007FF7911DA136 | 8BCD                     | mov ecx,ebp                             |
+00007FF7911DA138 | E8 C3DC39FE              | call fsd-win64-shipping.7FF78F577E00    |
+00007FF7911DA13D | 48:8B5C24 70             | mov rbx,qword ptr ss:[rsp+70]           |
+00007FF7911DA142 | 48:8BCB                  | mov rcx,rbx                             |
+00007FF7911DA145 | 48:C1E9 20               | shr rcx,20                              |
+00007FF7911DA149 | 85C9                     | test ecx,ecx                            |
+00007FF7911DA14B | 0F94C1                   | sete cl                                 |
+00007FF7911DA14E | 84C1                     | test cl,al                              |
+00007FF7911DA150 | 74 0F                    | je fsd-win64-shipping.7FF7911DA161      |
+00007FF7911DA152 | 48:8D15 27F4D300         | lea rdx,qword ptr ds:[7FF791F19580]     | 00007FF791F19580:L"NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."
+00007FF7911DA159 | 48:8BCF                  | mov rcx,rdi                             |
+00007FF7911DA15C | E8 AF265AFE              | call fsd-win64-shipping.7FF78F77C810    |
+00007FF7911DA161 | 48:8BD6                  | mov rdx,rsi                             |
+00007FF7911DA164 | 48:8D4C24 20             | lea rcx,qword ptr ss:[rsp+20]           |
+00007FF7911DA169 | E8 72F159FE              | call fsd-win64-shipping.7FF78F7792E0    |
+00007FF7911DA16E | 0F57C0                   | xorps xmm0,xmm0                         |
+00007FF7911DA171 | 48:897C24 28             | mov qword ptr ss:[rsp+28],rdi           |
+00007FF7911DA176 | 48:8D4C24 20             | lea rcx,qword ptr ss:[rsp+20]           |
+00007FF7911DA17B | 66:0F7F4424 50           | movdqa xmmword ptr ss:[rsp+50],xmm0     |
+00007FF7911DA181 | 48:895C24 30             | mov qword ptr ss:[rsp+30],rbx           |
+00007FF7911DA186 | 896C24 38                | mov dword ptr ss:[rsp+38],ebp           |
+00007FF7911DA18A | 48:896C24 48             | mov qword ptr ss:[rsp+48],rbp           |
+00007FF7911DA18F | 40:886C24 40             | mov byte ptr ss:[rsp+40],bpl            |
+00007FF7911DA194 | E8 77A65BFE              | call fsd-win64-shipping.7FF78F794810    |
+00007FF7911DA199 | 48:8987 38030000         | mov qword ptr ds:[rdi+338],rax          |
+00007FF7911DA1A0 | 48:8BC8                  | mov rcx,rax                             |
+00007FF7911DA1A3 | 48:8B10                  | mov rdx,qword ptr ds:[rax]              |
+00007FF7911DA1A6 | FF92 00040000            | call qword ptr ds:[rdx+400]             |
+00007FF7911DA1AC | 48:8B6C24 78             | mov rbp,qword ptr ss:[rsp+78]           |
+00007FF7911DA1B1 | 4C:8D5C24 60             | lea r11,qword ptr ss:[rsp+60]           |
+00007FF7911DA1B6 | 49:8B5B 20               | mov rbx,qword ptr ds:[r11+20]           |
+00007FF7911DA1BA | 49:8B73 28               | mov rsi,qword ptr ds:[r11+28]           |
+00007FF7911DA1BE | 49:8BE3                  | mov rsp,r11                             |
+00007FF7911DA1C1 | 5F                       | pop rdi                                 |
+00007FF7911DA1C2 | C3                       | ret                                     |

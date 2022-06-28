@@ -82,7 +82,7 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_global_engine(module)?;
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
-    // find_add_cheats(module)?;
+    find_add_cheats(module)?;
     find_post_actor_construction(module)?;
     find_destroy_actor(module)?;
     find_route_end_play(module)?;
@@ -118,7 +118,7 @@ unsafe fn find_process_remote_function_for_channel(module: &win::Module) -> Resu
 }
 
 unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 18] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), Some(0x50), Some(0x48), Some(0x8B), Some(0x01)];
+    const PATTERN: [Option<u8>; 21] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x83), Some(0xEC), None, Some(0x48), Some(0x8B), Some(0x01), Some(0x0F), Some(0xB6), Some(0xDA)];
     ADD_CHEATS = module.find_mut(&PATTERN).ok_or(Error::FindAddCheats)?;
     Ok(())
 }
