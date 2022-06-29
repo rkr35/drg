@@ -2,17 +2,15 @@ use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use common::win::random;
 use core::ffi::c_void;
 use core::mem;
-use sdk::Engine::{Actor, LocalPlayer, World};
+use sdk::Engine::{Actor, LocalPlayer};
 use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
 
 mod weapon;
 mod pawn;
-use pawn::Pawns;
 
 mod render;
 
 pub static mut SEEN_FUNCTIONS: List<*mut UFunction, 4096> = List::new();
-pub static mut PAWNS: Pawns = Pawns::new();
 
 pub struct OneTimeModifications;
 
@@ -111,71 +109,9 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     let obj = actor.cast::<UObject>();
 
     if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
-        if let Err(e) = PAWNS.add(obj.cast()) {
-            common::log!("failed to add pawn {}: {:?}", *obj, e);
-        }
-    }
+        pawn::set_outline(obj.cast())
 }
-
-unsafe fn on_actor_destroyed(actor: *mut Actor) {
-    let obj = actor.cast::<UObject>();
-
-    if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
-        if let Err(e) = PAWNS.remove(obj.cast()) {
-            common::log!("failed to remove pawn {}: {:?}", *obj, e)
-        }
-    } 
 }
-
-pub unsafe extern "C" fn my_destroy_actor(world: *mut World, actor: *mut Actor, net_force: bool, should_modify_level: bool) -> bool {
-    on_actor_destroyed(actor);
-    type DestroyActor = unsafe extern "C" fn (*mut World, *mut Actor, bool, bool) -> bool;
-    let original = mem::transmute::<*const c_void, DestroyActor>(crate::DESTROY_ACTOR);
-    original(world, actor, net_force, should_modify_level)
-}
-
-pub unsafe extern "C" fn my_route_end_play(actor: *mut Actor, end_play_reason: u32) {
-    on_actor_destroyed(actor);
-    type RouteEndPlay = unsafe extern "C" fn (*mut Actor, u32);
-    let original = mem::transmute::<*const c_void, RouteEndPlay>(crate::ROUTE_END_PLAY);
-    original(actor, end_play_reason);
-}
-
-// #[repr(C)]
-// pub struct Id {
-//     vtable: usize,
-//     this: *mut Id,
-//     magic: usize,
-//     value: u64,
-// }
-
-// #[repr(C)]
-// pub struct IdWrapper {
-//     vtable: usize,
-//     id: *mut Id,
-//     magic: usize,
-//     pad: [u8; 16],
-// }
-
-// pub unsafe extern "C" fn my_get_preferred_unique_net_id(local_player: *mut LocalPlayer, out_id: *mut IdWrapper) -> *mut IdWrapper {
-//     type GetPreferredUniqueNetId = unsafe extern "C" fn (*mut LocalPlayer, *mut IdWrapper) -> *mut IdWrapper;
-//     let original = mem::transmute::<*const c_void, GetPreferredUniqueNetId>(crate::GET_PREFERRED_UNIQUE_NET_ID);
-//     original(local_player, out_id);
-
-//     let old_id = (*(*out_id).id).value;
-
-//     let new_id = {
-//         const ID_WITHOUT_ACCOUNT: u64 = 76561197960265728;
-//         let random_account = random::u32();
-//         ID_WITHOUT_ACCOUNT | u64::from(random_account)
-//     };
-
-//     (*(*out_id).id).value = new_id;
-
-//     common::log!("ID: {} -> {}", old_id, new_id);
-
-//     out_id
-// }
 
 #[allow(dead_code)]
 unsafe fn print_if_unseen(object: *mut UObject, function: *mut UFunction) {

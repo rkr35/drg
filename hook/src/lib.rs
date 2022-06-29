@@ -28,8 +28,6 @@ enum Error {
     FindProcessRemoteFunctionForChannel,
     FindAddCheats,
     FindPostActorConstruction,
-    FindDestroyActor,
-    FindRouteEndPlay,
     FindGetPreferredUniqueNetId,
 }
 
@@ -40,8 +38,6 @@ static mut FUNCTION_INVOKE: *mut c_void = ptr::null_mut();
 static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
 static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
 static mut POST_ACTOR_CONSTRUCTION: *mut c_void = ptr::null_mut();
-static mut DESTROY_ACTOR: *mut c_void = ptr::null_mut();
-static mut ROUTE_END_PLAY: *mut c_void = ptr::null_mut();
 static mut GET_PREFERRED_UNIQUE_NET_ID: *mut c_void = ptr::null_mut();
 
 #[no_mangle]
@@ -84,8 +80,6 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_process_remote_function_for_channel(module)?;
     find_add_cheats(module)?;
     find_post_actor_construction(module)?;
-    find_destroy_actor(module)?;
-    find_route_end_play(module)?;
     find_get_preferred_unique_net_id(module)?;
     Ok(())
 }
@@ -133,18 +127,6 @@ unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error
     let mov_rcx_rdi: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindPostActorConstruction)?;
     let call_immediate = mov_rcx_rdi.add(4).cast::<i32>().read_unaligned();
     POST_ACTOR_CONSTRUCTION = mov_rcx_rdi.offset(8 + call_immediate as isize).cast();
-    Ok(())
-}
-
-unsafe fn find_destroy_actor(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 26] = [Some(0x40), Some(0x55), Some(0x53), Some(0x56), Some(0x57), Some(0x41), Some(0x54), Some(0x41), Some(0x56), Some(0x41), Some(0x57), Some(0x48), Some(0x8D), Some(0x6C), Some(0x24), Some(0x90), Some(0x48), Some(0x81), Some(0xEC), Some(0x70), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05)];
-    DESTROY_ACTOR = module.find_mut(&PATTERN).ok_or(Error::FindDestroyActor)?;
-    Ok(())
-}
-
-unsafe fn find_route_end_play(module: &win::Module) -> Result<(), Error> {
-    const PATTERN: [Option<u8>; 39] = [Some(0x48), Some(0x89), Some(0x5C), Some(0x24), Some(0x18), Some(0x48), Some(0x89), Some(0x74), Some(0x24), Some(0x20), Some(0x57), Some(0x48), Some(0x81), Some(0xEC), Some(0x00), Some(0x01), Some(0x00), Some(0x00), Some(0x48), Some(0x8B), Some(0x05), None, None, None, None, Some(0x48), Some(0x33), Some(0xC4), Some(0x48), Some(0x89), Some(0x84), Some(0x24), Some(0xF0), Some(0x00), Some(0x00), Some(0x00), Some(0xF6), Some(0x41), Some(0x5B)];
-    ROUTE_END_PLAY = module.find_mut(&PATTERN).ok_or(Error::FindRouteEndPlay)?;
     Ok(())
 }
 
