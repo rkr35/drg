@@ -57,6 +57,12 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
 }
 
+pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
+    type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
+    let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
+    original(function, object, stack, result);
+}
+
 pub unsafe extern "C" fn my_add_cheats(controller: *mut FSDPlayerController, _: bool) {
     type AddCheats = unsafe extern "C" fn(*mut FSDPlayerController, bool);
     let original = mem::transmute::<*const c_void, AddCheats>(crate::ADD_CHEATS);

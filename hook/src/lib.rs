@@ -24,6 +24,7 @@ enum Error {
     Module(#[from] win::module::Error),
     Hooks(#[from] hooks::Error),
     FindGlobalEngine,
+    FindFunctionInvoke,
     FindProcessRemoteFunctionForChannel,
     FindAddCheats,
     FindPostActorConstruction,
@@ -33,6 +34,7 @@ enum Error {
 #[allow(non_upper_case_globals)]
 static mut GEngine: *const Engine = ptr::null();
 
+static mut FUNCTION_INVOKE: *mut c_void = ptr::null_mut();
 static mut PROCESS_REMOTE_FUNCTION_FOR_CHANNEL: *mut c_void = ptr::null_mut();
 static mut ADD_CHEATS: *mut c_void = ptr::null_mut();
 static mut POST_ACTOR_CONSTRUCTION: *mut c_void = ptr::null_mut();
@@ -74,6 +76,7 @@ unsafe fn run() -> Result<(), Error> {
 unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     common::init_globals(module)?;
     find_global_engine(module)?;
+    find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
     find_add_cheats(module)?;
     find_post_actor_construction(module)?;
@@ -90,6 +93,15 @@ unsafe fn find_global_engine(module: &win::Module) -> Result<(), Error> {
     let mov_rcx_global_engine: *const u8 = module.find(&PATTERN).ok_or(Error::FindGlobalEngine)?;
     let relative_offset = mov_rcx_global_engine.add(3).cast::<i32>().read_unaligned();
     GEngine = *mov_rcx_global_engine.offset(7 + relative_offset as isize).cast::<*const Engine>();
+    Ok(())
+}
+
+unsafe fn find_function_invoke(module: &win::Module) -> Result<(), Error> {
+    const PATTERN: [Option<u8>; 14] = [Some(0x4D), Some(0x8B), Some(0xCE), Some(0x4C), Some(0x8D), Some(0x45), Some(0x10), Some(0x49), Some(0x8B), Some(0xD4), Some(0x48), Some(0x8B), Some(0xCE), Some(0xE8)];
+    let mov_r9_r14: *mut u8 = module.find_mut(&PATTERN).ok_or(Error::FindFunctionInvoke)?;
+    let base = mov_r9_r14.add(PATTERN.len() + 4);
+    let relative_offset = base.sub(4).cast::<i32>().read_unaligned();
+    FUNCTION_INVOKE = base.offset(relative_offset as isize).cast();
     Ok(())
 }
 

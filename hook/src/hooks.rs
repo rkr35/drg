@@ -47,6 +47,7 @@ pub struct Hooks {
     _one_time_modifications: OneTimeModifications,
 
     _process_remote_function_for_channel: Detour<7>,
+    _function_invoke: Detour<5>,
     _add_cheats: Detour<5>,
     _post_actor_construction: Detour<6>,
     _get_preferred_unique_net_id: Detour<5>,
@@ -66,6 +67,7 @@ impl Hooks {
             _one_time_modifications: OneTimeModifications::new(),
 
             _process_remote_function_for_channel: Detour::new(module, &mut crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL, user::my_process_remote_function_for_channel as *const c_void)?,
+            _function_invoke: Detour::new(module, &mut crate::FUNCTION_INVOKE, user::my_function_invoke as *const c_void)?,
             _add_cheats: Detour::new(module, &mut crate::ADD_CHEATS, user::my_add_cheats as *const c_void)?,
             _post_actor_construction: Detour::new(module, &mut crate::POST_ACTOR_CONSTRUCTION, user::my_post_actor_construction as *const c_void)?,
             _get_preferred_unique_net_id: Detour::new(module, &mut crate::GET_PREFERRED_UNIQUE_NET_ID, user::my_get_preferred_unique_net_id as *const c_void)?,
