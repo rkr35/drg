@@ -28,9 +28,10 @@ impl Drop for OneTimeModifications {
         }
     }
 }
-unsafe fn set_blank_name(controller: *mut FSDPlayerController) {
-    const ZERO_WIDTH_SPACE: [u16; 2] = [0x200b, 0];
-    (*controller).ServerChangeName(ZERO_WIDTH_SPACE.as_slice().into());
+
+unsafe fn set_custom_name(controller: *mut FSDPlayerController) {
+    const NAME: [u16; 2] = [0x200b, 0];
+    (*controller).ServerChangeName(NAME.as_slice().into());
 }
 
 pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut c_void, actor_channel: *mut c_void, class_cache: *mut c_void, field_cache: *mut c_void, object: *mut UObject, net_connection: *mut c_void, function: *mut UFunction, parms: *mut c_void, out_params: *mut c_void, stack: *mut FFrame, is_server: bool, send_policy: i32) {
@@ -41,27 +42,18 @@ pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut
         for _ in 0..2 {
             original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
         }
-    } else if function == super::SERVER_SET_FALL_VELOCITY {
-        #[allow(non_snake_case)]
-        #[repr(C)]
-        struct Parameters {
-            Velocity: f32, 
-        }
-
-        let p = parms.cast::<Parameters>();
-        (*p).Velocity = 0.0;
     } else if function == super::SERVER_SET_CONTROLLER_READY {
-        set_blank_name(object.cast());
-    } 
+        set_custom_name(object.cast());
+    }
 
     original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
 }
 
-pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
-    let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
-    original(function, object, stack, result);
-}
+// pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
+//     type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
+//     let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
+//     original(function, object, stack, result);
+// }
 
 pub unsafe extern "C" fn my_add_cheats(controller: *mut FSDPlayerController, _: bool) {
     type AddCheats = unsafe extern "C" fn(*mut FSDPlayerController, bool);
@@ -92,7 +84,7 @@ pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mu
     (*character).Server_EscapeFromGrabber();
     let health = (*character).HealthComponent;
     (*health).ToggleCanTakeDamage();
-    set_blank_name((*character).Controller.cast());
+    set_custom_name((*character).Controller.cast());
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
@@ -110,7 +102,7 @@ pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
 
     if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
         pawn::set_outline(obj.cast())
-}
+    }
 }
 
 #[allow(dead_code)]
@@ -132,5 +124,40 @@ unsafe fn run_cheat_manager(character: *mut PlayerCharacter) {
 
     #[allow(unused_variables)]
     let cheat_manager = (*controller).CheatManager.cast::<FSDCheatManager>();
+}
 
+#[repr(C)]
+pub struct Id {
+    vtable: usize,
+    this: *mut Id,
+    magic: usize,
+    value: u64,
+}
+
+#[repr(C)]
+pub struct IdWrapper {
+    vtable: usize,
+    id: *mut Id,
+    magic: usize,
+    pad: [u8; 16],
+}
+
+pub unsafe extern "C" fn my_get_preferred_unique_net_id(local_player: *mut LocalPlayer, out_id: *mut IdWrapper) -> *mut IdWrapper {
+    type GetPreferredUniqueNetId = unsafe extern "C" fn (*mut LocalPlayer, *mut IdWrapper) -> *mut IdWrapper;
+    let original = mem::transmute::<*const c_void, GetPreferredUniqueNetId>(crate::GET_PREFERRED_UNIQUE_NET_ID);
+    original(local_player, out_id);
+
+    let old_id = (*(*out_id).id).value;
+
+    let new_id = {
+        const ID_WITHOUT_ACCOUNT: u64 = 76561197960265728;
+        let random_account = random::u32();
+        ID_WITHOUT_ACCOUNT | u64::from(random_account)
+    };
+
+    (*(*out_id).id).value = new_id;
+
+    common::log!("ID: {} -> {}", old_id, new_id);
+
+    out_id
 }
