@@ -405,14 +405,33 @@ impl UClass {
     }
 }
 
-// #define RESULT_DECL void*const RESULT_PARAM
-// typedef void (*FNativeFuncPtr)(UObject* Context, FFrame& TheStack, RESULT_DECL);
+// struct FFrame : public FOutputDevice
+// TODO: fill in from UnrealEngine\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h
+
+#[repr(C)]
+pub struct FOutputDevice {
+	bSuppressEventTag: bool,
+	bAutoEmitLineTerminator: bool,
+}
 
 #[repr(C)]
 pub struct FFrame {
-    // TODO: fill in from UnrealEngine\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h
-    // struct FFrame : public FOutputDevice
-    replace_me: *const c_void,
+    base: FOutputDevice,
+
+    Node: *mut UFunction,
+	Object: *mut UObject,
+	
+    Code: *mut u8,
+	pub Locals: *mut u8,
+
+	MostRecentProperty: *mut c_void,
+	MostRecentPropertyAddress: *mut c_void,
+    FlowStack: crate::TArray<u32>,
+	PreviousFrame: *mut c_void,
+	OutParms: *mut c_void,
+	PropertyChainForCompiledIn: *mut c_void,
+	CurrentNativeFunction: *mut c_void,
+	bArrayContextFailed: bool,
 }
 
 pub type FNativeFuncPtr =
