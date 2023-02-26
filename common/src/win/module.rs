@@ -14,6 +14,8 @@ pub struct Module {
 }
 
 impl Module {
+    const CAVE_BYTES: [u8; 3] = [0x00, 0x90, 0xCC];
+
     pub unsafe fn current() -> Result<Self, Error> {
         const SECTION: [u8; 5] = *b".text";
         const PAGE: usize = 0x1000;
@@ -78,33 +80,97 @@ impl Module {
         self.size
     }
 
-    pub unsafe fn find_code_cave(&self) -> Option<&mut [u8]> {
-        let mut cursor = self.start as *mut u8;
-        let end = cursor.add(self.size);
-        let mut largest_cave: Option<(*mut u8, isize)> = None;
+    pub unsafe fn find_code_cave(
+        &self,
+        start: *mut u8,
+        min_required_len: usize,
+    ) -> Option<&mut [u8]> {
+        let backward = self.backward_cave_search(start, min_required_len);
+        let forward = self.forward_cave_search(start, min_required_len);
 
-        while cursor != end {
-            // Advance to the beginning of the next code cave.
-            if *cursor != 0 {
+        match [backward, forward] {
+            [Some(b), Some(f)] => {
+                if b.as_ptr().offset_from(start).abs() < f.as_ptr().offset_from(start).abs() {
+                    Some(b)
+                } else {
+                    Some(f)
+                }
+            }
+
+            [Some(b), None] => Some(b),
+
+            [None, Some(f)] => Some(f),
+
+            [None, None] => None,
+        }
+    }
+
+    unsafe fn backward_cave_search(
+        &self,
+        start: *mut u8,
+        min_required_len: usize,
+    ) -> Option<&'static mut [u8]> {
+        let mut cursor = start;
+        let module_start = self.start as *mut u8;
+
+        while cursor >= module_start {
+            // Advance to the end of the next code cave.
+            if !Self::CAVE_BYTES.contains(&*cursor) {
+                cursor = cursor.sub(1);
+                continue;
+            }
+
+            let cave_end = cursor;
+
+            // Advance to the start of this code cave.
+            while cursor >= module_start && Self::CAVE_BYTES.contains(&*cursor) {
+                cursor = cursor.sub(1);
+            }
+
+            let cave_start = cursor.add(1);
+
+            // [cave_start, cave_end] is the cave range.
+            let size = (cave_end.offset_from(cave_start) + 1) as usize;
+
+            if size >= min_required_len {
+                return Some(slice::from_raw_parts_mut(cave_start, size));
+            }
+        }
+
+        None
+    }
+
+    unsafe fn forward_cave_search(
+        &self,
+        start: *mut u8,
+        min_required_len: usize,
+    ) -> Option<&'static mut [u8]> {
+        let mut cursor = start;
+        let module_end = (self.start + self.size) as *mut u8;
+
+        while cursor < module_end {
+            // Advance to the start of the next code cave.
+            if !Self::CAVE_BYTES.contains(&*cursor) {
                 cursor = cursor.add(1);
                 continue;
             }
 
-            let cave_begin = cursor;
+            let cave_start = cursor;
 
             // Advance to the end of this code cave.
-            while cursor != end && *cursor == 0 {
+            while cursor < module_end && Self::CAVE_BYTES.contains(&*cursor) {
                 cursor = cursor.add(1);
             }
 
-            let size = cursor.offset_from(cave_begin);
+            // [cave_start, cursor) is all 0's.
+            let size = cursor.offset_from(cave_start) as usize;
 
-            if size > largest_cave.map_or(0, |(_, size)| size) {
-                largest_cave = Some((cave_begin, size));
+            if size >= min_required_len {
+                return Some(slice::from_raw_parts_mut(cave_start, size));
             }
         }
 
-        largest_cave.map(|(begin, size)| slice::from_raw_parts_mut(begin, size as usize))
+        None
     }
 }
 

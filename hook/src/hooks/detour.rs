@@ -11,6 +11,9 @@ pub enum Error {
     CaveIsTooSmall(usize, usize),
 }
 
+pub const JMP_TO_HOOK_LEN: usize = 12;
+pub const JMP_TO_ORIG_LEN: usize = 5;
+
 pub struct Detour<const JMP_LEN: usize> {
     jmp: ManuallyDrop<Patch<[u8; JMP_LEN]>>,
     code_cave: ManuallyDrop<CodeCave<JMP_LEN>>,
@@ -26,7 +29,12 @@ impl<const JMP_LEN: usize> Detour<JMP_LEN> {
             return Err(Error::JmpLenIsSmallerThanFiveBytes);
         }
 
-        let code_cave = module.find_code_cave().ok_or(Error::NoCodeCave)?;
+        let code_cave = module
+            .find_code_cave(
+                *original.cast(),
+                JMP_LEN + JMP_TO_HOOK_LEN + JMP_TO_ORIG_LEN,
+            )
+            .ok_or(Error::NoCodeCave)?;
 
         let code_cave_patch = ManuallyDrop::new(CodeCave::new(code_cave, *original.cast(), hook)?);
 
@@ -76,9 +84,9 @@ impl<const JMP_LEN: usize> Drop for Detour<JMP_LEN> {
 }
 
 pub struct CodeCave<const JMP_LEN: usize> {
-    _jmp_to_hook: Patch<[u8; 12]>,
+    _jmp_to_hook: Patch<[u8; JMP_TO_HOOK_LEN]>,
     _original_bytes: Patch<[u8; JMP_LEN]>,
-    _jmp_to_original: Patch<[u8; 5]>,
+    _jmp_to_original: Patch<[u8; JMP_TO_ORIG_LEN]>,
 }
 
 impl<const JMP_LEN: usize> CodeCave<JMP_LEN> {
@@ -124,4 +132,3 @@ impl<const JMP_LEN: usize> CodeCave<JMP_LEN> {
         })
     }
 }
-
