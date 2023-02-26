@@ -38,7 +38,7 @@ impl<T: Hexable> Display for Hex<T> {
 
         let mut n = self.0;
 
-        for digit in (&mut buffer[PREFIX_LEN..]).iter_mut().rev() {
+        for digit in buffer[PREFIX_LEN..].iter_mut().rev() {
             cursor -= 1;
 
             *digit = match (n % T::BASE).to_u8() {

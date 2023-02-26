@@ -79,7 +79,7 @@ impl Variant {
             Some(_) => Fields::Tuple(Self::count_tuple_variant_fields(tokens)),
 
             None => {
-                panic!("expected fields for {}", name);
+                panic!("expected fields for {name}");
             }
         }
     }
@@ -100,7 +100,7 @@ impl Variant {
             .filter(|attribute| matches!(attribute.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident.to_string() == "from"))
             .is_some();
 
-        assert!(has_from_attribute, "expected #[from] attribute for variant {}", name);
+        assert!(has_from_attribute, "expected #[from] attribute for variant {name}");
 
         let mut tokens = tokens.peekable();
 
@@ -109,8 +109,7 @@ impl Variant {
             Fields::InnerError(inner_error.to_string())
         } else {
             panic!(
-                "expected inner error name after #[from] attribute for variant {}",
-                name
+                "expected inner error name after #[from] attribute for variant {name}"
             );
         }
     }
@@ -155,7 +154,7 @@ impl fmt::Display for Variant {
 
             Fields::Tuple(size) => {
                 let (mut placeholders, fields): (String, String) =
-                    (0..*size).map(|i| ("{}, ", format!("f{}, ", i))).unzip();
+                    (0..*size).map(|i| ("{}, ", format!("f{i}, "))).unzip();
 
                 // Trim final ", ".
                 placeholders.pop();

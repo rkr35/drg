@@ -24,7 +24,7 @@ impl From<TokenStream> for Enum {
         let group = if let Some(TokenTree::Group(group)) = stream.next() {
             group
         } else {
-            panic!("expected variants after {}", name);
+            panic!("expected variants after {name}");
         };
 
         Self {
