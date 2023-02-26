@@ -9,7 +9,7 @@ macro_rules! log {
             fn write_str(&mut self, text: &str) -> Result<(), core::fmt::Error> { unsafe {
                 #[allow(clippy::cast_possible_truncation)]
                 $crate::win::WriteConsoleA(
-                    $crate::win::GetStdHandle(crate::win::STD_OUTPUT_HANDLE),
+                    $crate::win::GetStdHandle($crate::win::STD_OUTPUT_HANDLE),
                     text.as_ptr(),
                     text.len() as u32,
                     core::ptr::null_mut(),

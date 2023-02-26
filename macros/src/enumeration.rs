@@ -15,15 +15,11 @@ impl From<TokenStream> for Enum {
 
         assert!(is_enum(&mut stream), "not an enum");
 
-        let name = if let Some(TokenTree::Ident(ident)) = stream.next() {
-            ident
-        } else {
+        let Some(TokenTree::Ident(name)) = stream.next() else {
             panic!("expected name after enum keyword");
         };
 
-        let group = if let Some(TokenTree::Group(group)) = stream.next() {
-            group
-        } else {
+        let Some(TokenTree::Group(group)) = stream.next() else {
             panic!("expected variants after {name}");
         };
 
