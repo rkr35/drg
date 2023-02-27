@@ -1,11 +1,11 @@
-00007FF63827FECD | 48:8BCF                  | mov rcx,rdi                             |
-00007FF63827FED0 | E8 CBB80000              | call fsd-win64-shipping.7FF63828B7A0    |
-00007FF63827FED5 | 48:8B4D D0               | mov rcx,qword ptr ss:[rbp-30]           |
-00007FF63827FED9 | 48:33CC                  | xor rcx,rsp                             |
-00007FF63827FEDC | E8 7F881A01              | call fsd-win64-shipping.7FF639428760    |
-
+00007FF7E0C3F18D | 48:8BCF                  | mov rcx,rdi                                                                                |
+00007FF7E0C3F190 | E8 BBB80000              | call fsd-win64-shipping.7FF7E0C4AA50                                                       |
+00007FF7E0C3F195 | 48:8B4D D0               | mov rcx,qword ptr ss:[rbp-30]                                                              |
+00007FF7E0C3F199 | 48:33CC                  | xor rcx,rsp                                                                                |
+00007FF7E0C3F19C | E8 0F7B1D01              | call fsd-win64-shipping.7FF7E1E16CB0                                                       |
+00007FF7E0C3F1A1 | 48:81C4 80010000         | add rsp,180                                                                                |
 48 8B CF E8 ?? ?? ?? ?? 48 8B 4D D0 48 33 CC E8 ?? ?? ?? ??
-
+48 8B CF E8 ?? ?? ?? ?? 48 8B 4D D0 48 33 CC E8 ?? ?? ?? ?? 48 81 C4 80 01 00 00
 Search:
     "failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "
 
