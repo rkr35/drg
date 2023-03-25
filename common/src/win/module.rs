@@ -97,11 +97,7 @@ impl Module {
                 }
             }
 
-            [Some(b), None] => Some(b),
-
-            [None, Some(f)] => Some(f),
-
-            [None, None] => None,
+            [b, f] => b.or(f),
         }
     }
 

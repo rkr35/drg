@@ -1,12 +1,12 @@
-use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use common::win::random;
+use common::{self, EClassCastFlags, FFrame, List, UFunction, UObject};
 use core::ffi::c_void;
 use core::mem;
 use sdk::Engine::{Actor, LocalPlayer};
-use sdk::FSD::{FSDCheatManager, FSDPlayerController, FSDUserWidget, PlayerCharacter};
+use sdk::FSD::{FSDCheatManager, FSDPlayerController, PlayerCharacter};
 
-mod weapon;
 mod pawn;
+mod weapon;
 
 mod render;
 
@@ -29,28 +29,88 @@ impl Drop for OneTimeModifications {
     }
 }
 
+#[allow(dead_code)]
 unsafe fn set_custom_name(controller: *mut FSDPlayerController) {
-    const NAME: [u16; 2] = [0x200b, 0];
+    const NAME: [u16; 5] = [0x6e, 0x6f, 0x6f, 0x62, 0];
     (*controller).ServerChangeName(NAME.as_slice().into());
 }
 
-pub unsafe extern "C" fn my_process_remote_function_for_channel(net_driver: *mut c_void, actor_channel: *mut c_void, class_cache: *mut c_void, field_cache: *mut c_void, object: *mut UObject, net_connection: *mut c_void, function: *mut UFunction, parms: *mut c_void, out_params: *mut c_void, stack: *mut FFrame, is_server: bool, send_policy: i32) {
-    type ProcessRemoteFunctionForChannel = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut c_void, *mut c_void, *mut UObject, *mut c_void, *mut UFunction, *mut c_void, *mut c_void, *mut FFrame, bool, i32);
-    let original = mem::transmute::<*const c_void, ProcessRemoteFunctionForChannel>(crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL);
+pub unsafe extern "C" fn my_process_remote_function_for_channel(
+    net_driver: *mut c_void,
+    actor_channel: *mut c_void,
+    class_cache: *mut c_void,
+    field_cache: *mut c_void,
+    object: *mut UObject,
+    net_connection: *mut c_void,
+    function: *mut UFunction,
+    parms: *mut c_void,
+    out_params: *mut c_void,
+    stack: *mut FFrame,
+    is_server: bool,
+    send_policy: i32,
+) {
+    type ProcessRemoteFunctionForChannel = unsafe extern "C" fn(
+        *mut c_void,
+        *mut c_void,
+        *mut c_void,
+        *mut c_void,
+        *mut UObject,
+        *mut c_void,
+        *mut UFunction,
+        *mut c_void,
+        *mut c_void,
+        *mut FFrame,
+        bool,
+        i32,
+    );
+    let original = mem::transmute::<*const c_void, ProcessRemoteFunctionForChannel>(
+        crate::PROCESS_REMOTE_FUNCTION_FOR_CHANNEL,
+    );
 
     if weapon::is_server_register_hit(function) {
         for _ in 0..2 {
-            original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
+            original(
+                net_driver,
+                actor_channel,
+                class_cache,
+                field_cache,
+                object,
+                net_connection,
+                function,
+                parms,
+                out_params,
+                stack,
+                is_server,
+                send_policy,
+            );
         }
-    } else if function == super::SERVER_SET_CONTROLLER_READY {
-        set_custom_name(object.cast());
     }
 
-    original(net_driver, actor_channel, class_cache, field_cache, object, net_connection, function, parms, out_params, stack, is_server, send_policy);
+    original(
+        net_driver,
+        actor_channel,
+        class_cache,
+        field_cache,
+        object,
+        net_connection,
+        function,
+        parms,
+        out_params,
+        stack,
+        is_server,
+        send_policy,
+    );
 }
 
-// pub unsafe extern "C" fn my_function_invoke(function: *mut UFunction, object: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-//     type FunctionInvoke = unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
+// pub unsafe extern "C" fn my_function_invoke(
+//     function: *mut UFunction,
+//     object: *mut UObject,
+//     stack: *mut FFrame,
+//     result: *mut c_void,
+// ) {
+//     type FunctionInvoke =
+//         unsafe extern "C" fn(*mut UFunction, *mut UObject, *mut FFrame, *mut c_void);
+//     print_if_unseen(object, function);
 //     let original = mem::transmute::<*const c_void, FunctionInvoke>(crate::FUNCTION_INVOKE);
 //     original(function, object, stack, result);
 // }
@@ -61,43 +121,75 @@ pub unsafe extern "C" fn my_add_cheats(controller: *mut FSDPlayerController, _: 
     original(controller, true);
 }
 
-pub unsafe extern "C" fn my_on_item_amount_changed(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
+pub unsafe extern "C" fn my_on_item_amount_changed(
+    context: *mut UObject,
+    stack: *mut FFrame,
+    result: *mut c_void,
+) {
     weapon::on_item_amount_changed(context.cast());
     (*super::ON_ITEM_AMOUNT_CHANGED.as_ptr())(context, stack, result);
 }
 
-pub unsafe extern "C" fn my_get_item_name(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
+pub unsafe extern "C" fn my_get_item_name(
+    context: *mut UObject,
+    stack: *mut FFrame,
+    result: *mut c_void,
+) {
     weapon::on_item_equipped(context.cast());
     (*super::GET_ITEM_NAME.as_ptr())(context, stack, result);
 }
 
-pub unsafe extern "C" fn my_on_flare(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {
-    let widget = context.cast::<FSDUserWidget>();
-    let character = (*widget).Character;
-    let inv = (*character).InventoryComponent;
-    (*inv).FlareProductionTime = 0.0;
-    (*super::ON_FLARE.as_ptr())(context, stack, result);
-}
+// pub unsafe extern "C" fn my_on_flare(
+//     context: *mut UObject,
+//     stack: *mut FFrame,
+//     result: *mut c_void,
+// ) {
+//     let widget = context.cast::<FSDUserWidget>();
+//     let character = (*widget).Character;
+//     let inv = (*character).InventoryComponent;
+//     (*inv).FlareProductionTime = 0.0;
+//     (*super::ON_FLARE.as_ptr())(context, stack, result);
+// }
 
-pub unsafe extern "C" fn my_on_keypress_insert(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {    
+pub unsafe extern "C" fn my_on_keypress_insert(
+    context: *mut UObject,
+    stack: *mut FFrame,
+    result: *mut c_void,
+) {
     let character = context.cast::<PlayerCharacter>();
-    (*character).Server_EscapeFromGrabber();
     let health = (*character).HealthComponent;
     (*health).ToggleCanTakeDamage();
-    set_custom_name((*character).Controller.cast());
     (*super::ON_KEYPRESS_INSERT.as_ptr())(context, stack, result);
 }
 
-pub unsafe extern "C" fn my_on_keypress_delete(context: *mut UObject, stack: *mut FFrame, result: *mut c_void) {    
+#[allow(dead_code)]
+unsafe fn get_game_data() -> *mut sdk::FSD::GameData {
+    let asset_manager = (*crate::GEngine)
+        .AssetManager
+        .cast::<sdk::FSD::FSDAssetManager>();
+
+    if asset_manager.is_null() {
+        core::ptr::null_mut()
+    } else {
+        (*asset_manager).GameData
+    }
+}
+
+pub unsafe extern "C" fn my_on_keypress_delete(
+    context: *mut UObject,
+    stack: *mut FFrame,
+    result: *mut c_void,
+) {
     render::toggle_lighting();
     (*super::ON_KEYPRESS_DELETE.as_ptr())(context, stack, result);
 }
 
+#[allow(dead_code)]
 pub unsafe extern "C" fn my_post_actor_construction(actor: *mut Actor) {
     type PostActorConstruction = unsafe extern "C" fn(*mut Actor);
-    let original = mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
+    let original =
+        mem::transmute::<*const c_void, PostActorConstruction>(crate::POST_ACTOR_CONSTRUCTION);
     original(actor);
-
     let obj = actor.cast::<UObject>();
 
     if (*obj).fast_is(EClassCastFlags::CASTCLASS_APawn) {
@@ -142,9 +234,16 @@ pub struct IdWrapper {
     pad: [u8; 16],
 }
 
-pub unsafe extern "C" fn my_get_preferred_unique_net_id(local_player: *mut LocalPlayer, out_id: *mut IdWrapper) -> *mut IdWrapper {
-    type GetPreferredUniqueNetId = unsafe extern "C" fn (*mut LocalPlayer, *mut IdWrapper) -> *mut IdWrapper;
-    let original = mem::transmute::<*const c_void, GetPreferredUniqueNetId>(crate::GET_PREFERRED_UNIQUE_NET_ID);
+#[allow(dead_code)]
+pub unsafe extern "C" fn my_get_preferred_unique_net_id(
+    local_player: *mut LocalPlayer,
+    out_id: *mut IdWrapper,
+) -> *mut IdWrapper {
+    type GetPreferredUniqueNetId =
+        unsafe extern "C" fn(*mut LocalPlayer, *mut IdWrapper) -> *mut IdWrapper;
+    let original = mem::transmute::<*const c_void, GetPreferredUniqueNetId>(
+        crate::GET_PREFERRED_UNIQUE_NET_ID,
+    );
     original(local_player, out_id);
 
     let old_id = (*(*out_id).id).value;

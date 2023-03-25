@@ -79,8 +79,8 @@ unsafe fn init_globals(module: &win::Module) -> Result<(), Error> {
     find_function_invoke(module)?;
     find_process_remote_function_for_channel(module)?;
     find_add_cheats(module)?;
-    find_post_actor_construction(module)?;
-    find_get_preferred_unique_net_id(module)?;
+    // find_post_actor_construction(module)?;
+    // find_get_preferred_unique_net_id(module)?;
     Ok(())
 }
 
@@ -198,6 +198,7 @@ unsafe fn find_add_cheats(module: &win::Module) -> Result<(), Error> {
     Ok(())
 }
 
+#[allow(dead_code)]
 unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error> {
     // 00007FF63827FECD | 48:8BCF                  | mov rcx,rdi                             |
     // 00007FF63827FED0 | E8 CBB80000              | call fsd-win64-shipping.7FF63828B7A0    |
@@ -241,6 +242,7 @@ unsafe fn find_post_actor_construction(module: &win::Module) -> Result<(), Error
     Ok(())
 }
 
+#[allow(dead_code)]
 unsafe fn find_get_preferred_unique_net_id(module: &win::Module) -> Result<(), Error> {
     const PATTERN: [Option<u8>; 30] = [
         Some(0x48),
