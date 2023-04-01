@@ -16,7 +16,6 @@ pub struct OneTimeModifications;
 
 impl OneTimeModifications {
     pub unsafe fn new() -> Self {
-        render::remove_lighting();
         Self
     }
 }
